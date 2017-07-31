@@ -1,0 +1,918 @@
+From 97b889b8b2b2554ce33fd6b3f0359fc18f39832d Mon Sep 17 00:00:00 2001
+From: Varun Dhall <varun.dhall@studentpartner.com>
+Date: Tue, 1 Aug 2017 10:36:45 +0530
+Subject: [PATCH] WIP: Removing unused SfxItemPool serialisation from svx
+
+Change-Id: I3222033fadd688959fd55e3f335540054fc418f4
+Reviewed-on: https://gerrit.libreoffice.org/40612
+Tested-by: Jenkins <ci@libreoffice.org>
+Reviewed-by: Michael Stahl <mstahl@redhat.com>
+---
+ include/svx/AffineMatrixItem.hxx |   3 -
+ include/svx/xbtmpit.hxx          |   3 -
+ include/svx/xcolit.hxx           |   3 -
+ include/svx/xflclit.hxx          |   2 -
+ include/svx/xflgrit.hxx          |   3 -
+ include/svx/xflhtit.hxx          |   3 -
+ include/svx/xftshcit.hxx         |   2 -
+ include/svx/xit.hxx              |   3 -
+ include/svx/xlnclit.hxx          |   2 -
+ include/svx/xlndsit.hxx          |   3 -
+ include/svx/xlnedit.hxx          |   3 -
+ include/svx/xlnstit.hxx          |   3 -
+ include/svx/xsflclit.hxx         |   2 -
+ sd/source/ui/func/fupage.cxx     |   2 +-
+ svx/source/xoutdev/xattr.cxx     | 406 ---------------------------------------
+ svx/source/xoutdev/xattr2.cxx    |  27 ---
+ svx/source/xoutdev/xattrbmp.cxx  |  23 ---
+ 17 files changed, 1 insertion(+), 492 deletions(-)
+
+diff --git a/include/svx/AffineMatrixItem.hxx b/include/svx/AffineMatrixItem.hxx
+index 872e3f7..dad733a 100644
+--- a/include/svx/AffineMatrixItem.hxx
++++ b/include/svx/AffineMatrixItem.hxx
+@@ -35,14 +35,11 @@ private:
+ 
+ public:
+     AffineMatrixItem(const css::geometry::AffineMatrix2D* pMatrix);
+-    AffineMatrixItem(SvStream& rIn);
+     AffineMatrixItem(const AffineMatrixItem&);
+     virtual ~AffineMatrixItem() override;
+ 
+     virtual bool operator==(const SfxPoolItem&) const override;
+     virtual SfxPoolItem* Clone( SfxItemPool* pPool = nullptr ) const override;
+-    virtual SfxPoolItem* Create( SvStream& rIn, sal_uInt16 nVer ) const override;
+-    virtual SvStream& Store(SvStream &, sal_uInt16 nItemVersion ) const override;
+ 
+     virtual bool QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+     virtual bool PutValue( const css::uno::Any& rVal, sal_uInt8 nMemberId ) override;
+diff --git a/include/svx/xbtmpit.hxx b/include/svx/xbtmpit.hxx
+index 0180e3d..48e1483 100644
+--- a/include/svx/xbtmpit.hxx
++++ b/include/svx/xbtmpit.hxx
+@@ -49,12 +49,9 @@ public:
+             XFillBitmapItem(const OUString& rName, const GraphicObject& rGraphicObject);
+             XFillBitmapItem( const GraphicObject& rGraphicObject );
+             XFillBitmapItem( const XFillBitmapItem& rItem );
+-            XFillBitmapItem( SvStream& rIn, sal_uInt16 nVer );
+ 
+     virtual bool            operator==( const SfxPoolItem& rItem ) const override;
+     virtual SfxPoolItem*    Clone( SfxItemPool* pPool = nullptr ) const override;
+-    virtual SfxPoolItem*    Create( SvStream& rIn, sal_uInt16 nVer ) const override;
+-    virtual SvStream&       Store( SvStream& rOut, sal_uInt16 nItemVersion  ) const override;
+     virtual sal_uInt16      GetVersion( sal_uInt16 nFileFormatVersion ) const override;
+ 
+     virtual bool            QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+diff --git a/include/svx/xcolit.hxx b/include/svx/xcolit.hxx
+index 3acdf0f..df37235 100644
+--- a/include/svx/xcolit.hxx
++++ b/include/svx/xcolit.hxx
+@@ -44,13 +44,10 @@ public:
+ 
+             XColorItem(sal_uInt16 nWhich, const Color& rTheColor);
+             XColorItem(sal_uInt16 nWhich, const OUString& rName, const Color& rTheColor);
+-            XColorItem(sal_uInt16 nWhich, SvStream& rIn);
+             XColorItem(const XColorItem& rItem);
+ 
+     virtual bool            operator==(const SfxPoolItem& rItem) const override;
+     virtual SfxPoolItem*    Clone(SfxItemPool* pPool = nullptr) const override;
+-    virtual SfxPoolItem*    Create(SvStream& rIn, sal_uInt16 nVer) const override;
+-    virtual SvStream&       Store(SvStream& rOut, sal_uInt16 nItemVersion ) const override;
+ 
+     const Color&    GetColorValue() const;
+     void            SetColorValue(const Color& rNew) { aColor = rNew; Detach(); }
+diff --git a/include/svx/xflclit.hxx b/include/svx/xflclit.hxx
+index c3ea60c..820e574 100644
+--- a/include/svx/xflclit.hxx
++++ b/include/svx/xflclit.hxx
+@@ -37,10 +37,8 @@ public:
+             XFillColorItem() {}
+             XFillColorItem(sal_Int32 nIndex, const Color& rTheColor);
+             XFillColorItem(const OUString& rName, const Color& rTheColor);
+-            XFillColorItem(SvStream& rIn);
+ 
+     virtual SfxPoolItem*    Clone(SfxItemPool* pPool = nullptr) const override;
+-    virtual SfxPoolItem*    Create(SvStream& rIn, sal_uInt16 nVer) const override;
+ 
+     virtual bool            QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+     virtual bool            PutValue( const css::uno::Any& rVal, sal_uInt8 nMemberId ) override;
+diff --git a/include/svx/xflgrit.hxx b/include/svx/xflgrit.hxx
+index 12127ad..70abe25 100644
+--- a/include/svx/xflgrit.hxx
++++ b/include/svx/xflgrit.hxx
+@@ -40,12 +40,9 @@ public:
+             XFillGradientItem(const OUString& rName, const XGradient& rTheGradient, sal_uInt16 nWhich = XATTR_FILLGRADIENT);
+             XFillGradientItem(const XGradient& rTheGradient);
+             XFillGradientItem(const XFillGradientItem& rItem);
+-            XFillGradientItem(SvStream& rIn, sal_uInt16 nVer);
+ 
+     virtual bool            operator==(const SfxPoolItem& rItem) const override;
+     virtual SfxPoolItem*    Clone(SfxItemPool* pPool = nullptr) const override;
+-    virtual SfxPoolItem*    Create(SvStream& rIn, sal_uInt16 nVer) const override;
+-    virtual SvStream&       Store(SvStream& rOut, sal_uInt16 nItemVersion ) const override;
+     virtual sal_uInt16      GetVersion( sal_uInt16 nFileFormatVersion ) const override;
+ 
+     virtual bool            QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+diff --git a/include/svx/xflhtit.hxx b/include/svx/xflhtit.hxx
+index 24aac407..f6717d9 100644
+--- a/include/svx/xflhtit.hxx
++++ b/include/svx/xflhtit.hxx
+@@ -39,12 +39,9 @@ public:
+                             XFillHatchItem(const OUString& rName, const XHatch& rTheHatch);
+                             XFillHatchItem(const XHatch& rTheHatch);
+                             XFillHatchItem(const XFillHatchItem& rItem);
+-                            XFillHatchItem(SvStream& rIn);
+ 
+     virtual bool            operator==(const SfxPoolItem& rItem) const override;
+     virtual SfxPoolItem*    Clone(SfxItemPool* pPool = nullptr) const override;
+-    virtual SfxPoolItem*    Create(SvStream& rIn, sal_uInt16 nVer) const override;
+-    virtual SvStream&       Store(SvStream& rOut, sal_uInt16 nItemVersion ) const override;
+ 
+     virtual bool            QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+     virtual bool            PutValue( const css::uno::Any& rVal, sal_uInt8 nMemberId ) override;
+diff --git a/include/svx/xftshcit.hxx b/include/svx/xftshcit.hxx
+index 3077a9a..21babdd 100644
+--- a/include/svx/xftshcit.hxx
++++ b/include/svx/xftshcit.hxx
+@@ -35,10 +35,8 @@ public:
+             static SfxPoolItem* CreateDefault();
+             XFormTextShadowColorItem() {}
+             XFormTextShadowColorItem(const OUString& rName, const Color& rTheColor);
+-            XFormTextShadowColorItem(SvStream& rIn);
+ 
+     virtual SfxPoolItem*    Clone(SfxItemPool* pPool = nullptr) const override;
+-    virtual SfxPoolItem*    Create(SvStream& rIn, sal_uInt16 nVer) const override;
+ };
+ 
+ #endif
+diff --git a/include/svx/xit.hxx b/include/svx/xit.hxx
+index 7cbfa15..540ffa4 100644
+--- a/include/svx/xit.hxx
++++ b/include/svx/xit.hxx
+@@ -46,13 +46,10 @@ public:
+             NameOrIndex() { nPalIndex = -1; }
+             NameOrIndex(sal_uInt16 nWhich, sal_Int32 nIndex);
+             NameOrIndex(sal_uInt16 nWhich, const OUString& rName);
+-            NameOrIndex(sal_uInt16 nWhich, SvStream& rIn);
+             NameOrIndex(const NameOrIndex& rNameOrIndex);
+ 
+     virtual bool         operator==(const SfxPoolItem& rItem) const override;
+     virtual SfxPoolItem* Clone(SfxItemPool* pPool = nullptr) const override;
+-    virtual SfxPoolItem* Create(SvStream& rIn, sal_uInt16 nVer) const override;
+-    virtual SvStream&    Store(SvStream& rOut, sal_uInt16 nItemVersion ) const override;
+ 
+             OUString     GetName() const              { return GetValue();   }
+             void         SetName(const OUString& rName) { SetValue(rName);     }
+diff --git a/include/svx/xlnclit.hxx b/include/svx/xlnclit.hxx
+index 85036a4..00ce920 100644
+--- a/include/svx/xlnclit.hxx
++++ b/include/svx/xlnclit.hxx
+@@ -33,10 +33,8 @@ public:
+             XLineColorItem() {}
+             XLineColorItem(sal_Int32 nIndex, const Color& rTheColor);
+             XLineColorItem(const OUString& rName, const Color& rTheColor);
+-            XLineColorItem(SvStream& rIn);
+ 
+     virtual SfxPoolItem*    Clone(SfxItemPool* pPool = nullptr) const override;
+-    virtual SfxPoolItem*    Create(SvStream& rIn, sal_uInt16 nVer) const override;
+ 
+     virtual bool            QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+     virtual bool            PutValue( const css::uno::Any& rVal, sal_uInt8 nMemberId ) override;
+diff --git a/include/svx/xlndsit.hxx b/include/svx/xlndsit.hxx
+index 9a9cf63..53a757f 100644
+--- a/include/svx/xlndsit.hxx
++++ b/include/svx/xlndsit.hxx
+@@ -40,12 +40,9 @@ public:
+                             XLineDashItem(const OUString& rName, const XDash& rTheDash);
+                             XLineDashItem(const XDash& rTheDash);
+                             XLineDashItem(const XLineDashItem& rItem);
+-                            XLineDashItem(SvStream& rIn);
+ 
+     virtual bool            operator==(const SfxPoolItem& rItem) const override;
+     virtual SfxPoolItem*    Clone(SfxItemPool* pPool = nullptr) const override;
+-    virtual SfxPoolItem*    Create(SvStream& rIn, sal_uInt16 nVer) const override;
+-    virtual SvStream&       Store(SvStream& rOut, sal_uInt16 nItemVersion ) const override;
+ 
+     virtual bool            QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+     virtual bool            PutValue( const css::uno::Any& rVal, sal_uInt8 nMemberId ) override;
+diff --git a/include/svx/xlnedit.hxx b/include/svx/xlnedit.hxx
+index 2e9e843..ac835de 100644
+--- a/include/svx/xlnedit.hxx
++++ b/include/svx/xlnedit.hxx
+@@ -39,12 +39,9 @@ public:
+             XLineEndItem(const OUString& rName, const basegfx::B2DPolyPolygon& rPolyPolygon);
+             XLineEndItem(const basegfx::B2DPolyPolygon& rPolyPolygon);
+             XLineEndItem(const XLineEndItem& rItem);
+-            XLineEndItem(SvStream& rIn);
+ 
+     virtual bool            operator==(const SfxPoolItem& rItem) const override;
+     virtual SfxPoolItem*    Clone(SfxItemPool* pPool = nullptr) const override;
+-    virtual SfxPoolItem*    Create(SvStream& rIn, sal_uInt16 nVer) const override;
+-    virtual SvStream&       Store(SvStream& rOut, sal_uInt16 nItemVersion ) const override;
+ 
+     virtual bool            QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+     virtual bool            PutValue( const css::uno::Any& rVal, sal_uInt8 nMemberId ) override;
+diff --git a/include/svx/xlnstit.hxx b/include/svx/xlnstit.hxx
+index c8ff1c2c..5155ab6 100644
+--- a/include/svx/xlnstit.hxx
++++ b/include/svx/xlnstit.hxx
+@@ -39,12 +39,9 @@ public:
+             XLineStartItem(const OUString& rName, const basegfx::B2DPolyPolygon& rPolyPolygon);
+             XLineStartItem(const basegfx::B2DPolyPolygon& rPolyPolygon);
+             XLineStartItem(const XLineStartItem& rItem);
+-            XLineStartItem(SvStream& rIn);
+ 
+     virtual bool            operator==(const SfxPoolItem& rItem) const override;
+     virtual SfxPoolItem*    Clone(SfxItemPool* pPool = nullptr) const override;
+-    virtual SfxPoolItem*    Create(SvStream& rIn, sal_uInt16 nVer) const override;
+-    virtual SvStream&       Store(SvStream& rOut, sal_uInt16 nItemVersion ) const override;
+ 
+     virtual bool            QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+     virtual bool            PutValue( const css::uno::Any& rVal, sal_uInt8 nMemberId ) override;
+diff --git a/include/svx/xsflclit.hxx b/include/svx/xsflclit.hxx
+index e37f272..12ed0e0 100644
+--- a/include/svx/xsflclit.hxx
++++ b/include/svx/xsflclit.hxx
+@@ -29,10 +29,8 @@ class SVX_DLLPUBLIC XSecondaryFillColorItem : public XColorItem
+ {
+ public:
+     XSecondaryFillColorItem(const OUString& rName, const Color& rTheColor);
+-    SVX_DLLPRIVATE XSecondaryFillColorItem(SvStream& rIn);
+ 
+     SVX_DLLPRIVATE virtual SfxPoolItem*    Clone(SfxItemPool* pPool = nullptr) const override;
+-    SVX_DLLPRIVATE virtual SfxPoolItem*    Create(SvStream& rIn, sal_uInt16 nVer) const override;
+ 
+     SVX_DLLPRIVATE virtual bool GetPresentation( SfxItemPresentation ePres,
+                                     MapUnit eCoreMetric,
+diff --git a/sd/source/ui/func/fupage.cxx b/sd/source/ui/func/fupage.cxx
+index 3533cb1..019af23 100644
+--- a/sd/source/ui/func/fupage.cxx
++++ b/sd/source/ui/func/fupage.cxx
+@@ -320,7 +320,7 @@ const SfxItemSet* FuPage::ExecuteDialog( vcl::Window* pParent )
+ 
+                 // MigrateItemSet makes sure the XFillBitmapItem will have a unique name
+                 SfxItemSet aMigrateSet( mpDoc->GetPool(), svl::Items<XATTR_FILLBITMAP, XATTR_FILLBITMAP>{} );
+-                aMigrateSet.Put(XFillBitmapItem(OUString("background"), aGraphic));
++                aMigrateSet.Put(XFillBitmapItem("background", aGraphic));
+                 SdrModel::MigrateItemSet( &aMigrateSet, pTempSet.get(), mpDoc );
+ 
+                 pTempSet->Put( XFillBmpStretchItem( true ));
+diff --git a/svx/source/xoutdev/xattr.cxx b/svx/source/xoutdev/xattr.cxx
+index 9f56324..0b2405d 100644
+--- a/svx/source/xoutdev/xattr.cxx
++++ b/svx/source/xoutdev/xattr.cxx
+@@ -63,9 +63,6 @@
+ 
+ using namespace ::com::sun::star;
+ 
+-#define VCLTOSVCOL( rCol ) (sal_uInt16)((((sal_uInt16)(rCol))<<8)|(rCol))
+-
+-
+ long ScaleMetricValue( long nVal, long nMul, long nDiv )
+ {
+     BigInt aVal( nVal );
+@@ -94,13 +91,6 @@ NameOrIndex::NameOrIndex(sal_uInt16 _nWhich, const OUString& rName) :
+ {
+ }
+ 
+-NameOrIndex::NameOrIndex(sal_uInt16 _nWhich, SvStream& rIn)
+-    : SfxStringItem(_nWhich, rIn)
+-    , nPalIndex(-1)
+-{
+-    rIn.ReadInt32( nPalIndex );
+-}
+-
+ NameOrIndex::NameOrIndex(const NameOrIndex& rNameOrIndex) :
+     SfxStringItem(rNameOrIndex),
+     nPalIndex(rNameOrIndex.nPalIndex)
+@@ -119,18 +109,6 @@ SfxPoolItem* NameOrIndex::Clone(SfxItemPool* /*pPool*/) const
+     return new NameOrIndex(*this);
+ }
+ 
+-SfxPoolItem* NameOrIndex::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new NameOrIndex(Which(), rIn);
+-}
+-
+-SvStream& NameOrIndex::Store( SvStream& rOut, sal_uInt16 nItemVersion ) const
+-{
+-    SfxStringItem::Store( rOut, nItemVersion );
+-    rOut.WriteInt32( nPalIndex );
+-    return rOut;
+-}
+-
+ /** this static checks if the given NameOrIndex item has a unique name for its value.
+     The returned String is a unique name for an item with this value in both given pools.
+     Argument pPool2 can be null.
+@@ -298,15 +276,6 @@ XColorItem::XColorItem(const XColorItem& rItem) :
+ {
+ }
+ 
+-XColorItem::XColorItem(sal_uInt16 _nWhich, SvStream& rIn) :
+-    NameOrIndex(_nWhich, rIn)
+-{
+-    if (!IsIndex())
+-    {
+-        ReadColor( rIn, aColor );
+-    }
+-}
+-
+ SfxPoolItem* XColorItem::Clone(SfxItemPool* /*pPool*/) const
+ {
+     return new XColorItem(*this);
+@@ -318,23 +287,6 @@ bool XColorItem::operator==(const SfxPoolItem& rItem) const
+             static_cast<const XColorItem&>(rItem).aColor == aColor );
+ }
+ 
+-SfxPoolItem* XColorItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XColorItem(Which(), rIn);
+-}
+-
+-SvStream& XColorItem::Store( SvStream& rOut, sal_uInt16 nItemVersion ) const
+-{
+-    NameOrIndex::Store( rOut, nItemVersion );
+-
+-    if ( !IsIndex() )
+-    {
+-        WriteColor( rOut, aColor );
+-    }
+-
+-    return rOut;
+-}
+-
+ const Color& XColorItem::GetColorValue() const
+ {
+     assert(!IsIndex());
+@@ -666,24 +618,6 @@ XLineDashItem::XLineDashItem(const XLineDashItem& rItem) :
+ {
+ }
+ 
+-XLineDashItem::XLineDashItem(SvStream& rIn) :
+-    NameOrIndex(XATTR_LINEDASH, rIn)
+-{
+-    if (!IsIndex())
+-    {
+-        sal_uInt16  nSTemp;
+-        sal_uInt32  nLTemp;
+-        sal_Int32   nITemp;
+-
+-        rIn.ReadInt32( nITemp ); aDash.SetDashStyle((css::drawing::DashStyle)nITemp);
+-        rIn.ReadUInt16( nSTemp ); aDash.SetDots(nSTemp);
+-        rIn.ReadUInt32( nLTemp ); aDash.SetDotLen(nLTemp);
+-        rIn.ReadUInt16( nSTemp ); aDash.SetDashes(nSTemp);
+-        rIn.ReadUInt32( nLTemp ); aDash.SetDashLen(nLTemp);
+-        rIn.ReadUInt32( nLTemp ); aDash.SetDistance(nLTemp);
+-    }
+-}
+-
+ XLineDashItem::XLineDashItem(const XDash& rTheDash)
+ :   NameOrIndex( XATTR_LINEDASH, -1 ),
+     aDash(rTheDash)
+@@ -701,29 +635,6 @@ bool XLineDashItem::operator==(const SfxPoolItem& rItem) const
+              aDash == static_cast<const XLineDashItem&>(rItem).aDash );
+ }
+ 
+-SfxPoolItem* XLineDashItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XLineDashItem(rIn);
+-}
+-
+-SvStream& XLineDashItem::Store( SvStream& rOut, sal_uInt16 nItemVersion ) const
+-{
+-    NameOrIndex::Store( rOut, nItemVersion );
+-
+-    if (!IsIndex())
+-    {
+-        rOut.WriteInt32( (sal_Int32)aDash.GetDashStyle() );
+-        rOut.WriteUInt16( aDash.GetDots() );
+-        rOut.WriteUInt32( aDash.GetDotLen() );
+-        rOut.WriteUInt16( aDash.GetDashes() );
+-        rOut.WriteUInt32( aDash.GetDashLen() );
+-        rOut.WriteUInt32( aDash.GetDistance() );
+-    }
+-
+-    return rOut;
+-}
+-
+-
+ bool XLineDashItem::GetPresentation
+ (
+     SfxItemPresentation /*ePres*/,
+@@ -1085,21 +996,11 @@ XLineColorItem::XLineColorItem(const OUString& rName, const Color& rTheColor) :
+ {
+ }
+ 
+-XLineColorItem::XLineColorItem(SvStream& rIn) :
+-    XColorItem(XATTR_LINECOLOR, rIn)
+-{
+-}
+-
+ SfxPoolItem* XLineColorItem::Clone(SfxItemPool* /*pPool*/) const
+ {
+     return new XLineColorItem(*this);
+ }
+ 
+-SfxPoolItem* XLineColorItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XLineColorItem(rIn);
+-}
+-
+ bool XLineColorItem::GetPresentation
+ (
+     SfxItemPresentation /*ePres*/,
+@@ -1128,101 +1029,6 @@ bool XLineColorItem::PutValue( const css::uno::Any& rVal, sal_uInt8 /*nMemberId*
+     return true;
+ }
+ 
+-// --- tooling for simple spooling B2DPolygon to file and back ---
+-
+-namespace
+-{
+-    void streamOutB2DPolyPolygon(const basegfx::B2DPolyPolygon& rPolyPolygon, SvStream& rOut)
+-    {
+-        const sal_uInt32 nPolygonCount(rPolyPolygon.count());
+-        rOut.WriteUInt32( nPolygonCount );
+-
+-        for(sal_uInt32 a(0L); a < nPolygonCount; a++)
+-        {
+-            const basegfx::B2DPolygon aCandidate(rPolyPolygon.getB2DPolygon(a));
+-            const sal_uInt32 nPointCount(aCandidate.count());
+-            const sal_uInt8 bClosed(aCandidate.isClosed() ? 1 : 0);
+-            const sal_uInt8 bControlPoints(aCandidate.areControlPointsUsed() ? 1 : 0);
+-            rOut.WriteUInt32( nPointCount );
+-            rOut.WriteUChar( bClosed );
+-            rOut.WriteUChar( bControlPoints );
+-
+-            for(sal_uInt32 b(0L); b < nPointCount; b++)
+-            {
+-                const basegfx::B2DPoint aPoint(aCandidate.getB2DPoint(b));
+-                rOut.WriteDouble( aPoint.getX() );
+-                rOut.WriteDouble( aPoint.getY() );
+-
+-                if(bControlPoints)
+-                {
+-                    const sal_uInt8 bEdgeIsCurve(aCandidate.isPrevControlPointUsed(b) || aCandidate.isNextControlPointUsed(b) ? 1 : 0);
+-                    rOut.WriteUChar( bEdgeIsCurve );
+-
+-                    if(bEdgeIsCurve)
+-                    {
+-                        const basegfx::B2DVector aControlVectorA(aCandidate.getPrevControlPoint(b));
+-                        rOut.WriteDouble( aControlVectorA.getX() );
+-                        rOut.WriteDouble( aControlVectorA.getY() );
+-
+-                        const basegfx::B2DVector aControlVectorB(aCandidate.getNextControlPoint(b));
+-                        rOut.WriteDouble( aControlVectorB.getX() );
+-                        rOut.WriteDouble( aControlVectorB.getY() );
+-                    }
+-                }
+-            }
+-        }
+-    }
+-
+-    basegfx::B2DPolyPolygon streamInB2DPolyPolygon(SvStream& rIn)
+-    {
+-        basegfx::B2DPolyPolygon aRetval;
+-        sal_uInt32 nPolygonCount;
+-        rIn.ReadUInt32( nPolygonCount );
+-
+-        for(sal_uInt32 a(0L); a < nPolygonCount; a++)
+-        {
+-            sal_uInt32 nPointCount;
+-            sal_uInt8 bClosed;
+-            sal_uInt8 bControlPoints;
+-
+-            rIn.ReadUInt32( nPointCount );
+-            rIn.ReadUChar( bClosed );
+-            rIn.ReadUChar( bControlPoints );
+-
+-            basegfx::B2DPolygon aCandidate;
+-            aCandidate.setClosed(0 != bClosed);
+-
+-            for(sal_uInt32 b(0L); b < nPointCount; b++)
+-            {
+-                double fX, fY;
+-                rIn.ReadDouble( fX );
+-                rIn.ReadDouble( fY );
+-                aCandidate.append(basegfx::B2DPoint(fX, fY));
+-
+-                if(0 != bControlPoints)
+-                {
+-                    sal_uInt8 bEdgeIsCurve;
+-                    rIn.ReadUChar( bEdgeIsCurve );
+-
+-                    if(0 != bEdgeIsCurve)
+-                    {
+-                        rIn.ReadDouble( fX );
+-                        rIn.ReadDouble( fY );
+-                        aCandidate.setPrevControlPoint(b, basegfx::B2DVector(fX, fY));
+-
+-                        rIn.ReadDouble( fX );
+-                        rIn.ReadDouble( fY );
+-                        aCandidate.setNextControlPoint(b, basegfx::B2DVector(fX, fY));
+-                    }
+-                }
+-            }
+-
+-            aRetval.append(aCandidate);
+-        }
+-
+-        return aRetval;
+-    }
+-}
+ 
+ SfxPoolItem* XLineStartItem::CreateDefault() {return new XLineStartItem;}
+ 
+@@ -1243,15 +1049,6 @@ XLineStartItem::XLineStartItem(const XLineStartItem& rItem)
+ {
+ }
+ 
+-XLineStartItem::XLineStartItem(SvStream& rIn) :
+-    NameOrIndex(XATTR_LINESTART, rIn)
+-{
+-    if (!IsIndex())
+-    {
+-        maPolyPolygon = streamInB2DPolyPolygon(rIn);
+-    }
+-}
+-
+ XLineStartItem::XLineStartItem(const basegfx::B2DPolyPolygon& rPolyPolygon)
+ :   NameOrIndex( XATTR_LINESTART, -1 ),
+     maPolyPolygon(rPolyPolygon)
+@@ -1268,24 +1065,6 @@ bool XLineStartItem::operator==(const SfxPoolItem& rItem) const
+     return ( NameOrIndex::operator==(rItem) && static_cast<const XLineStartItem&>(rItem).maPolyPolygon == maPolyPolygon );
+ }
+ 
+-SfxPoolItem* XLineStartItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XLineStartItem(rIn);
+-}
+-
+-SvStream& XLineStartItem::Store( SvStream& rOut, sal_uInt16 nItemVersion ) const
+-{
+-    NameOrIndex::Store( rOut, nItemVersion );
+-
+-    if (!IsIndex())
+-    {
+-        streamOutB2DPolyPolygon(maPolyPolygon, rOut);
+-    }
+-
+-    return rOut;
+-}
+-
+-
+ bool XLineStartItem::GetPresentation
+ (
+     SfxItemPresentation /*ePres*/,
+@@ -1585,15 +1364,6 @@ XLineEndItem::XLineEndItem(const XLineEndItem& rItem)
+ {
+ }
+ 
+-XLineEndItem::XLineEndItem(SvStream& rIn) :
+-    NameOrIndex(XATTR_LINEEND, rIn)
+-{
+-    if (!IsIndex())
+-    {
+-        maPolyPolygon = streamInB2DPolyPolygon(rIn);
+-    }
+-}
+-
+ XLineEndItem::XLineEndItem(const basegfx::B2DPolyPolygon& rPolyPolygon)
+ :   NameOrIndex( XATTR_LINEEND, -1 ),
+     maPolyPolygon(rPolyPolygon)
+@@ -1610,23 +1380,6 @@ bool XLineEndItem::operator==(const SfxPoolItem& rItem) const
+     return ( NameOrIndex::operator==(rItem) && static_cast<const XLineEndItem&>(rItem).maPolyPolygon == maPolyPolygon );
+ }
+ 
+-SfxPoolItem* XLineEndItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XLineEndItem(rIn);
+-}
+-
+-SvStream& XLineEndItem::Store( SvStream& rOut, sal_uInt16 nItemVersion ) const
+-{
+-    NameOrIndex::Store( rOut, nItemVersion );
+-
+-    if (!IsIndex())
+-    {
+-        streamOutB2DPolyPolygon(maPolyPolygon, rOut);
+-    }
+-
+-    return rOut;
+-}
+-
+ 
+ /** this function searches in both the models pool and the styles pool for XLineStartItem
+     and XLineEndItem with the same value or name and returns an item with the value of
+@@ -2221,21 +1974,11 @@ XFillColorItem::XFillColorItem(const OUString& rName, const Color& rTheColor) :
+ {
+ }
+ 
+-XFillColorItem::XFillColorItem(SvStream& rIn) :
+-    XColorItem(XATTR_FILLCOLOR, rIn)
+-{
+-}
+-
+ SfxPoolItem* XFillColorItem::Clone(SfxItemPool* /*pPool*/) const
+ {
+     return new XFillColorItem(*this);
+ }
+ 
+-SfxPoolItem* XFillColorItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XFillColorItem(rIn);
+-}
+-
+ bool XFillColorItem::GetPresentation
+ (
+     SfxItemPresentation /*ePres*/,
+@@ -2278,24 +2021,11 @@ XSecondaryFillColorItem::XSecondaryFillColorItem(const OUString& rName, const Co
+ {
+ }
+ 
+-XSecondaryFillColorItem::XSecondaryFillColorItem( SvStream& rIn ) :
+-    XColorItem(XATTR_SECONDARYFILLCOLOR, rIn)
+-{
+-}
+-
+ SfxPoolItem* XSecondaryFillColorItem::Clone(SfxItemPool* /*pPool*/) const
+ {
+     return new XSecondaryFillColorItem(*this);
+ }
+ 
+-SfxPoolItem* XSecondaryFillColorItem::Create( SvStream& rIn, sal_uInt16 nVer ) const
+-{
+-    if ( nVer >= 2 )
+-        return new XSecondaryFillColorItem( rIn );
+-    else
+-        return new XSecondaryFillColorItem( "", Color(0,184,255) );
+-}
+-
+ sal_uInt16 XSecondaryFillColorItem::GetVersion( sal_uInt16 /*nFileFormatVersion*/ ) const
+ {
+     return 2;
+@@ -2382,47 +2112,6 @@ XFillGradientItem::XFillGradientItem(const XFillGradientItem& rItem) :
+ {
+ }
+ 
+-XFillGradientItem::XFillGradientItem(SvStream& rIn, sal_uInt16 nVer) :
+-    NameOrIndex(XATTR_FILLGRADIENT, rIn),
+-    aGradient(COL_BLACK, COL_WHITE)
+-{
+-    if (!IsIndex())
+-    {
+-        sal_uInt16 nUSTemp;
+-        sal_uInt16 nRed;
+-        sal_uInt16 nGreen;
+-        sal_uInt16 nBlue;
+-        sal_Int16  nITemp;
+-        sal_Int32  nLTemp;
+-
+-        rIn.ReadInt16( nITemp ); aGradient.SetGradientStyle((css::awt::GradientStyle)nITemp);
+-        rIn.ReadUInt16( nRed );
+-        rIn.ReadUInt16( nGreen );
+-        rIn.ReadUInt16( nBlue );
+-        Color aCol;
+-        aCol = Color( (sal_uInt8)( nRed >> 8 ), (sal_uInt8)( nGreen >> 8 ), (sal_uInt8)( nBlue >> 8 ) );
+-        aGradient.SetStartColor( aCol );
+-
+-        rIn.ReadUInt16( nRed );
+-        rIn.ReadUInt16( nGreen );
+-        rIn.ReadUInt16( nBlue );
+-        aCol = Color( (sal_uInt8)( nRed >> 8 ), (sal_uInt8)( nGreen >> 8 ), (sal_uInt8)( nBlue >> 8 ) );
+-        aGradient.SetEndColor(aCol);
+-        rIn.ReadInt32( nLTemp ); aGradient.SetAngle(nLTemp);
+-        rIn.ReadUInt16( nUSTemp ); aGradient.SetBorder(nUSTemp);
+-        rIn.ReadUInt16( nUSTemp ); aGradient.SetXOffset(nUSTemp);
+-        rIn.ReadUInt16( nUSTemp ); aGradient.SetYOffset(nUSTemp);
+-        rIn.ReadUInt16( nUSTemp ); aGradient.SetStartIntens(nUSTemp);
+-        rIn.ReadUInt16( nUSTemp ); aGradient.SetEndIntens(nUSTemp);
+-
+-        // for newer versions consider the step width as well
+-        if (nVer >= 1)
+-        {
+-            rIn.ReadUInt16( nUSTemp ); aGradient.SetSteps(nUSTemp);
+-        }
+-    }
+-}
+-
+ XFillGradientItem::XFillGradientItem( const XGradient& rTheGradient )
+ :   NameOrIndex( XATTR_FILLGRADIENT, -1 ),
+     aGradient(rTheGradient)
+@@ -2440,40 +2129,6 @@ bool XFillGradientItem::operator==(const SfxPoolItem& rItem) const
+              aGradient == static_cast<const XFillGradientItem&>(rItem).aGradient );
+ }
+ 
+-SfxPoolItem* XFillGradientItem::Create(SvStream& rIn, sal_uInt16 nVer) const
+-{
+-    return new XFillGradientItem(rIn, nVer);
+-}
+-
+-SvStream& XFillGradientItem::Store( SvStream& rOut, sal_uInt16 nItemVersion ) const
+-{
+-    NameOrIndex::Store( rOut, nItemVersion );
+-
+-    if (!IsIndex())
+-    {
+-        rOut.WriteInt16( (sal_Int16)aGradient.GetGradientStyle() );
+-
+-        sal_uInt16 nTmp;
+-
+-        nTmp = VCLTOSVCOL( aGradient.GetStartColor().GetRed() ); rOut.WriteUInt16( nTmp );
+-        nTmp = VCLTOSVCOL( aGradient.GetStartColor().GetGreen() ); rOut.WriteUInt16( nTmp );
+-        nTmp = VCLTOSVCOL( aGradient.GetStartColor().GetBlue() ); rOut.WriteUInt16( nTmp );
+-        nTmp = VCLTOSVCOL( aGradient.GetEndColor().GetRed() ); rOut.WriteUInt16( nTmp );
+-        nTmp = VCLTOSVCOL( aGradient.GetEndColor().GetGreen() ); rOut.WriteUInt16( nTmp );
+-        nTmp = VCLTOSVCOL( aGradient.GetEndColor().GetBlue() ); rOut.WriteUInt16( nTmp );
+-
+-        rOut.WriteInt32( aGradient.GetAngle() );
+-        rOut.WriteUInt16( aGradient.GetBorder() );
+-        rOut.WriteUInt16( aGradient.GetXOffset() );
+-        rOut.WriteUInt16( aGradient.GetYOffset() );
+-        rOut.WriteUInt16( aGradient.GetStartIntens() );
+-        rOut.WriteUInt16( aGradient.GetEndIntens() );
+-        rOut.WriteUInt16( aGradient.GetSteps() );
+-    }
+-
+-    return rOut;
+-}
+-
+ const XGradient& XFillGradientItem::GetGradientValue() const // GetValue -> GetGradientValue
+ {
+     if (!IsIndex())
+@@ -2883,31 +2538,6 @@ XFillHatchItem::XFillHatchItem(const XFillHatchItem& rItem) :
+ {
+ }
+ 
+-XFillHatchItem::XFillHatchItem(SvStream& rIn) :
+-    NameOrIndex(XATTR_FILLHATCH, rIn),
+-    aHatch(COL_BLACK)
+-{
+-    if (!IsIndex())
+-    {
+-        sal_uInt16 nRed;
+-        sal_uInt16 nGreen;
+-        sal_uInt16 nBlue;
+-        sal_Int16  nITemp;
+-        sal_Int32  nLTemp;
+-
+-        rIn.ReadInt16( nITemp ); aHatch.SetHatchStyle((css::drawing::HatchStyle)nITemp);
+-        rIn.ReadUInt16( nRed );
+-        rIn.ReadUInt16( nGreen );
+-        rIn.ReadUInt16( nBlue );
+-
+-        Color aCol;
+-        aCol = Color( (sal_uInt8)( nRed >> 8 ), (sal_uInt8)( nGreen >> 8 ), (sal_uInt8)( nBlue >> 8 ) );
+-        aHatch.SetColor(aCol);
+-        rIn.ReadInt32( nLTemp ); aHatch.SetDistance(nLTemp);
+-        rIn.ReadInt32( nLTemp ); aHatch.SetAngle(nLTemp);
+-    }
+-}
+-
+ XFillHatchItem::XFillHatchItem(const XHatch& rTheHatch)
+ :   NameOrIndex( XATTR_FILLHATCH, -1 ),
+     aHatch(rTheHatch)
+@@ -2925,31 +2555,6 @@ bool XFillHatchItem::operator==(const SfxPoolItem& rItem) const
+              aHatch == static_cast<const XFillHatchItem&>(rItem).aHatch );
+ }
+ 
+-SfxPoolItem* XFillHatchItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XFillHatchItem(rIn);
+-}
+-
+-SvStream& XFillHatchItem::Store( SvStream& rOut, sal_uInt16 nItemVersion ) const
+-{
+-    NameOrIndex::Store( rOut, nItemVersion );
+-
+-    if (!IsIndex())
+-    {
+-        rOut.WriteInt16( (sal_Int16)aHatch.GetHatchStyle() );
+-
+-        sal_uInt16 nTmp;
+-        nTmp = VCLTOSVCOL( aHatch.GetColor().GetRed() ); rOut.WriteUInt16( nTmp );
+-        nTmp = VCLTOSVCOL( aHatch.GetColor().GetGreen() ); rOut.WriteUInt16( nTmp );
+-        nTmp = VCLTOSVCOL( aHatch.GetColor().GetBlue() ); rOut.WriteUInt16( nTmp );
+-
+-        rOut.WriteInt32( aHatch.GetDistance() );
+-        rOut.WriteInt32( aHatch.GetAngle() );
+-    }
+-
+-    return rOut;
+-}
+-
+ bool XFillHatchItem::GetPresentation
+ (
+     SfxItemPresentation /*ePres*/,
+@@ -3379,22 +2984,11 @@ XFormTextShadowColorItem::XFormTextShadowColorItem(const OUString& rName,
+ {
+ }
+ 
+-XFormTextShadowColorItem::XFormTextShadowColorItem(SvStream& rIn) :
+-    XColorItem(XATTR_FORMTXTSHDWCOLOR, rIn)
+-{
+-}
+-
+ SfxPoolItem* XFormTextShadowColorItem::Clone(SfxItemPool* /*pPool*/) const
+ {
+     return new XFormTextShadowColorItem(*this);
+ }
+ 
+-SfxPoolItem* XFormTextShadowColorItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XFormTextShadowColorItem(rIn);
+-}
+-
+-
+ SfxPoolItem* XFormTextShadowXValItem::CreateDefault() { return new XFormTextShadowXValItem; }
+ 
+ XFormTextShadowXValItem::XFormTextShadowXValItem(long nVal) :
+diff --git a/svx/source/xoutdev/xattr2.cxx b/svx/source/xoutdev/xattr2.cxx
+index 7d7114c..e48ab30 100644
+--- a/svx/source/xoutdev/xattr2.cxx
++++ b/svx/source/xoutdev/xattr2.cxx
+@@ -202,17 +202,6 @@ AffineMatrixItem::AffineMatrixItem(const css::geometry::AffineMatrix2D* pMatrix)
+     }
+ }
+ 
+-AffineMatrixItem::AffineMatrixItem(SvStream& rIn)
+-:   SfxPoolItem(SID_ATTR_TRANSFORM_MATRIX)
+-{
+-    rIn.ReadDouble( maMatrix.m00 );
+-    rIn.ReadDouble( maMatrix.m01 );
+-    rIn.ReadDouble( maMatrix.m02 );
+-    rIn.ReadDouble( maMatrix.m10 );
+-    rIn.ReadDouble( maMatrix.m11 );
+-    rIn.ReadDouble( maMatrix.m12 );
+-}
+-
+ AffineMatrixItem::AffineMatrixItem(const AffineMatrixItem& rRef)
+ :   SfxPoolItem(SID_ATTR_TRANSFORM_MATRIX)
+ {
+@@ -250,22 +239,6 @@ SfxPoolItem* AffineMatrixItem::Clone( SfxItemPool* /*pPool*/ ) const
+     return new AffineMatrixItem(*this);
+ }
+ 
+-SfxPoolItem* AffineMatrixItem::Create( SvStream& rIn, sal_uInt16 /*nVer*/ ) const
+-{
+-    return new AffineMatrixItem(rIn);
+-}
+-
+-SvStream& AffineMatrixItem::Store(SvStream &rStream, sal_uInt16 /*nItemVersion*/ ) const
+-{
+-    rStream.WriteDouble( maMatrix.m00 );
+-    rStream.WriteDouble( maMatrix.m01 );
+-    rStream.WriteDouble( maMatrix.m02 );
+-    rStream.WriteDouble( maMatrix.m10 );
+-    rStream.WriteDouble( maMatrix.m11 );
+-    rStream.WriteDouble( maMatrix.m12 );
+-    return rStream;
+-}
+-
+ bool AffineMatrixItem::QueryValue( css::uno::Any& rVal, sal_uInt8 /*nMemberId*/ ) const
+ {
+     rVal <<= maMatrix;
+diff --git a/svx/source/xoutdev/xattrbmp.cxx b/svx/source/xoutdev/xattrbmp.cxx
+index 2ffb49b..f5a4ef0 100644
+--- a/svx/source/xoutdev/xattrbmp.cxx
++++ b/svx/source/xoutdev/xattrbmp.cxx
+@@ -270,12 +270,6 @@ GraphicObject XFillBitmapItem::makeGraphicObject(SvStream& rIn, sal_uInt16 nVer)
+     return GraphicObject();
+ }
+ 
+-XFillBitmapItem::XFillBitmapItem(SvStream& rIn, sal_uInt16 nVer)
+-    : NameOrIndex(XATTR_FILLBITMAP, rIn)
+-    , maGraphicObject(makeGraphicObject(rIn, nVer))
+-{
+-}
+-
+ XFillBitmapItem::XFillBitmapItem(const GraphicObject& rGraphicObject)
+     : NameOrIndex(XATTR_FILLBITMAP, -1)
+     , maGraphicObject(rGraphicObject)
+@@ -293,23 +287,6 @@ bool XFillBitmapItem::operator==(const SfxPoolItem& rItem) const
+         && maGraphicObject == static_cast<const XFillBitmapItem&>(rItem).maGraphicObject);
+ }
+ 
+-SfxPoolItem* XFillBitmapItem::Create(SvStream& rIn, sal_uInt16 nVer) const
+-{
+-    return new XFillBitmapItem( rIn, nVer );
+-}
+-
+-SvStream& XFillBitmapItem::Store( SvStream& rOut, sal_uInt16 nItemVersion ) const
+-{
+-    NameOrIndex::Store(rOut, nItemVersion);
+-
+-    if(!IsIndex())
+-    {
+-        WriteDIBBitmapEx(maGraphicObject.GetGraphic().GetBitmapEx(), rOut);
+-    }
+-
+-    return rOut;
+-}
+-
+ 
+ bool XFillBitmapItem::isPattern() const
+ {
+-- 
+2.7.4
+

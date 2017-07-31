@@ -1,0 +1,406 @@
+From da79caf3e1d28cfc418073ff398270a384c162a5 Mon Sep 17 00:00:00 2001
+From: Varun Dhall <varun.dhall@studentpartner.com>
+Date: Wed, 27 May 2015 13:58:23 +0200
+Subject: [PATCH] add test for frame backgrounds
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Change-Id: I39766373811a48a683706c391aa46a9bf89b3462
+Reviewed-on: https://gerrit.libreoffice.org/15924
+Reviewed-by: Björn Michaelsen <bjoern.michaelsen@canonical.com>
+Tested-by: Björn Michaelsen <bjoern.michaelsen@canonical.com>
+---
+ sw/qa/extras/odfexport/data/framebackgrounds.odt | Bin 0 -> 14327 bytes
+ sw/qa/extras/odfexport/odfexport.cxx             | 115 +++++++++++++++++++++++
+ 2 files changed, 115 insertions(+)
+ create mode 100644 sw/qa/extras/odfexport/data/framebackgrounds.odt
+
+diff --git a/sw/qa/extras/odfexport/data/framebackgrounds.odt b/sw/qa/extras/odfexport/data/framebackgrounds.odt
+new file mode 100644
+index 0000000000000000000000000000000000000000..9ad338c2d1da1edf95ba36e16dcdf1694a95aab8
+GIT binary patch
+literal 14327
+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
+
+literal 0
+HcmV?d00001
+
+diff --git a/sw/qa/extras/odfexport/odfexport.cxx b/sw/qa/extras/odfexport/odfexport.cxx
+index 848bec8..aeb72e5 100644
+--- a/sw/qa/extras/odfexport/odfexport.cxx
++++ b/sw/qa/extras/odfexport/odfexport.cxx
+@@ -71,6 +71,121 @@ public:
+     }
+ };
+ 
++DECLARE_ODFEXPORT_TEST(testFramebackgrounds, "framebackgrounds.odt")
++{
++   //Counting the Number of Frames and checking with the expected count
++   uno::Reference<text::XTextFramesSupplier> xTextFramesSupplier(mxComponent, uno::UNO_QUERY);
++    uno::Reference<container::XIndexAccess> xIndexAccess(xTextFramesSupplier->getTextFrames(), uno::UNO_QUERY);
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(16), xIndexAccess->getCount());
++    uno::Reference<drawing::XShape> xTextFrame;
++    awt::Gradient aGradientxTextFrame;
++    //Frame 1
++    xTextFrame = getShape(1);
++    CPPUNIT_ASSERT_EQUAL(drawing::FillStyle_NONE, getProperty<drawing::FillStyle>(xTextFrame, "FillStyle"));
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(0), getProperty<sal_Int32>(xTextFrame, "FillTransparence"));
++    //Frame 2
++    xTextFrame = getShape(2);
++    CPPUNIT_ASSERT_EQUAL(drawing::FillStyle_SOLID, getProperty<drawing::FillStyle>(xTextFrame, "FillStyle"));
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(0x006600), getProperty<util::Color>(xTextFrame, "FillColor"));
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(0), getProperty<sal_Int32>(xTextFrame, "FillTransparence"));
++    //Frame 3
++    xTextFrame = getShape(3);
++    CPPUNIT_ASSERT_EQUAL(drawing::FillStyle_SOLID, getProperty<drawing::FillStyle>(xTextFrame, "FillStyle"));
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(0x006600), getProperty<util::Color>(xTextFrame, "FillColor"));
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(45), getProperty<sal_Int32>(xTextFrame, "FillTransparence"));
++    //Frame 4
++    xTextFrame = getShape(4);
++    CPPUNIT_ASSERT_EQUAL(drawing::FillStyle_SOLID, getProperty<drawing::FillStyle>(xTextFrame, "FillStyle"));
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(0x579D1C), getProperty<util::Color>(xTextFrame, "FillColor"));
++    aGradientxTextFrame = getProperty<awt::Gradient>(xTextFrame, "FillTransparenceGradient");
++    CPPUNIT_ASSERT_EQUAL(css::awt::GradientStyle_LINEAR, aGradientxTextFrame.Style);
++    //Frame 5
++    xTextFrame = getShape(5);
++    CPPUNIT_ASSERT_EQUAL(drawing::FillStyle_GRADIENT, getProperty<drawing::FillStyle>(xTextFrame, "FillStyle"));
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(0), getProperty<sal_Int32>(xTextFrame, "FillTransparence"));
++    CPPUNIT_ASSERT_EQUAL(OUString("Subtle Tango Green"), getProperty<OUString>(xTextFrame, "FillGradientName"));
++    //Frame 6
++    xTextFrame = getShape(6);
++    CPPUNIT_ASSERT_EQUAL(drawing::FillStyle_GRADIENT, getProperty<drawing::FillStyle>(xTextFrame, "FillStyle"));
++    CPPUNIT_ASSERT_EQUAL(OUString("Subtle Tango Green"), getProperty<OUString>(xTextFrame, "FillGradientName"));
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(45), getProperty<sal_Int32>(xTextFrame, "FillTransparence"));
++    //Frame 7
++    xTextFrame = getShape(7);
++    CPPUNIT_ASSERT_EQUAL(drawing::FillStyle_GRADIENT, getProperty<drawing::FillStyle>(xTextFrame, "FillStyle"));
++    CPPUNIT_ASSERT_EQUAL(OUString("Subtle Tango Green"), getProperty<OUString>(xTextFrame, "FillGradientName"));
++    aGradientxTextFrame = getProperty<awt::Gradient>(xTextFrame, "FillTransparenceGradient");
++    CPPUNIT_ASSERT_EQUAL(css::awt::GradientStyle_LINEAR, aGradientxTextFrame.Style);
++    //Frame 8
++    xTextFrame = getShape(8);
++    CPPUNIT_ASSERT_EQUAL(drawing::FillStyle_HATCH, getProperty<drawing::FillStyle>(xTextFrame, "FillStyle"));
++    CPPUNIT_ASSERT_EQUAL(OUString("Black 0 Degrees"), getProperty<OUString>(xTextFrame, "FillHatchName"));
++    CPPUNIT_ASSERT_EQUAL(sal_Bool(false), getProperty<sal_Bool>(xTextFrame, "FillBackground"));
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(0), getProperty<sal_Int32>(xTextFrame, "FillTransparence"));
++    //Frame 9
++    xTextFrame = getShape(9);
++    CPPUNIT_ASSERT_EQUAL(drawing::FillStyle_HATCH, getProperty<drawing::FillStyle>(xTextFrame, "FillStyle"));
++    CPPUNIT_ASSERT_EQUAL(OUString("Black 0 Degrees"), getProperty<OUString>(xTextFrame, "FillHatchName"));
++    CPPUNIT_ASSERT_EQUAL(sal_Bool(true), getProperty<sal_Bool>(xTextFrame, "FillBackground"));
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(0), getProperty<sal_Int32>(xTextFrame, "FillTransparence"));
++    //Frame 10
++    xTextFrame = getShape(10);
++    CPPUNIT_ASSERT_EQUAL(drawing::FillStyle_HATCH, getProperty<drawing::FillStyle>(xTextFrame, "FillStyle"));
++    CPPUNIT_ASSERT_EQUAL(OUString("Black 0 Degrees"), getProperty<OUString>(xTextFrame, "FillHatchName"));
++    CPPUNIT_ASSERT_EQUAL(sal_Bool(false), getProperty<sal_Bool>(xTextFrame, "FillBackground"));
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(45), getProperty<sal_Int32>(xTextFrame, "FillTransparence"));
++    //Frame 11
++    xTextFrame = getShape(11);
++    CPPUNIT_ASSERT_EQUAL(drawing::FillStyle_HATCH, getProperty<drawing::FillStyle>(xTextFrame, "FillStyle"));
++    CPPUNIT_ASSERT_EQUAL(OUString("Black 0 Degrees"), getProperty<OUString>(xTextFrame, "FillHatchName"));
++    CPPUNIT_ASSERT_EQUAL(sal_Bool(true), getProperty<sal_Bool>(xTextFrame, "FillBackground"));
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(45), getProperty<sal_Int32>(xTextFrame, "FillTransparence"));
++    //Frame 12
++    xTextFrame = getShape(12);
++    CPPUNIT_ASSERT_EQUAL(drawing::FillStyle_HATCH, getProperty<drawing::FillStyle>(xTextFrame, "FillStyle"));
++    CPPUNIT_ASSERT_EQUAL(OUString("Black 0 Degrees"), getProperty<OUString>(xTextFrame, "FillHatchName"));
++    CPPUNIT_ASSERT_EQUAL(sal_Bool(false), getProperty<sal_Bool>(xTextFrame, "FillBackground"));
++    aGradientxTextFrame = getProperty<awt::Gradient>(xTextFrame, "FillTransparenceGradient");
++    CPPUNIT_ASSERT_EQUAL(css::awt::GradientStyle_LINEAR, aGradientxTextFrame.Style);
++    //Frame 13
++    xTextFrame = getShape(13);
++    CPPUNIT_ASSERT_EQUAL(drawing::FillStyle_HATCH, getProperty<drawing::FillStyle>(xTextFrame, "FillStyle"));
++    CPPUNIT_ASSERT_EQUAL(OUString("Black 0 Degrees"), getProperty<OUString>(xTextFrame, "FillHatchName"));
++    CPPUNIT_ASSERT_EQUAL(sal_Bool(true), getProperty<sal_Bool>(xTextFrame, "FillBackground"));
++    aGradientxTextFrame = getProperty<awt::Gradient>(xTextFrame, "FillTransparenceGradient");
++    CPPUNIT_ASSERT_EQUAL(css::awt::GradientStyle_LINEAR, aGradientxTextFrame.Style);
++    //Frame 14
++    xTextFrame = getShape(14);
++    CPPUNIT_ASSERT_EQUAL(drawing::FillStyle_BITMAP, getProperty<drawing::FillStyle>(xTextFrame, "FillStyle"));
++    CPPUNIT_ASSERT_EQUAL(OUString("Sky"), getProperty<OUString>(xTextFrame, "FillBitmapName"));
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(0), getProperty<sal_Int32>(xTextFrame, "FillTransparence"));
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(0), getProperty<sal_Int32>(xTextFrame, "FillBitmapPositionOffsetX"));
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(0), getProperty<sal_Int32>(xTextFrame, "FillBitmapPositionOffsetY"));
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(0), getProperty<sal_Int32>(xTextFrame, "FillBitmapOffsetX"));
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(0), getProperty<sal_Int32>(xTextFrame, "FillBitmapOffsetY"));
++    CPPUNIT_ASSERT_EQUAL(sal_Bool(true), getProperty<sal_Bool>(xTextFrame, "FillBitmapTile"));
++    //Frame 15
++    xTextFrame = getShape(15);
++    CPPUNIT_ASSERT_EQUAL(drawing::FillStyle_BITMAP, getProperty<drawing::FillStyle>(xTextFrame, "FillStyle"));
++    CPPUNIT_ASSERT_EQUAL(OUString("Sky"), getProperty<OUString>(xTextFrame, "FillBitmapName"));
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(45), getProperty<sal_Int32>(xTextFrame, "FillTransparence"));
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(0), getProperty<sal_Int32>(xTextFrame, "FillBitmapPositionOffsetX"));
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(0), getProperty<sal_Int32>(xTextFrame, "FillBitmapPositionOffsetY"));
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(0), getProperty<sal_Int32>(xTextFrame, "FillBitmapOffsetX"));
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(0), getProperty<sal_Int32>(xTextFrame, "FillBitmapOffsetY"));
++    CPPUNIT_ASSERT_EQUAL(sal_Bool(true), getProperty<sal_Bool>(xTextFrame, "FillBitmapTile"));
++    //Frame 16
++    xTextFrame = getShape(16);
++    CPPUNIT_ASSERT_EQUAL(drawing::FillStyle_BITMAP, getProperty<drawing::FillStyle>(xTextFrame, "FillStyle"));
++    CPPUNIT_ASSERT_EQUAL(OUString("Sky"), getProperty<OUString>(xTextFrame, "FillBitmapName"));
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(0), getProperty<sal_Int32>(xTextFrame, "FillBitmapPositionOffsetX"));
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(0), getProperty<sal_Int32>(xTextFrame, "FillBitmapPositionOffsetY"));
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(0), getProperty<sal_Int32>(xTextFrame, "FillBitmapOffsetX"));
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(0), getProperty<sal_Int32>(xTextFrame, "FillBitmapOffsetY"));
++    CPPUNIT_ASSERT_EQUAL(sal_Bool(true), getProperty<sal_Bool>(xTextFrame, "FillBitmapTile"));
++    aGradientxTextFrame = getProperty<awt::Gradient>(xTextFrame, "FillTransparenceGradient");
++    CPPUNIT_ASSERT_EQUAL(css::awt::GradientStyle_LINEAR, aGradientxTextFrame.Style);
++}
++
+ DECLARE_ODFEXPORT_TEST(testFdo38244, "fdo38244.odt")
+ {
+     // See ooxmlexport's testFdo38244().
+-- 
+2.1.4
+

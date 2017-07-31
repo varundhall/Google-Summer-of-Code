@@ -1,0 +1,28 @@
+From 35ba68fd471d7d2f50183a1ffb7348b1b069616d Mon Sep 17 00:00:00 2001
+From: Varun Dhall <varun.dhall@studentpartner.com>
+Date: Tue, 11 Jul 2017 10:54:03 +0530
+Subject: [PATCH] EditEngine: Added expwarp for unit tests
+
+Change-Id: Ice1c8c0ceb7d8fe93f369fb4a05226ba738f7e97
+Reviewed-on: https://gerrit.libreoffice.org/39789
+Reviewed-by: Michael Stahl <mstahl@redhat.com>
+Tested-by: Michael Stahl <mstahl@redhat.com>
+---
+ editeng/CppunitTest_editeng_core.mk | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/editeng/CppunitTest_editeng_core.mk b/editeng/CppunitTest_editeng_core.mk
+index 9cb41fe..faf2d93 100644
+--- a/editeng/CppunitTest_editeng_core.mk
++++ b/editeng/CppunitTest_editeng_core.mk
+@@ -68,6 +68,7 @@ $(eval $(call gb_CppunitTest_use_components,editeng_core,\
+     ucb/source/core/ucb1 \
+     ucb/source/ucp/file/ucpfile1 \
+     unoxml/source/service/unoxml \
++	sax/source/expatwrap/expwrap \
+ ))
+ 
+ $(eval $(call gb_CppunitTest_use_configuration,editeng_core))
+-- 
+2.7.4
+

@@ -1,0 +1,100 @@
+From d10a61fe36760336842cbfa7f8f77e1fb9a475a5 Mon Sep 17 00:00:00 2001
+From: Varun Dhall <varun.dhall@studentpartner.com>
+Date: Mon, 7 Aug 2017 02:50:35 +0530
+Subject: [PATCH] Removing unused SfxItemPool serialisation from sfx2
+
+Change-Id: Ibb14fcd656f401cb9d2ad57ab63f6cfecf49807d
+Reviewed-on: https://gerrit.libreoffice.org/40814
+Tested-by: Jenkins <ci@libreoffice.org>
+Reviewed-by: Michael Stahl <mstahl@redhat.com>
+---
+ include/sfx2/evntconf.hxx       |  2 --
+ include/sfx2/zoomitem.hxx       |  2 --
+ sfx2/source/config/evntconf.cxx | 12 ------------
+ sfx2/source/doc/zoomitem.cxx    | 21 ---------------------
+ 4 files changed, 37 deletions(-)
+
+diff --git a/include/sfx2/evntconf.hxx b/include/sfx2/evntconf.hxx
+index ec6a060..8a4d004 100644
+--- a/include/sfx2/evntconf.hxx
++++ b/include/sfx2/evntconf.hxx
+@@ -81,8 +81,6 @@ public:
+                                   OUString &rText,
+                                   const IntlWrapper& ) const override;
+     virtual SfxPoolItem*    Clone( SfxItemPool *pPool = nullptr ) const override;
+-    virtual SfxPoolItem*    Create(SvStream &, sal_uInt16) const override;
+-    virtual SvStream&       Store(SvStream &, sal_uInt16 nItemVersion ) const override;
+     virtual sal_uInt16      GetVersion( sal_uInt16 nFileFormatVersion ) const override;
+ 
+     const SfxEventNamesList& GetEvents() const { return aEventsList;}
+diff --git a/include/sfx2/zoomitem.hxx b/include/sfx2/zoomitem.hxx
+index b846079..6329c31 100644
+--- a/include/sfx2/zoomitem.hxx
++++ b/include/sfx2/zoomitem.hxx
+@@ -72,8 +72,6 @@ public:
+     void                    SetType( SvxZoomType eNewType ) { eType = eNewType; }
+ 
+     virtual SfxPoolItem*    Clone( SfxItemPool *pPool = nullptr ) const override;
+-    virtual SfxPoolItem*    Create( SvStream& rStrm, sal_uInt16 nVersion ) const override;
+-    virtual SvStream&       Store( SvStream& rStrm , sal_uInt16 nItemVersion ) const override;
+     virtual bool            operator==( const SfxPoolItem& ) const override;
+     virtual bool            QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+     virtual bool            PutValue( const css::uno::Any& rVal, sal_uInt8 nMemberId ) override;
+diff --git a/sfx2/source/config/evntconf.cxx b/sfx2/source/config/evntconf.cxx
+index 77a0a82..35d42f0 100644
+--- a/sfx2/source/config/evntconf.cxx
++++ b/sfx2/source/config/evntconf.cxx
+@@ -108,18 +108,6 @@ SfxPoolItem* SfxEventNamesItem::Clone( SfxItemPool *) const
+     return new SfxEventNamesItem(*this);
+ }
+ 
+-SfxPoolItem* SfxEventNamesItem::Create(SvStream &, sal_uInt16) const
+-{
+-    OSL_FAIL("not streamable!");
+-    return new SfxEventNamesItem(Which());
+-}
+-
+-SvStream& SfxEventNamesItem::Store(SvStream &rStream, sal_uInt16 ) const
+-{
+-    OSL_FAIL("not streamable!");
+-    return rStream;
+-}
+-
+ sal_uInt16 SfxEventNamesItem::GetVersion( sal_uInt16 ) const
+ {
+     OSL_FAIL("not streamable!");
+diff --git a/sfx2/source/doc/zoomitem.cxx b/sfx2/source/doc/zoomitem.cxx
+index 117d1a7..e528175 100644
+--- a/sfx2/source/doc/zoomitem.cxx
++++ b/sfx2/source/doc/zoomitem.cxx
+@@ -66,27 +66,6 @@ SfxPoolItem* SvxZoomItem::Clone( SfxItemPool * /*pPool*/ ) const
+ }
+ 
+ 
+-SfxPoolItem* SvxZoomItem::Create( SvStream& rStrm, sal_uInt16 /*nVersion*/ ) const
+-{
+-    sal_uInt16 nValue;
+-    sal_uInt16 nValSet;
+-    sal_Int8 nType;
+-    rStrm.ReadUInt16( nValue ).ReadUInt16( nValSet ).ReadSChar( nType );
+-    SvxZoomItem* pNew = new SvxZoomItem( (SvxZoomType)nType, nValue, Which() );
+-    pNew->SetValueSet( static_cast<SvxZoomEnableFlags>(nValSet) );
+-    return pNew;
+-}
+-
+-
+-SvStream& SvxZoomItem::Store( SvStream& rStrm, sal_uInt16 /*nItemVersion*/ ) const
+-{
+-    rStrm.WriteUInt16( GetValue() )
+-         .WriteUInt16( static_cast<sal_uInt16>(nValueSet) )
+-         .WriteSChar( static_cast<int>(eType) );
+-    return rStrm;
+-}
+-
+-
+ bool SvxZoomItem::operator==( const SfxPoolItem& rAttr ) const
+ {
+     assert(SfxPoolItem::operator==(rAttr));
+-- 
+2.7.4
+

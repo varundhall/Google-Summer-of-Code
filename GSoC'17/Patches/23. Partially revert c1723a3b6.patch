@@ -1,0 +1,35 @@
+From 315b6afc90298ac23de7d24449feae6beaade17a Mon Sep 17 00:00:00 2001
+From: Varun Dhall <varun.dhall@studentpartner.com>
+Date: Tue, 18 Jul 2017 01:28:40 +0530
+Subject: [PATCH] Partially revert c1723a3b6 The loop behavior was changed by
+ the original commit instead of starting from 1 it started from 0 due to which
+ it ends up saving Default Style and missed an important custom style
+
+Change-Id: I4853b70fbb6a24c9ccbd0b5713c6dbe4215830a6
+Reviewed-on: https://gerrit.libreoffice.org/40093
+Reviewed-by: Michael Stahl <mstahl@redhat.com>
+Tested-by: Jenkins <ci@libreoffice.org>
+---
+ sw/source/core/doc/tblafmt.cxx | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/sw/source/core/doc/tblafmt.cxx b/sw/source/core/doc/tblafmt.cxx
+index 4bc7958..c256f759 100644
+--- a/sw/source/core/doc/tblafmt.cxx
++++ b/sw/source/core/doc/tblafmt.cxx
+@@ -1410,9 +1410,10 @@ bool SwTableAutoFormatTable::Save( SvStream& rStream ) const
+         rStream.WriteUInt16( m_pImpl->m_AutoFormats.size() - 1 );
+         bRet = ERRCODE_NONE == rStream.GetError();
+ 
+-        for (auto const & rFormat: m_pImpl->m_AutoFormats)
++        for (size_t i = 1; bRet && i < m_pImpl->m_AutoFormats.size(); ++i)
+         {
+-            bRet = rFormat->Save(rStream, AUTOFORMAT_FILE_VERSION);
++            SwTableAutoFormat const& rFormat = *m_pImpl->m_AutoFormats[i];
++            bRet = rFormat.Save(rStream, AUTOFORMAT_FILE_VERSION);
+         }
+     }
+     rStream.Flush();
+-- 
+2.7.4
+

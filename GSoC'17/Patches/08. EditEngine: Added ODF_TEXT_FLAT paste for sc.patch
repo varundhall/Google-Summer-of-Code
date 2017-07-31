@@ -1,0 +1,49 @@
+From b0f0096fbbccc212931501c5c879b65f9b0d7477 Mon Sep 17 00:00:00 2001
+From: Varun Dhall <varun.dhall@studentpartner.com>
+Date: Wed, 7 Jun 2017 01:06:46 +0530
+Subject: [PATCH] EditEngine: Added ODF_TEXT_FLAT paste for sc
+
+Change-Id: I40acd32229faa9a4ec9941592a4a952b7d05ef01
+Reviewed-on: https://gerrit.libreoffice.org/38464
+Tested-by: Jenkins <ci@libreoffice.org>
+Reviewed-by: Michael Stahl <mstahl@redhat.com>
+---
+ sc/source/ui/view/viewfun4.cxx | 3 ++-
+ sc/source/ui/view/viewfun5.cxx | 6 ++++--
+ 2 files changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/sc/source/ui/view/viewfun4.cxx b/sc/source/ui/view/viewfun4.cxx
+index f5c7db9..4963180 100644
+--- a/sc/source/ui/view/viewfun4.cxx
++++ b/sc/source/ui/view/viewfun4.cxx
+@@ -79,7 +79,8 @@ void ScViewFunc::PasteRTF( SCCOL nStartCol, SCROW nStartRow,
+                                 const css::uno::Reference< css::datatransfer::XTransferable >& rxTransferable )
+ {
+     TransferableDataHelper aDataHelper( rxTransferable );
+-    if ( aDataHelper.HasFormat( SotClipboardFormatId::EDITENGINE ) )
++    if ( aDataHelper.HasFormat( SotClipboardFormatId::EDITENGINE ) ||
++            aDataHelper.HasFormat( SotClipboardFormatId::EDITENGINE_ODF_TEXT_FLAT ) )
+     {
+         HideAllCursors();
+ 
+diff --git a/sc/source/ui/view/viewfun5.cxx b/sc/source/ui/view/viewfun5.cxx
+index a4c955d..75f1c2d9 100644
+--- a/sc/source/ui/view/viewfun5.cxx
++++ b/sc/source/ui/view/viewfun5.cxx
+@@ -282,9 +282,11 @@ bool ScViewFunc::PasteDataFormat( SotClipboardFormatId nFormatId,
+     {
+         bRet = PasteLink( rxTransferable );
+     }
+-    else if ( ScImportExport::IsFormatSupported( nFormatId ) || nFormatId == SotClipboardFormatId::RTF )
++    else if ( ScImportExport::IsFormatSupported( nFormatId ) || nFormatId == SotClipboardFormatId::RTF ||
++                nFormatId == SotClipboardFormatId::EDITENGINE_ODF_TEXT_FLAT )
+     {
+-        if ( nFormatId == SotClipboardFormatId::RTF && aDataHelper.HasFormat( SotClipboardFormatId::EDITENGINE ) )
++        if ( nFormatId == SotClipboardFormatId::RTF && ( aDataHelper.HasFormat( SotClipboardFormatId::EDITENGINE ) ||
++                aDataHelper.HasFormat( SotClipboardFormatId::EDITENGINE_ODF_TEXT_FLAT ) ) )
+         {
+             //  use EditView's PasteSpecial / Drop
+             PasteRTF( nPosX, nPosY, rxTransferable );
+-- 
+2.7.4
+

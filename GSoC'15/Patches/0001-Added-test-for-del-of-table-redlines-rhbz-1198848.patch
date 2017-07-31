@@ -1,0 +1,98 @@
+From 69295a44dc8b1e78a32f074cbfcf1ed84fd93b43 Mon Sep 17 00:00:00 2001
+From: Varun <varun.dhall@studentpartner.com>
+Date: Thu, 18 Jun 2015 01:22:54 +0530
+Subject: [PATCH] Added test for del of table redlines rhbz#1198848
+
+Change-Id: I76f236adee86ffb75496bc36f0d6b0ac7d646afd
+Reviewed-on: https://gerrit.libreoffice.org/16347
+Tested-by: Jenkins <ci@libreoffice.org>
+Reviewed-by: Michael Stahl <mstahl@redhat.com>
+---
+ sw/inc/docary.hxx                  |  2 +-
+ sw/inc/unocrsrhelper.hxx           |  2 +-
+ sw/qa/extras/uiwriter/uiwriter.cxx | 22 ++++++++++++++++++++++
+ 3 files changed, 24 insertions(+), 2 deletions(-)
+
+diff --git a/sw/inc/docary.hxx b/sw/inc/docary.hxx
+index 5544dab..dcacc21 100644
+--- a/sw/inc/docary.hxx
++++ b/sw/inc/docary.hxx
+@@ -257,7 +257,7 @@ public:
+     SwExtraRedline* GetRedline( sal_uInt16 uIndex ) const   {     return m_aExtraRedlines.operator[]( uIndex );  }
+     bool IsEmpty() const                              {     return m_aExtraRedlines.empty();               }
+ 
+-    bool DeleteAllTableRedlines( SwDoc* pDoc, const SwTable& rTable, bool bSaveInUndo, sal_uInt16 nRedlineTypeToDelete );
++    SW_DLLPUBLIC bool DeleteAllTableRedlines( SwDoc* pDoc, const SwTable& rTable, bool bSaveInUndo, sal_uInt16 nRedlineTypeToDelete );
+     bool DeleteTableRowRedline ( SwDoc* pDoc, const SwTableLine& rTableLine, bool bSaveInUndo, sal_uInt16 nRedlineTypeToDelete );
+     bool DeleteTableCellRedline( SwDoc* pDoc, const SwTableBox& rTableBox, bool bSaveInUndo, sal_uInt16 nRedlineTypeToDelete );
+ };
+diff --git a/sw/inc/unocrsrhelper.hxx b/sw/inc/unocrsrhelper.hxx
+index a7bd39e..9550362 100644
+--- a/sw/inc/unocrsrhelper.hxx
++++ b/sw/inc/unocrsrhelper.hxx
+@@ -126,7 +126,7 @@ namespace SwUnoCursorHelper
+             const ::com::sun::star::uno::Sequence< ::com::sun::star::beans::PropertyValue >& RedlineProperties )
+                 throw (::com::sun::star::lang::IllegalArgumentException, ::com::sun::star::uno::RuntimeException);
+ 
+-    void    makeTableCellRedline( SwTableBox& rTableBox, const OUString& RedlineType,
++    SW_DLLPUBLIC void    makeTableCellRedline( SwTableBox& rTableBox, const OUString& RedlineType,
+             const ::com::sun::star::uno::Sequence< ::com::sun::star::beans::PropertyValue >& RedlineProperties )
+                 throw (::com::sun::star::lang::IllegalArgumentException, ::com::sun::star::uno::RuntimeException);
+ 
+diff --git a/sw/qa/extras/uiwriter/uiwriter.cxx b/sw/qa/extras/uiwriter/uiwriter.cxx
+index b416777..22cd38a 100644
+--- a/sw/qa/extras/uiwriter/uiwriter.cxx
++++ b/sw/qa/extras/uiwriter/uiwriter.cxx
+@@ -33,6 +33,7 @@
+ #include <unotools/streamwrap.hxx>
+ #include <test/mtfxmldump.hxx>
+ #include <unocrsr.hxx>
++#include <unocrsrhelper.hxx>
+ 
+ #include <svx/svdpage.hxx>
+ #include <svx/svdview.hxx>
+@@ -91,6 +92,7 @@ public:
+     void testTdf68183();
+     void testCp1000115();
+     void testTdf90003();
++    void testdelofTableRedlines();
+     void testExportToPicture();
+     void testSearchWithTransliterate();
+     void testTableBackgroundColor();
+@@ -132,6 +134,7 @@ public:
+     CPPUNIT_TEST(testTdf68183);
+     CPPUNIT_TEST(testCp1000115);
+     CPPUNIT_TEST(testTdf90003);
++    CPPUNIT_TEST(testdelofTableRedlines);
+     CPPUNIT_TEST(testExportToPicture);
+     CPPUNIT_TEST(testSearchWithTransliterate);
+     CPPUNIT_TEST(testTableBackgroundColor);
+@@ -875,6 +878,25 @@ void SwUiWriterTest::testTdf90003()
+     assertXPath(pXmlDoc, "//Special[@nType='POR_FLY']", 0);
+ }
+ 
++void SwUiWriterTest::testdelofTableRedlines()
++{
++    SwDoc* pDoc = createDoc();
++    SwWrtShell* pWrtShell = pDoc->GetDocShell()->GetWrtShell();
++    SwInsertTableOptions TableOpt(tabopts::DEFAULT_BORDER, 0);
++    const SwTable& tbl = pWrtShell->InsertTable(TableOpt, 1, 3);
++    uno::Reference<text::XTextTable> xTable(getParagraphOrTable(1), uno::UNO_QUERY);
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(1), xTable->getRows()->getCount());
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(3), xTable->getColumns()->getCount());
++    uno::Sequence<beans::PropertyValue> aDescriptor;
++    SwUnoCursorHelper::makeTableCellRedline((*const_cast<SwTableBox*>(tbl.GetTableBox(OUString("A1")))), OUString("TableCellInsert"), aDescriptor);
++    SwUnoCursorHelper::makeTableCellRedline((*const_cast<SwTableBox*>(tbl.GetTableBox(OUString("B1")))), OUString("TableCellInsert"), aDescriptor);
++    SwUnoCursorHelper::makeTableCellRedline((*const_cast<SwTableBox*>(tbl.GetTableBox(OUString("C1")))), OUString("TableCellInsert"), aDescriptor);
++    IDocumentRedlineAccess& pDocRed = pDoc->getIDocumentRedlineAccess();
++    SwExtraRedlineTable& redtbl = pDocRed.GetExtraRedlineTable();
++    redtbl.DeleteAllTableRedlines(pDoc, tbl, false, sal_uInt16(USHRT_MAX));
++    CPPUNIT_ASSERT(redtbl.IsEmpty());
++}
++
+ void SwUiWriterTest::testExportToPicture()
+ {
+     createDoc();
+-- 
+2.1.4
+

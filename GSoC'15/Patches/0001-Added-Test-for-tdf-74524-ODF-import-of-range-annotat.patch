@@ -1,0 +1,215 @@
+From 5120b3f30614f6e4988c512577da1d70be8d25b1 Mon Sep 17 00:00:00 2001
+From: Varun <varun.dhall@studentpartner.com>
+Date: Tue, 18 Aug 2015 22:58:41 +0530
+Subject: [PATCH] Added Test for tdf#74524 ODF import of range annotation
+
+Change-Id: I9e5d67026df1b3d79dda1158d35357a8dae47517
+Reviewed-on: https://gerrit.libreoffice.org/17843
+Reviewed-by: Michael Stahl <mstahl@redhat.com>
+Tested-by: Michael Stahl <mstahl@redhat.com>
+---
+ sw/qa/extras/odfimport/data/tdf74524.odt | Bin 0 -> 9015 bytes
+ sw/qa/extras/odfimport/odfimport.cxx     |  25 +++++++++++++++++++++++++
+ 2 files changed, 25 insertions(+)
+ create mode 100644 sw/qa/extras/odfimport/data/tdf74524.odt
+
+diff --git a/sw/qa/extras/odfimport/data/tdf74524.odt b/sw/qa/extras/odfimport/data/tdf74524.odt
+new file mode 100644
+index 0000000000000000000000000000000000000000..df6f2e8fe72ae416051079d9a369c6cd69d777ed
+GIT binary patch
+literal 9015
+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
+X5&kZ%0{~#(y})<+Q+}7=0Ra9F66GGT
+
+literal 0
+HcmV?d00001
+
+diff --git a/sw/qa/extras/odfimport/odfimport.cxx b/sw/qa/extras/odfimport/odfimport.cxx
+index 4ed43af..708704d 100644
+--- a/sw/qa/extras/odfimport/odfimport.cxx
++++ b/sw/qa/extras/odfimport/odfimport.cxx
+@@ -19,6 +19,7 @@
+ #include <com/sun/star/table/BorderLine.hpp>
+ #include <com/sun/star/text/XTextSection.hpp>
+ #include <com/sun/star/text/XTextTable.hpp>
++#include <com/sun/star/text/PageNumberType.hpp>
+ 
+ #include <wrtsh.hxx>
+ #include <ndtxt.hxx>
+@@ -248,6 +249,30 @@ DECLARE_ODFIMPORT_TEST(testPageStyleLayoutDefault, "hello.odt")
+     CPPUNIT_ASSERT_EQUAL(style::PageStyleLayout_ALL, getProperty<style::PageStyleLayout>(xPropertySet, "PageStyleLayout"));
+ }
+ 
++DECLARE_ODFIMPORT_TEST(testTdf74524, "tdf74524.odt")
++{
++    uno::Reference<text::XTextFieldsSupplier> xTextFieldsSupplier(mxComponent, uno::UNO_QUERY);
++    uno::Reference<container::XEnumerationAccess> xFieldsAccess(xTextFieldsSupplier->getTextFields());
++    uno::Reference<container::XEnumeration> xFields(xFieldsAccess->createEnumeration());
++    uno::Any aField1 = xFields->nextElement();
++    uno::Reference<lang::XServiceInfo> xServiceInfo1(aField1, uno::UNO_QUERY);
++    CPPUNIT_ASSERT(xServiceInfo1->supportsService(OUString("com.sun.star.text.textfield.PageNumber")));
++    uno::Reference<beans::XPropertySet> xPropertySet(aField1, uno::UNO_QUERY);
++    CPPUNIT_ASSERT_EQUAL(uno::makeAny(sal_Int16(style::NumberingType::PAGE_DESCRIPTOR)), xPropertySet->getPropertyValue(OUString("NumberingType")));
++    CPPUNIT_ASSERT_EQUAL(uno::makeAny(sal_Int16(0)), xPropertySet->getPropertyValue(OUString("Offset")));
++    CPPUNIT_ASSERT_EQUAL(uno::makeAny(text::PageNumberType_CURRENT), xPropertySet->getPropertyValue(OUString("SubType")));
++    uno::Reference<text::XTextContent> xField1(aField1, uno::UNO_QUERY);
++    CPPUNIT_ASSERT_EQUAL(OUString("1"), xField1->getAnchor()->getString());
++    uno::Any aField2 = xFields->nextElement();
++    uno::Reference<lang::XServiceInfo> xServiceInfo2(aField2, uno::UNO_QUERY);
++    CPPUNIT_ASSERT(xServiceInfo2->supportsService(OUString("com.sun.star.text.textfield.Annotation")));
++    uno::Reference<beans::XPropertySet> xPropertySet2(aField2, uno::UNO_QUERY);
++    CPPUNIT_ASSERT_EQUAL(uno::makeAny(OUString("Comment 1")), xPropertySet2->getPropertyValue(OUString("Content")));
++    uno::Reference<text::XTextContent> xField2(aField2, uno::UNO_QUERY);
++    CPPUNIT_ASSERT_EQUAL(OUString("Hello 1World"), xField2->getAnchor()->getString());
++    CPPUNIT_ASSERT(!xFields->hasMoreElements());
++}
++
+ DECLARE_ODFIMPORT_TEST(testPageStyleLayoutRight, "hello.odt")
+ {
+     uno::Reference<beans::XPropertySet> xPropertySet(getStyles("PageStyles")->getByName("Default Style"), uno::UNO_QUERY);
+-- 
+2.1.4
+

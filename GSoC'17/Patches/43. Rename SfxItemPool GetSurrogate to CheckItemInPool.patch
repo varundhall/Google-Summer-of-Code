@@ -1,0 +1,86 @@
+From 75933b220d48bceff25b07cfc4b55c70a2e24917 Mon Sep 17 00:00:00 2001
+From: Varun Dhall <varun.dhall@studentpartner.com>
+Date: Thu, 17 Aug 2017 01:23:47 +0530
+Subject: [PATCH] Rename SfxItemPool GetSurrogate to CheckItemInPool
+
+Change-Id: Ife08e05a9fcbadea86c005a2e9defb7cef9b5acc
+Reviewed-on: https://gerrit.libreoffice.org/41231
+Reviewed-by: Michael Stahl <mstahl@redhat.com>
+Tested-by: Jenkins <ci@libreoffice.org>
+---
+ include/svl/itempool.hxx     |  2 +-
+ svl/source/items/itemset.cxx |  2 +-
+ svl/source/items/poolio.cxx  | 10 +++++-----
+ 3 files changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/include/svl/itempool.hxx b/include/svl/itempool.hxx
+index 14051f6..f2940ad 100644
+--- a/include/svl/itempool.hxx
++++ b/include/svl/itempool.hxx
+@@ -151,7 +151,7 @@ public:
+     void                            Remove( const SfxPoolItem& );
+     const SfxPoolItem&              GetDefaultItem( sal_uInt16 nWhich ) const;
+ 
+-    sal_uInt32                      GetSurrogate(const SfxPoolItem *) const;
++    bool                            CheckItemInPool(const SfxPoolItem *) const;
+     const SfxPoolItem *             GetItem2(sal_uInt16 nWhich, sal_uInt32 nSurrogate) const;
+     const SfxPoolItem *             GetItem2Default(sal_uInt16 nWhich) const;
+     sal_uInt32                      GetItemCount2(sal_uInt16 nWhich) const;
+diff --git a/svl/source/items/itemset.cxx b/svl/source/items/itemset.cxx
+index 3b7efdc..fc1ac10 100644
+--- a/svl/source/items/itemset.cxx
++++ b/svl/source/items/itemset.cxx
+@@ -1429,7 +1429,7 @@ void SfxItemSet::PutDirect(const SfxPoolItem &rItem)
+     const sal_uInt16* pPtr = m_pWhichRanges;
+     const sal_uInt16 nWhich = rItem.Which();
+ #ifdef DBG_UTIL
+-    IsPoolDefaultItem(&rItem) || m_pPool->GetSurrogate(&rItem);
++    IsPoolDefaultItem(&rItem) || m_pPool->CheckItemInPool(&rItem);
+         // Only cause assertion in the callees
+ #endif
+     while( *pPtr )
+diff --git a/svl/source/items/poolio.cxx b/svl/source/items/poolio.cxx
+index ff490ed..6c4e643 100644
+--- a/svl/source/items/poolio.cxx
++++ b/svl/source/items/poolio.cxx
+@@ -88,7 +88,7 @@ sal_uInt16 SfxItemPool::GetSize_Impl() const
+ }
+ 
+ 
+-sal_uInt32 SfxItemPool::GetSurrogate(const SfxPoolItem *pItem) const
++bool SfxItemPool::CheckItemInPool(const SfxPoolItem *pItem) const
+ {
+     DBG_ASSERT( pItem, "no 0-Pointer Surrogate" );
+     DBG_ASSERT( !IsInvalidItem(pItem), "no Invalid-Item Surrogate" );
+@@ -97,13 +97,13 @@ sal_uInt32 SfxItemPool::GetSurrogate(const SfxPoolItem *pItem) const
+     if ( !IsInRange(pItem->Which()) )
+     {
+         if ( pImpl->mpSecondary )
+-            return pImpl->mpSecondary->GetSurrogate( pItem );
++            return pImpl->mpSecondary->CheckItemInPool( pItem );
+         SAL_WARN( "svl.items", "unknown Which-Id - don't ask me for surrogates, with ID/pos " << pItem->Which());
+     }
+ 
+     // Pointer on static or pool-default attribute?
+     if( IsStaticDefaultItem(pItem) || IsPoolDefaultItem(pItem) )
+-        return SFX_ITEMS_DEFAULT;
++        return true;
+ 
+     SfxPoolItemArray_Impl* pItemArr = pImpl->maPoolItems[GetIndex_Impl(pItem->Which())];
+     DBG_ASSERT(pItemArr, "ItemArr is not available");
+@@ -112,10 +112,10 @@ sal_uInt32 SfxItemPool::GetSurrogate(const SfxPoolItem *pItem) const
+     {
+         const SfxPoolItem *p = (*pItemArr)[i];
+         if ( p == pItem )
+-            return i;
++            return true;
+     }
+     SAL_WARN( "svl.items", "Item not in the pool, with ID/pos " << pItem->Which());
+-    return SFX_ITEMS_NULL;
++    return false;
+ }
+ 
+ OUString readByteString(SvStream& rStream)
+-- 
+2.7.4
+

@@ -1,0 +1,95 @@
+From b863b1cb9c72d04933e6f9d3c361b8ebf9399cfd Mon Sep 17 00:00:00 2001
+From: Varun Dhall <varun.dhall@studentpartner.com>
+Date: Wed, 31 May 2017 21:03:33 +0530
+Subject: [PATCH] EditEngine Implementing Paste for XML from clipboard
+
+Change-Id: Ia820a29bec8a6b102fb78cf325577b731a12c3c4
+Reviewed-on: https://gerrit.libreoffice.org/38282
+Tested-by: Jenkins <ci@libreoffice.org>
+Reviewed-by: Michael Stahl <mstahl@redhat.com>
+---
+ editeng/source/editeng/impedit2.cxx | 50 +++++++++++++++++++++++++++----------
+ 1 file changed, 37 insertions(+), 13 deletions(-)
+
+diff --git a/editeng/source/editeng/impedit2.cxx b/editeng/source/editeng/impedit2.cxx
+index 6346589..d30bfb9 100644
+--- a/editeng/source/editeng/impedit2.cxx
++++ b/editeng/source/editeng/impedit2.cxx
+@@ -3522,25 +3522,54 @@ EditSelection ImpEditEngine::InsertText( uno::Reference< datatransfer::XTransfer
+     datatransfer::DataFlavor aFlavor;
+     bool bDone = false;
+ 
++    char* ODF_XML_Env = getenv ("ODF_TEXT_FLAT_XML_ENV");
++
+     if ( bUseSpecial )
+     {
+         // BIN
+         SotExchange::GetFormatDataFlavor( SotClipboardFormatId::EDITENGINE, aFlavor );
+         if ( rxDataObj->isDataFlavorSupported( aFlavor ) )
+         {
+-            try
++            if ( ODF_XML_Env == nullptr )
+             {
+-                uno::Any aData = rxDataObj->getTransferData( aFlavor );
+-                uno::Sequence< sal_Int8 > aSeq;
+-                aData >>= aSeq;
++                try
++                {
++                    uno::Any aData = rxDataObj->getTransferData( aFlavor );
++                    uno::Sequence< sal_Int8 > aSeq;
++                    aData >>= aSeq;
++                    {
++                        SvMemoryStream aBinStream( aSeq.getArray(), aSeq.getLength(), StreamMode::READ );
++                        aNewSelection = Read( aBinStream, rBaseURL, EE_FORMAT_BIN, rPaM );
++                    }
++                    bDone = true;
++                }
++                catch( const css::uno::Exception& )
+                 {
+-                    SvMemoryStream aBinStream( aSeq.getArray(), aSeq.getLength(), StreamMode::READ );
+-                    aNewSelection = Read( aBinStream, rBaseURL, EE_FORMAT_BIN, rPaM );
+                 }
+-                bDone = true;
+             }
+-            catch( const css::uno::Exception& )
++        }
++
++        if ( !bDone )
++        {
++            // XML
++            SotExchange::GetFormatDataFlavor( SotClipboardFormatId::EDITENGINE_ODF_TEXT_FLAT, aFlavor );
++            if ( rxDataObj->isDataFlavorSupported( aFlavor ) )
+             {
++                try
++                {
++                    uno::Any aData = rxDataObj->getTransferData( aFlavor );
++                    uno::Sequence< sal_Int8 > aSeq;
++                    aData >>= aSeq;
++                    {
++                        SvMemoryStream aODFStream( aSeq.getArray(), aSeq.getLength(), StreamMode::READ );
++                        aNewSelection = Read( aODFStream, rBaseURL, EE_FORMAT_XML, rPaM );
++                    }
++                    bDone = true;
++                }
++                catch( const css::uno::Exception& e)
++                {
++                    SAL_WARN( "editeng", "Unable to paste EDITENGINE_ODF_TEXT_FLAT " << e.Message );
++                }
+             }
+         }
+ 
+@@ -3575,11 +3604,6 @@ EditSelection ImpEditEngine::InsertText( uno::Reference< datatransfer::XTransfer
+                 }
+             }
+         }
+-        if ( !bDone )
+-        {
+-            // XML ?
+-            // Currently, there is nothing like "The" XML format, StarOffice doesn't offer plain XML in Clipboard...
+-        }
+     }
+     if ( !bDone )
+     {
+-- 
+2.7.4
+

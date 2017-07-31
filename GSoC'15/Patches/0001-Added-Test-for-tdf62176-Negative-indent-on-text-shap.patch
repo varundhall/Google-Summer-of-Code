@@ -1,0 +1,270 @@
+From 077fd3d95cc00bb3cd99f6bb7dae610877ad59b5 Mon Sep 17 00:00:00 2001
+From: Varun <varun.dhall@studentpartner.com>
+Date: Wed, 5 Aug 2015 15:42:08 +0530
+Subject: [PATCH] Added Test for #tdf62176 Negative indent on text shapes
+
+Change-Id: I9548c80f0bda342477cde249f9b55dde95e9c0f4
+Reviewed-on: https://gerrit.libreoffice.org/17524
+Tested-by: Jenkins <ci@libreoffice.org>
+Reviewed-by: Michael Stahl <mstahl@redhat.com>
+---
+ sd/qa/unit/data/odp/Tdf62176.odp | Bin 0 -> 10358 bytes
+ sd/qa/unit/export-tests.cxx      |  47 +++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 47 insertions(+)
+ create mode 100644 sd/qa/unit/data/odp/Tdf62176.odp
+
+diff --git a/sd/qa/unit/data/odp/Tdf62176.odp b/sd/qa/unit/data/odp/Tdf62176.odp
+new file mode 100644
+index 0000000000000000000000000000000000000000..1139dd0484d3b9268707b94a018d190fcf988087
+GIT binary patch
+literal 10358
+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
+
+literal 0
+HcmV?d00001
+
+diff --git a/sd/qa/unit/export-tests.cxx b/sd/qa/unit/export-tests.cxx
+index fe60aeb..0a8a342 100644
+--- a/sd/qa/unit/export-tests.cxx
++++ b/sd/qa/unit/export-tests.cxx
+@@ -119,6 +119,7 @@ public:
+     void testRightToLeftParaghraph();
+     void testTableCellBorder();
+     void testBulletColor();
++    void testTdf62176();
+     void testBulletMarginAndIndentation();
+     void testParaMarginAndindentation();
+     void testTransparentBackground();
+@@ -156,6 +157,7 @@ public:
+     CPPUNIT_TEST(testRightToLeftParaghraph);
+     CPPUNIT_TEST(testTableCellBorder);
+     CPPUNIT_TEST(testBulletColor);
++    CPPUNIT_TEST(testTdf62176);
+     CPPUNIT_TEST(testBulletMarginAndIndentation);
+     CPPUNIT_TEST(testParaMarginAndindentation);
+     CPPUNIT_TEST(testTransparentBackground);
+@@ -974,6 +976,51 @@ void SdExportTest::testBulletColor()
+     CPPUNIT_ASSERT_EQUAL_MESSAGE( "Bullet's color is wrong!", sal_uInt32(0xff0000),pNumFmt->GetNumRule()->GetLevel(0).GetBulletColor().GetColor());
+ }
+ 
++void SdExportTest::testTdf62176()
++{
++    ::sd::DrawDocShellRef xDocShRef = loadURL(getURLFromSrc("/sd/qa/unit/data/odp/Tdf62176.odp"), ODP);
++    uno::Reference<drawing::XDrawPagesSupplier> xDoc(xDocShRef->GetDoc()->getUnoModel(), uno::UNO_QUERY_THROW);
++    uno::Reference<drawing::XDrawPage> xPage(xDoc->getDrawPages()->getByIndex(0), uno::UNO_QUERY_THROW);
++    //there should be only *one* shape
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(1), xPage->getCount());
++    uno::Reference<beans::XPropertySet> xShape(xPage->getByIndex(0), uno::UNO_QUERY);
++    //checking Paragraph's Left Margin with expected value
++    sal_Int32 nParaLeftMargin = 0;
++    xShape->getPropertyValue("ParaLeftMargin") >>= nParaLeftMargin;
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(2000), nParaLeftMargin);
++    //checking Paragraph's First Line Indent with expected value
++    sal_Int32 nParaFirstLineIndent = 0;
++    xShape->getPropertyValue("ParaFirstLineIndent") >>= nParaFirstLineIndent;
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(-1300), nParaFirstLineIndent);
++    //Checking the *Text* in TextBox
++    uno::Reference<text::XText> xText = uno::Reference<text::XTextRange>(xShape, uno::UNO_QUERY)->getText();
++    uno::Reference<container::XEnumerationAccess> paraEnumAccess(xText, uno::UNO_QUERY);
++    uno::Reference<container::XEnumeration> paraEnum(paraEnumAccess->createEnumeration());
++    uno::Reference<text::XTextRange> xParagraph(paraEnum->nextElement(), uno::UNO_QUERY_THROW);
++    CPPUNIT_ASSERT_EQUAL(OUString("Hello World"), xParagraph->getString());
++    //Saving and Reloading the file
++    xDocShRef = saveAndReload(xDocShRef, ODP);
++    uno::Reference<drawing::XDrawPagesSupplier> xDoc2(xDocShRef->GetDoc()->getUnoModel(), uno::UNO_QUERY_THROW);
++    uno::Reference<drawing::XDrawPage> xPage2(xDoc2->getDrawPages()->getByIndex(0), uno::UNO_QUERY_THROW);
++    //there should be only *one* shape
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(1), xPage2->getCount());
++    uno::Reference<beans::XPropertySet> xShape2(xPage2->getByIndex(0), uno::UNO_QUERY);
++    //checking Paragraph's Left Margin with expected value
++    sal_Int32 nParaLeftMargin2 = 0;
++    xShape2->getPropertyValue("ParaLeftMargin") >>= nParaLeftMargin2;
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(2000), nParaLeftMargin2);
++    //checking Paragraph's First Line Indent with expected value
++    sal_Int32 nParaFirstLineIndent2 = 0;
++    xShape2->getPropertyValue("ParaFirstLineIndent") >>= nParaFirstLineIndent2;
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(-1300), nParaFirstLineIndent2);
++    //Checking the *Text* in TextBox
++    uno::Reference<text::XText> xText2 = uno::Reference<text::XTextRange>(xShape2, uno::UNO_QUERY)->getText();
++    uno::Reference<container::XEnumerationAccess> paraEnumAccess2(xText2, uno::UNO_QUERY);
++    uno::Reference<container::XEnumeration> paraEnum2(paraEnumAccess2->createEnumeration());
++    uno::Reference<text::XTextRange> xParagraph2(paraEnum2->nextElement(), uno::UNO_QUERY_THROW);
++    CPPUNIT_ASSERT_EQUAL(OUString("Hello World"), xParagraph2->getString());
++}
++
+ void SdExportTest::testTdf91378()
+ {
+ 
+-- 
+2.1.4
+

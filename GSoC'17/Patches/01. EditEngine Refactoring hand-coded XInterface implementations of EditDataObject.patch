@@ -1,0 +1,73 @@
+From 5ae5fb482f37176f1746cca4ade5c87b34b135a7 Mon Sep 17 00:00:00 2001
+From: Varun Dhall <varun.dhall@studentpartner.com>
+Date: Mon, 29 May 2017 23:15:53 +0530
+Subject: [PATCH] EditEngine Refactoring hand-coded XInterface implementations
+ of EditDataObject
+
+EditDataObject has odd hand-coded XInterface implementations,
+this is unnecessary and can be improved by replacing its superclasses
+
+Change-Id: Ife19c114450dfd95a10a10de1a78b035babb5443
+Reviewed-on: https://gerrit.libreoffice.org/38163
+Tested-by: Jenkins <ci@libreoffice.org>
+Reviewed-by: Eike Rathke <erack@redhat.com>
+---
+ editeng/source/editeng/eeobj.cxx |  7 -------
+ editeng/source/editeng/eeobj.hxx | 12 ++----------
+ 2 files changed, 2 insertions(+), 17 deletions(-)
+
+diff --git a/editeng/source/editeng/eeobj.cxx b/editeng/source/editeng/eeobj.cxx
+index fa1392e..0c6bd12 100644
+--- a/editeng/source/editeng/eeobj.cxx
++++ b/editeng/source/editeng/eeobj.cxx
+@@ -43,13 +43,6 @@ EditDataObject::~EditDataObject()
+ {
+ }
+ 
+-// uno::XInterface
+-uno::Any EditDataObject::queryInterface( const uno::Type & rType )
+-{
+-    uno::Any aRet = ::cppu::queryInterface( rType, (static_cast< datatransfer::XTransferable* >(this)) );
+-    return (aRet.hasValue() ? aRet : OWeakObject::queryInterface( rType ));
+-}
+-
+ // datatransfer::XTransferable
+ uno::Any EditDataObject::getTransferData( const datatransfer::DataFlavor& rFlavor )
+ {
+diff --git a/editeng/source/editeng/eeobj.hxx b/editeng/source/editeng/eeobj.hxx
+index 643ef453..30c90c4 100644
+--- a/editeng/source/editeng/eeobj.hxx
++++ b/editeng/source/editeng/eeobj.hxx
+@@ -20,14 +20,12 @@
+ #ifndef INCLUDED_EDITENG_SOURCE_EDITENG_EEOBJ_HXX
+ #define INCLUDED_EDITENG_SOURCE_EDITENG_EEOBJ_HXX
+ 
+-#include <cppuhelper/weak.hxx>
++#include <cppuhelper/implbase.hxx>
+ #include <com/sun/star/datatransfer/XTransferable.hpp>
+ 
+ #include <tools/stream.hxx>
+ 
+-class EditDataObject :  public css::datatransfer::XTransferable,
+-                        public ::cppu::OWeakObject
+-
++class EditDataObject :  public ::cppu::WeakImplHelper<css::datatransfer::XTransferable>
+ {
+ private:
+     SvMemoryStream  maBinData;
+@@ -45,12 +43,6 @@ public:
+     OUString&       GetString() { return maText; }
+     OUString&       GetURL()    { return maOfficeBookmark; }
+ 
+-
+-    // css::uno::XInterface
+-    css::uno::Any                               SAL_CALL queryInterface( const css::uno::Type & rType ) override;
+-    void                                        SAL_CALL acquire() throw() override  { OWeakObject::acquire(); }
+-    void                                        SAL_CALL release() throw() override  { OWeakObject::release(); }
+-
+     // css::datatransfer::XTransferable
+     css::uno::Any SAL_CALL getTransferData( const css::datatransfer::DataFlavor& aFlavor ) override;
+     css::uno::Sequence< css::datatransfer::DataFlavor > SAL_CALL getTransferDataFlavors(  ) override;
+-- 
+2.7.4
+

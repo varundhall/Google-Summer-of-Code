@@ -1,0 +1,2401 @@
+From 38984e9351a0230b0a56fb7277f7b19722350d8d Mon Sep 17 00:00:00 2001
+From: Varun Dhall <varun.dhall@studentpartner.com>
+Date: Fri, 11 Aug 2017 22:40:31 +0530
+Subject: [PATCH] Removing unused SfxItemPool serialisation from svx
+
+Change-Id: I778ae09c4b0fd3e18a37db4aa3f2affda2c8e86c
+Reviewed-on: https://gerrit.libreoffice.org/41053
+Tested-by: Jenkins <ci@libreoffice.org>
+Reviewed-by: Michael Stahl <mstahl@redhat.com>
+---
+ include/svx/chrtitem.hxx           |  11 ---
+ include/svx/sdangitm.hxx           |   2 -
+ include/svx/sdgcoitm.hxx           |   6 --
+ include/svx/sdgcpitm.hxx           |   1 -
+ include/svx/sdggaitm.hxx           |   2 -
+ include/svx/sdginitm.hxx           |   2 -
+ include/svx/sdgluitm.hxx           |   4 -
+ include/svx/sdgmoitm.hxx           |   4 -
+ include/svx/sdgtritm.hxx           |   2 -
+ include/svx/sdmetitm.hxx           |   2 -
+ include/svx/sdooitm.hxx            |   2 -
+ include/svx/sdprcitm.hxx           |   4 -
+ include/svx/sdtaaitm.hxx           |   2 -
+ include/svx/sdtaditm.hxx           |   2 -
+ include/svx/sdtaitm.hxx            |   4 -
+ include/svx/sdtakitm.hxx           |   2 -
+ include/svx/sdtayitm.hxx           |   2 -
+ include/svx/sdtfsitm.hxx           |   2 -
+ include/svx/sdynitm.hxx            |   2 -
+ include/svx/svx3ditems.hxx         |   6 --
+ include/svx/sxcecitm.hxx           |   2 -
+ include/svx/sxctitm.hxx            |   2 -
+ include/svx/sxekitm.hxx            |   2 -
+ include/svx/sxmtpitm.hxx           |  10 ---
+ include/svx/sxmuitm.hxx            |   2 -
+ include/svx/xfillit0.hxx           |   2 -
+ include/svx/xflbckit.hxx           |   3 -
+ include/svx/xflbmpit.hxx           |   2 -
+ include/svx/xflbmsli.hxx           |   2 -
+ include/svx/xflbmsxy.hxx           |   4 -
+ include/svx/xflbmtit.hxx           |   2 -
+ include/svx/xflboxy.hxx            |   4 -
+ include/svx/xflbstit.hxx           |   2 -
+ include/svx/xflbtoxy.hxx           |   4 -
+ include/svx/xfltrit.hxx            |   2 -
+ include/svx/xftadit.hxx            |   2 -
+ include/svx/xftdiit.hxx            |   2 -
+ include/svx/xftmrit.hxx            |   2 -
+ include/svx/xftouit.hxx            |   2 -
+ include/svx/xftshit.hxx            |   2 -
+ include/svx/xftshtit.hxx           |   2 -
+ include/svx/xftshxy.hxx            |   4 -
+ include/svx/xftstit.hxx            |   2 -
+ include/svx/xgrscit.hxx            |   2 -
+ include/svx/xlineit0.hxx           |   2 -
+ include/svx/xlinjoit.hxx           |   2 -
+ include/svx/xlncapit.hxx           |   2 -
+ include/svx/xlnedcit.hxx           |   2 -
+ include/svx/xlnedwit.hxx           |   2 -
+ include/svx/xlnstcit.hxx           |   2 -
+ include/svx/xlnstwit.hxx           |   2 -
+ include/svx/xlntrit.hxx            |   2 -
+ include/svx/xlnwtit.hxx            |   2 -
+ include/svx/xtextit0.hxx           |   4 -
+ svx/inc/sxcikitm.hxx               |   2 -
+ svx/inc/sxmkitm.hxx                |   2 -
+ svx/source/engine3d/svx3ditems.cxx |  78 ----------------
+ svx/source/items/chrtitem.cxx      |  48 ----------
+ svx/source/svdraw/svdattr.cxx      | 110 -----------------------
+ svx/source/xoutdev/xattr.cxx       | 170 -----------------------------------
+ svx/source/xoutdev/xattr2.cxx      | 180 -------------------------------------
+ 61 files changed, 741 deletions(-)
+
+diff --git a/include/svx/chrtitem.hxx b/include/svx/chrtitem.hxx
+index b7b311b5..71bf9ab 100644
+--- a/include/svx/chrtitem.hxx
++++ b/include/svx/chrtitem.hxx
+@@ -84,10 +84,8 @@ class SAL_WARN_UNUSED SVX_DLLPUBLIC SvxChartRegressItem : public SfxEnumItem<Svx
+ public:
+     SvxChartRegressItem(SvxChartRegress eRegress /*= SvxChartRegress::Linear*/,
+                         sal_uInt16 nId );
+-    SvxChartRegressItem(SvStream& rIn, sal_uInt16 nId );
+ 
+     virtual SfxPoolItem* Clone(SfxItemPool* pPool = nullptr) const override;
+-    virtual SfxPoolItem* Create(SvStream& rIn, sal_uInt16 nVer) const override;
+ 
+     sal_uInt16 GetValueCount() const override { return CHREGRESS_COUNT; }
+     sal_uInt16 GetVersion (sal_uInt16 nFileFormatVersion) const override;
+@@ -98,11 +96,8 @@ class SAL_WARN_UNUSED SVX_DLLPUBLIC SvxChartTextOrderItem : public SfxEnumItem<S
+ public:
+     SvxChartTextOrderItem(SvxChartTextOrder eOrder /*= SvxChartTextOrder::SideBySide*/,
+                           sal_uInt16 nId );
+-    SvxChartTextOrderItem(SvStream& rIn,
+-                          sal_uInt16 nId );
+ 
+     virtual SfxPoolItem* Clone(SfxItemPool* pPool = nullptr) const override;
+-    virtual SfxPoolItem* Create(SvStream& rIn, sal_uInt16 nVer) const override;
+ 
+     virtual bool         QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+     virtual bool         PutValue( const css::uno::Any& rVal, sal_uInt8 nMemberId ) override;
+@@ -115,11 +110,8 @@ class SAL_WARN_UNUSED SVX_DLLPUBLIC SvxChartKindErrorItem : public SfxEnumItem<S
+ public:
+     SvxChartKindErrorItem(SvxChartKindError /*eOrient = SvxChartKindError::NONE*/,
+                            sal_uInt16 nId );
+-    SvxChartKindErrorItem(SvStream& rIn,
+-                           sal_uInt16 nId );
+ 
+     virtual SfxPoolItem* Clone(SfxItemPool* pPool = nullptr) const override;
+-    virtual SfxPoolItem* Create(SvStream& rIn, sal_uInt16 nVer) const override;
+ 
+     sal_uInt16 GetValueCount() const override { return CHERROR_COUNT; }
+ 
+@@ -131,11 +123,8 @@ class SAL_WARN_UNUSED SVX_DLLPUBLIC SvxChartIndicateItem : public SfxEnumItem<Sv
+ public:
+     SvxChartIndicateItem(SvxChartIndicate eOrient /*= SvxChartIndicate::NONE*/,
+                            sal_uInt16 nId );
+-    SvxChartIndicateItem(SvStream& rIn,
+-                           sal_uInt16 nId );
+ 
+     virtual SfxPoolItem* Clone(SfxItemPool* pPool = nullptr) const override;
+-    virtual SfxPoolItem* Create(SvStream& rIn, sal_uInt16 nVer) const override;
+ 
+     sal_uInt16 GetValueCount() const override { return CHINDICATE_COUNT; }
+ 
+diff --git a/include/svx/sdangitm.hxx b/include/svx/sdangitm.hxx
+index b923772..9e43df6 100644
+--- a/include/svx/sdangitm.hxx
++++ b/include/svx/sdangitm.hxx
+@@ -28,9 +28,7 @@
+ class SVX_DLLPUBLIC SdrAngleItem: public SfxInt32Item {
+ public:
+     SdrAngleItem(sal_uInt16 nId, sal_Int32 nAngle): SfxInt32Item(nId,nAngle) {}
+-    SdrAngleItem(sal_uInt16 nId, SvStream& rIn):  SfxInt32Item(nId,rIn) {}
+     virtual SfxPoolItem* Clone(SfxItemPool* pPool=nullptr) const override;
+-    virtual SfxPoolItem* Create(SvStream& rIn, sal_uInt16 nVer) const override;
+ 
+     virtual bool GetPresentation(SfxItemPresentation ePres,
+                                  MapUnit eCoreMetric,
+diff --git a/include/svx/sdgcoitm.hxx b/include/svx/sdgcoitm.hxx
+index 39de802..2c9c67c 100644
+--- a/include/svx/sdgcoitm.hxx
++++ b/include/svx/sdgcoitm.hxx
+@@ -34,10 +34,8 @@ public:
+ 
+ 
+                             SdrGrafRedItem( short nRedPercent = 0 ) : SdrSignedPercentItem( SDRATTR_GRAFRED, nRedPercent ) {}
+-                            SdrGrafRedItem( SvStream& rIn ) : SdrSignedPercentItem( SDRATTR_GRAFRED, rIn ) {}
+ 
+     virtual SfxPoolItem*    Clone( SfxItemPool* pPool = nullptr ) const override;
+-    virtual SfxPoolItem*    Create( SvStream& rIn, sal_uInt16 nVer ) const override;
+ };
+ 
+ 
+@@ -50,10 +48,8 @@ public:
+ 
+ 
+                             SdrGrafGreenItem( short nGreenPercent = 0 ) : SdrSignedPercentItem( SDRATTR_GRAFGREEN, nGreenPercent ) {}
+-                            SdrGrafGreenItem( SvStream& rIn ) : SdrSignedPercentItem( SDRATTR_GRAFGREEN, rIn ) {}
+ 
+     virtual SfxPoolItem*    Clone( SfxItemPool* pPool = nullptr ) const override;
+-    virtual SfxPoolItem*    Create( SvStream& rIn, sal_uInt16 nVer ) const override;
+ };
+ 
+ 
+@@ -66,10 +62,8 @@ public:
+ 
+ 
+                             SdrGrafBlueItem( short nBluePercent = 0 ) : SdrSignedPercentItem( SDRATTR_GRAFBLUE, nBluePercent ) {}
+-                            SdrGrafBlueItem( SvStream& rIn ) : SdrSignedPercentItem( SDRATTR_GRAFBLUE, rIn ) {}
+ 
+     virtual SfxPoolItem*    Clone( SfxItemPool* pPool = nullptr ) const override;
+-    virtual SfxPoolItem*    Create( SvStream& rIn, sal_uInt16 nVer ) const override;
+ };
+ 
+ #endif // INCLUDED_SVX_SDGCOITM_HXX
+diff --git a/include/svx/sdgcpitm.hxx b/include/svx/sdgcpitm.hxx
+index 47b3bf6..76d4028 100644
+--- a/include/svx/sdgcpitm.hxx
++++ b/include/svx/sdgcpitm.hxx
+@@ -37,7 +37,6 @@ public:
+                                 SvxGrfCrop( nLeftCrop, nRightCrop, nTopCrop, nBottomCrop, SDRATTR_GRAFCROP ) {}
+ 
+     virtual SfxPoolItem*    Clone( SfxItemPool* pPool = nullptr ) const override;
+-    virtual SfxPoolItem*    Create( SvStream& rIn, sal_uInt16 nVer ) const override;
+     virtual sal_uInt16          GetVersion( sal_uInt16 nFileVersion ) const override;
+ };
+ 
+diff --git a/include/svx/sdggaitm.hxx b/include/svx/sdggaitm.hxx
+index 6dcb041..96e0647 100644
+--- a/include/svx/sdggaitm.hxx
++++ b/include/svx/sdggaitm.hxx
+@@ -34,10 +34,8 @@ public:
+ 
+ 
+                             SdrGrafGamma100Item( sal_uInt32 nGamma100 = 100 ) : SfxUInt32Item( SDRATTR_GRAFGAMMA, nGamma100 ) {}
+-                            SdrGrafGamma100Item( SvStream& rIn ) : SfxUInt32Item( SDRATTR_GRAFGAMMA, rIn ) {}
+ 
+     virtual SfxPoolItem*    Clone( SfxItemPool* pPool = nullptr ) const override;
+-    virtual SfxPoolItem*    Create( SvStream& rIn, sal_uInt16 nVer ) const override;
+ 
+     virtual bool            QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+     virtual bool            PutValue( const css::uno::Any& rVal, sal_uInt8 nMemberId ) override;
+diff --git a/include/svx/sdginitm.hxx b/include/svx/sdginitm.hxx
+index ace78b6..ff5a8a3 100644
+--- a/include/svx/sdginitm.hxx
++++ b/include/svx/sdginitm.hxx
+@@ -34,10 +34,8 @@ public:
+ 
+ 
+                             SdrGrafInvertItem( bool bInvert = false ) : SdrOnOffItem( SDRATTR_GRAFINVERT, bInvert ) {}
+-                            SdrGrafInvertItem( SvStream& rIn ) : SdrOnOffItem( SDRATTR_GRAFINVERT, rIn ) {}
+ 
+     virtual SfxPoolItem*    Clone( SfxItemPool* pPool = nullptr ) const override;
+-    virtual SfxPoolItem*    Create( SvStream& rIn, sal_uInt16 nVer ) const override;
+ };
+ 
+ #endif // INCLUDED_SVX_SDGINITM_HXX
+diff --git a/include/svx/sdgluitm.hxx b/include/svx/sdgluitm.hxx
+index f935edf..da937f7 100644
+--- a/include/svx/sdgluitm.hxx
++++ b/include/svx/sdgluitm.hxx
+@@ -34,10 +34,8 @@ public:
+ 
+ 
+                             SdrGrafLuminanceItem( short nLuminancePercent = 0 ) : SdrSignedPercentItem( SDRATTR_GRAFLUMINANCE, nLuminancePercent ) {}
+-                            SdrGrafLuminanceItem( SvStream& rIn ) : SdrSignedPercentItem( SDRATTR_GRAFLUMINANCE, rIn ) {}
+ 
+     virtual SfxPoolItem*    Clone( SfxItemPool* pPool = nullptr ) const override;
+-    virtual SfxPoolItem*    Create( SvStream& rIn, sal_uInt16 nVer ) const override;
+ };
+ 
+ 
+@@ -50,10 +48,8 @@ public:
+ 
+ 
+                             SdrGrafContrastItem( short nContrastPercent = 0 ) : SdrSignedPercentItem( SDRATTR_GRAFCONTRAST, nContrastPercent ) {}
+-                            SdrGrafContrastItem( SvStream& rIn ) : SdrSignedPercentItem( SDRATTR_GRAFCONTRAST, rIn ) {}
+ 
+     virtual SfxPoolItem*    Clone( SfxItemPool* pPool = nullptr ) const override;
+-    virtual SfxPoolItem*    Create( SvStream& rIn, sal_uInt16 nVer ) const override;
+ };
+ 
+ #endif // INCLUDED_SVX_SDGLUITM_HXX
+diff --git a/include/svx/sdgmoitm.hxx b/include/svx/sdgmoitm.hxx
+index dc41849..9b0eeb4 100644
+--- a/include/svx/sdgmoitm.hxx
++++ b/include/svx/sdgmoitm.hxx
+@@ -30,18 +30,14 @@ class SdrGrafModeItem_Base: public SfxEnumItem<GraphicDrawMode> {
+ protected:
+     SdrGrafModeItem_Base(GraphicDrawMode eMode):
+         SfxEnumItem(SDRATTR_GRAFMODE, eMode) {}
+-
+-    SdrGrafModeItem_Base(SvStream& rIn): SfxEnumItem(SDRATTR_GRAFMODE, rIn) {}
+ };
+ 
+ class SVX_DLLPUBLIC SdrGrafModeItem : public SdrGrafModeItem_Base
+ {
+ public:
+                             SdrGrafModeItem( GraphicDrawMode eMode = GraphicDrawMode::Standard ) : SdrGrafModeItem_Base( eMode ) {}
+-                            SdrGrafModeItem( SvStream& rIn ) : SdrGrafModeItem_Base( rIn ) {}
+ 
+     virtual SfxPoolItem*    Clone( SfxItemPool* pPool = nullptr ) const override;
+-    virtual SfxPoolItem*    Create( SvStream& rIn, sal_uInt16 nVer ) const override;
+     virtual sal_uInt16      GetValueCount() const override;
+ 
+     virtual OUString        GetValueTextByPos( sal_uInt16 nPos ) const override;
+diff --git a/include/svx/sdgtritm.hxx b/include/svx/sdgtritm.hxx
+index 9b24c03..8e84db2 100644
+--- a/include/svx/sdgtritm.hxx
++++ b/include/svx/sdgtritm.hxx
+@@ -33,10 +33,8 @@ class SVX_DLLPUBLIC SdrGrafTransparenceItem : public SdrPercentItem
+ public:
+ 
+                             SdrGrafTransparenceItem( sal_uInt16 nTransparencePercent = 0 ) : SdrPercentItem( SDRATTR_GRAFTRANSPARENCE, nTransparencePercent ) {}
+-                            SdrGrafTransparenceItem( SvStream& rIn ) : SdrPercentItem( SDRATTR_GRAFTRANSPARENCE, rIn ) {}
+ 
+     virtual SfxPoolItem*    Clone( SfxItemPool* pPool = nullptr ) const override;
+-    virtual SfxPoolItem*    Create( SvStream& rIn, sal_uInt16 nVer ) const override;
+ };
+ 
+ #endif // INCLUDED_SVX_SDGTRITM_HXX
+diff --git a/include/svx/sdmetitm.hxx b/include/svx/sdmetitm.hxx
+index eead867..2dee63e 100644
+--- a/include/svx/sdmetitm.hxx
++++ b/include/svx/sdmetitm.hxx
+@@ -30,9 +30,7 @@
+ class SVX_DLLPUBLIC SdrMetricItem: public SfxInt32Item {
+ public:
+     SdrMetricItem(sal_uInt16 nId, sal_Int32 nVal):  SfxInt32Item(nId,nVal) {}
+-    SdrMetricItem(sal_uInt16 nId, SvStream& rIn): SfxInt32Item(nId,rIn) {}
+     virtual SfxPoolItem* Clone(SfxItemPool* pPool=nullptr) const override;
+-    virtual SfxPoolItem* Create(SvStream& rIn, sal_uInt16 nVer) const override;
+     virtual bool HasMetrics() const override;
+     virtual void ScaleMetrics(long nMul, long nDiv) override;
+ 
+diff --git a/include/svx/sdooitm.hxx b/include/svx/sdooitm.hxx
+index 974b1c8..0e80354 100644
+--- a/include/svx/sdooitm.hxx
++++ b/include/svx/sdooitm.hxx
+@@ -30,9 +30,7 @@
+ class SVX_DLLPUBLIC SdrOnOffItem: public SfxBoolItem {
+ public:
+     SdrOnOffItem(sal_uInt16 nId, bool bOn): SfxBoolItem(nId,bOn) {}
+-    SdrOnOffItem(sal_uInt16 nId, SvStream& rIn):  SfxBoolItem(nId,rIn) {}
+     virtual SfxPoolItem* Clone(SfxItemPool* pPool=nullptr) const override;
+-    virtual SfxPoolItem* Create(SvStream& rIn, sal_uInt16 nVer) const override;
+ 
+     virtual OUString GetValueTextByVal(bool bVal) const override;
+ 
+diff --git a/include/svx/sdprcitm.hxx b/include/svx/sdprcitm.hxx
+index 6d3d11a..ee7ec94 100644
+--- a/include/svx/sdprcitm.hxx
++++ b/include/svx/sdprcitm.hxx
+@@ -31,9 +31,7 @@ class SVX_DLLPUBLIC SdrPercentItem : public SfxUInt16Item
+ {
+ public:
+     SdrPercentItem(sal_uInt16 nId, sal_uInt16 nVal): SfxUInt16Item(nId,nVal) {}
+-    SdrPercentItem(sal_uInt16 nId, SvStream& rIn):  SfxUInt16Item(nId,rIn) {}
+     virtual SfxPoolItem* Clone(SfxItemPool* pPool=nullptr) const override;
+-    virtual SfxPoolItem* Create(SvStream& rIn, sal_uInt16 nVer) const override;
+ 
+     virtual bool GetPresentation(SfxItemPresentation ePres, MapUnit eCoreMetric, MapUnit ePresMetric, OUString& rText, const IntlWrapper&) const override;
+ };
+@@ -47,9 +45,7 @@ class SVX_DLLPUBLIC SdrSignedPercentItem : public SfxInt16Item
+ {
+ public:
+     SdrSignedPercentItem( sal_uInt16 nId, sal_Int16 nVal ) : SfxInt16Item( nId,nVal ) {}
+-    SdrSignedPercentItem( sal_uInt16 nId, SvStream& rIn ) : SfxInt16Item( nId,rIn ) {}
+     virtual SfxPoolItem* Clone( SfxItemPool* pPool = nullptr ) const override;
+-    virtual SfxPoolItem* Create( SvStream& rIn, sal_uInt16 nVer ) const override;
+ 
+     virtual bool GetPresentation(SfxItemPresentation ePres, MapUnit eCoreMetric, MapUnit ePresMetric, OUString& rText, const IntlWrapper&) const override;
+ };
+diff --git a/include/svx/sdtaaitm.hxx b/include/svx/sdtaaitm.hxx
+index 37a4b3c..a6a9904 100644
+--- a/include/svx/sdtaaitm.hxx
++++ b/include/svx/sdtaaitm.hxx
+@@ -26,9 +26,7 @@
+ class SVX_DLLPUBLIC SdrTextAniAmountItem: public SfxInt16Item {
+ public:
+     SdrTextAniAmountItem(sal_Int16 nVal=0): SfxInt16Item(SDRATTR_TEXT_ANIAMOUNT,nVal) {}
+-    SdrTextAniAmountItem(SvStream& rIn): SfxInt16Item(SDRATTR_TEXT_ANIAMOUNT,rIn) {}
+     virtual SfxPoolItem* Clone(SfxItemPool* pPool=nullptr) const override;
+-    virtual SfxPoolItem* Create(SvStream& rIn, sal_uInt16 nVer) const override;
+     virtual bool HasMetrics() const override;
+     virtual void ScaleMetrics(long nMul, long nDiv) override;
+ 
+diff --git a/include/svx/sdtaditm.hxx b/include/svx/sdtaditm.hxx
+index 7b6a655..b900748 100644
+--- a/include/svx/sdtaditm.hxx
++++ b/include/svx/sdtaditm.hxx
+@@ -35,9 +35,7 @@ enum class SdrTextAniDirection
+ class SVX_DLLPUBLIC SdrTextAniDirectionItem: public SfxEnumItem<SdrTextAniDirection> {
+ public:
+     SdrTextAniDirectionItem(SdrTextAniDirection eDir=SdrTextAniDirection::Left): SfxEnumItem(SDRATTR_TEXT_ANIDIRECTION, eDir) {}
+-    SdrTextAniDirectionItem(SvStream& rIn)                           : SfxEnumItem(SDRATTR_TEXT_ANIDIRECTION,rIn)  {}
+     virtual SfxPoolItem*   Clone(SfxItemPool* pPool=nullptr) const override;
+-    virtual SfxPoolItem*   Create(SvStream& rIn, sal_uInt16 nVer) const override;
+     virtual sal_uInt16     GetValueCount() const override;
+ 
+     virtual bool QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+diff --git a/include/svx/sdtaitm.hxx b/include/svx/sdtaitm.hxx
+index 3f542c7..d21407a 100644
+--- a/include/svx/sdtaitm.hxx
++++ b/include/svx/sdtaitm.hxx
+@@ -37,9 +37,7 @@ class SVX_DLLPUBLIC SdrTextVertAdjustItem: public SfxEnumItem<SdrTextVertAdjust>
+ public:
+     SdrTextVertAdjustItem(SdrTextVertAdjust eAdj=SDRTEXTVERTADJUST_TOP): SfxEnumItem(SDRATTR_TEXT_VERTADJUST, eAdj) {}
+     SdrTextVertAdjustItem(SdrTextVertAdjust eAdj, sal_uInt16 nWhich): SfxEnumItem(nWhich, eAdj) {}
+-    SdrTextVertAdjustItem(SvStream& rIn)                               : SfxEnumItem(SDRATTR_TEXT_VERTADJUST,rIn)  {}
+     virtual SfxPoolItem*      Clone(SfxItemPool* pPool=nullptr) const override;
+-    virtual SfxPoolItem*      Create(SvStream& rIn, sal_uInt16 nVer) const override;
+     virtual sal_uInt16        GetValueCount() const override; // { return 5; }
+ 
+     virtual bool QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+@@ -63,9 +61,7 @@ enum SdrTextHorzAdjust {SDRTEXTHORZADJUST_LEFT,     // left adjusted
+ class SVX_DLLPUBLIC SdrTextHorzAdjustItem: public SfxEnumItem<SdrTextHorzAdjust> {
+ public:
+     SdrTextHorzAdjustItem(SdrTextHorzAdjust eAdj=SDRTEXTHORZADJUST_BLOCK): SfxEnumItem(SDRATTR_TEXT_HORZADJUST, eAdj) {}
+-    SdrTextHorzAdjustItem(SvStream& rIn)                                 : SfxEnumItem(SDRATTR_TEXT_HORZADJUST, rIn)  {}
+     virtual SfxPoolItem*      Clone(SfxItemPool* pPool=nullptr) const override;
+-    virtual SfxPoolItem*      Create(SvStream& rIn, sal_uInt16 nVer) const override;
+     virtual sal_uInt16        GetValueCount() const override;
+ 
+     virtual bool QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+diff --git a/include/svx/sdtakitm.hxx b/include/svx/sdtakitm.hxx
+index 5a8d020..6c9b82e 100644
+--- a/include/svx/sdtakitm.hxx
++++ b/include/svx/sdtakitm.hxx
+@@ -79,9 +79,7 @@ enum class SdrTextAniKind {
+ class SVX_DLLPUBLIC SdrTextAniKindItem: public SfxEnumItem<SdrTextAniKind> {
+ public:
+     SdrTextAniKindItem(SdrTextAniKind eKind=SdrTextAniKind::NONE): SfxEnumItem(SDRATTR_TEXT_ANIKIND, eKind) {}
+-    SdrTextAniKindItem(SvStream& rIn)                       : SfxEnumItem(SDRATTR_TEXT_ANIKIND, rIn)  {}
+     virtual SfxPoolItem*      Clone(SfxItemPool* pPool=nullptr) const override;
+-    virtual SfxPoolItem*      Create(SvStream& rIn, sal_uInt16 nVer) const override;
+     virtual sal_uInt16        GetValueCount() const override; // { return 5; }
+ 
+     virtual bool QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+diff --git a/include/svx/sdtayitm.hxx b/include/svx/sdtayitm.hxx
+index 88a5c58..ad339bd 100644
+--- a/include/svx/sdtayitm.hxx
++++ b/include/svx/sdtayitm.hxx
+@@ -26,9 +26,7 @@
+ class SVX_DLLPUBLIC SdrTextAniDelayItem: public SfxUInt16Item {
+ public:
+     SdrTextAniDelayItem(sal_uInt16 nVal=0): SfxUInt16Item(SDRATTR_TEXT_ANIDELAY,nVal) {}
+-    SdrTextAniDelayItem(SvStream& rIn): SfxUInt16Item(SDRATTR_TEXT_ANIDELAY,rIn)  {}
+     virtual SfxPoolItem* Clone(SfxItemPool* pPool=nullptr) const override;
+-    virtual SfxPoolItem* Create(SvStream& rIn, sal_uInt16 nVer) const override;
+     virtual bool GetPresentation(SfxItemPresentation ePres, MapUnit eCoreMetric, MapUnit ePresMetric, OUString& rText, const IntlWrapper&) const override;
+ };
+ 
+diff --git a/include/svx/sdtfsitm.hxx b/include/svx/sdtfsitm.hxx
+index 3039de8..51909e8 100644
+--- a/include/svx/sdtfsitm.hxx
++++ b/include/svx/sdtfsitm.hxx
+@@ -46,9 +46,7 @@ class SVX_DLLPUBLIC SdrTextFitToSizeTypeItem: public SfxEnumItem<SdrFitToSizeTyp
+ public:
+     static SfxPoolItem* CreateDefault();
+     SdrTextFitToSizeTypeItem(SdrFitToSizeType eFit=SdrFitToSizeType::NONE): SfxEnumItem(SDRATTR_TEXT_FITTOSIZE, eFit) {}
+-    SdrTextFitToSizeTypeItem(SvStream& rIn)                        : SfxEnumItem(SDRATTR_TEXT_FITTOSIZE, rIn)  {}
+     virtual SfxPoolItem*     Clone(SfxItemPool* pPool=nullptr) const override;
+-    virtual SfxPoolItem*     Create(SvStream& rIn, sal_uInt16 nVer) const override;
+     virtual sal_uInt16       GetValueCount() const override;
+ 
+     virtual bool             QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+diff --git a/include/svx/sdynitm.hxx b/include/svx/sdynitm.hxx
+index 61fa67f..33bdcd0 100644
+--- a/include/svx/sdynitm.hxx
++++ b/include/svx/sdynitm.hxx
+@@ -30,9 +30,7 @@
+ class SVX_DLLPUBLIC SdrYesNoItem: public SfxBoolItem {
+ public:
+     SdrYesNoItem(sal_uInt16 nId, bool bOn): SfxBoolItem(nId,bOn) {}
+-    SdrYesNoItem(sal_uInt16 nId, SvStream& rIn):  SfxBoolItem(nId,rIn) {}
+     virtual SfxPoolItem* Clone(SfxItemPool* pPool=nullptr) const override;
+-    virtual SfxPoolItem* Create(SvStream& rIn, sal_uInt16 nVer) const override;
+     virtual OUString GetValueTextByVal(bool bVal) const override;
+     virtual bool GetPresentation(SfxItemPresentation ePres, MapUnit eCoreMetric, MapUnit ePresMetric, OUString& rText, const IntlWrapper&) const override;
+ };
+diff --git a/include/svx/svx3ditems.hxx b/include/svx/svx3ditems.hxx
+index c2472c9..11b4179 100644
+--- a/include/svx/svx3ditems.hxx
++++ b/include/svx/svx3ditems.hxx
+@@ -63,7 +63,6 @@ inline SfxBoolItem makeSvx3DDoubleSidedItem(bool bVal) {
+ class Svx3DReducedLineGeometryItem : public SfxBoolItem {
+ public:
+     Svx3DReducedLineGeometryItem(bool bVal = false);
+-    virtual SfxPoolItem* Create(SvStream& rIn, sal_uInt16 nItemVersion) const override;
+     virtual sal_uInt16 GetVersion(sal_uInt16 nFileFormatVersion) const override;
+     SfxPoolItem * Clone(SfxItemPool * = nullptr) const override;
+ };
+@@ -284,7 +283,6 @@ public:
+ class Svx3DSmoothNormalsItem : public SfxBoolItem {
+ public:
+     Svx3DSmoothNormalsItem(bool bVal = true);
+-    virtual SfxPoolItem* Create(SvStream& rIn, sal_uInt16 nItemVersion) const override;
+     virtual sal_uInt16 GetVersion(sal_uInt16 nFileFormatVersion) const override;
+     SfxPoolItem * Clone(SfxItemPool * = nullptr) const override;
+ };
+@@ -293,7 +291,6 @@ public:
+ class Svx3DSmoothLidsItem : public SfxBoolItem {
+ public:
+     Svx3DSmoothLidsItem(bool bVal = false);
+-    virtual SfxPoolItem* Create(SvStream& rIn, sal_uInt16 nItemVersion) const override;
+     virtual sal_uInt16 GetVersion(sal_uInt16 nFileFormatVersion) const override;
+     SfxPoolItem * Clone(SfxItemPool * = nullptr) const override;
+ };
+@@ -302,7 +299,6 @@ public:
+ class Svx3DCharacterModeItem : public SfxBoolItem {
+ public:
+     Svx3DCharacterModeItem(bool bVal = false);
+-    virtual SfxPoolItem* Create(SvStream& rIn, sal_uInt16 nItemVersion) const override;
+     virtual sal_uInt16 GetVersion(sal_uInt16 nFileFormatVersion) const override;
+     SfxPoolItem * Clone(SfxItemPool * = nullptr) const override;
+ };
+@@ -311,7 +307,6 @@ public:
+ class SVX_DLLPUBLIC Svx3DCloseFrontItem : public SfxBoolItem {
+ public:
+     Svx3DCloseFrontItem(bool bVal = true);
+-    SVX_DLLPRIVATE virtual SfxPoolItem* Create(SvStream& rIn, sal_uInt16 nItemVersion) const override;
+     SVX_DLLPRIVATE virtual sal_uInt16 GetVersion(sal_uInt16 nFileFormatVersion) const override;
+     SfxPoolItem * Clone(SfxItemPool * = nullptr) const override;
+ };
+@@ -320,7 +315,6 @@ public:
+ class SVX_DLLPUBLIC Svx3DCloseBackItem : public SfxBoolItem {
+ public:
+     Svx3DCloseBackItem(bool bVal = true);
+-    SVX_DLLPRIVATE virtual SfxPoolItem* Create(SvStream& rIn, sal_uInt16 nItemVersion) const override;
+     SVX_DLLPRIVATE virtual sal_uInt16 GetVersion(sal_uInt16 nFileFormatVersion) const override;
+     SfxPoolItem * Clone(SfxItemPool * = nullptr) const override;
+ };
+diff --git a/include/svx/sxcecitm.hxx b/include/svx/sxcecitm.hxx
+index 3f51582..22abfd4 100644
+--- a/include/svx/sxcecitm.hxx
++++ b/include/svx/sxcecitm.hxx
+@@ -33,9 +33,7 @@ enum class SdrCaptionEscDir { Horizontal, Vertical, BestFit };
+ class SVX_DLLPUBLIC SdrCaptionEscDirItem: public SfxEnumItem<SdrCaptionEscDir> {
+ public:
+     SdrCaptionEscDirItem(SdrCaptionEscDir eDir=SdrCaptionEscDir::Horizontal): SfxEnumItem(SDRATTR_CAPTIONESCDIR, eDir) {}
+-    SdrCaptionEscDirItem(SvStream& rIn)                              : SfxEnumItem(SDRATTR_CAPTIONESCDIR,rIn)  {}
+     virtual SfxPoolItem*     Clone(SfxItemPool* pPool=nullptr) const override;
+-    virtual SfxPoolItem*     Create(SvStream& rIn, sal_uInt16 nVer) const override;
+     virtual sal_uInt16       GetValueCount() const override; // { return 3; }
+ 
+     virtual OUString GetValueTextByPos(sal_uInt16 nPos) const override;
+diff --git a/include/svx/sxctitm.hxx b/include/svx/sxctitm.hxx
+index 58f5e97..9dc5d92 100644
+--- a/include/svx/sxctitm.hxx
++++ b/include/svx/sxctitm.hxx
+@@ -31,9 +31,7 @@ enum class SdrCaptionType { Type1, Type2, Type3, Type4 };
+ class SVX_DLLPUBLIC SdrCaptionTypeItem: public SfxEnumItem<SdrCaptionType> {
+ public:
+     SdrCaptionTypeItem(SdrCaptionType eStyle=SdrCaptionType::Type3): SfxEnumItem(SDRATTR_CAPTIONTYPE, eStyle) {}
+-    SdrCaptionTypeItem(SvStream& rIn)                      : SfxEnumItem(SDRATTR_CAPTIONTYPE,rIn)    {}
+     virtual SfxPoolItem*    Clone(SfxItemPool* pPool=nullptr) const override;
+-    virtual SfxPoolItem*    Create(SvStream& rIn, sal_uInt16 nVer) const override;
+     virtual sal_uInt16      GetValueCount() const override; // { return 4; }
+     virtual OUString        GetValueTextByPos(sal_uInt16 nPos) const override;
+     virtual bool GetPresentation(SfxItemPresentation ePres, MapUnit eCoreMetric, MapUnit ePresMetric, OUString& rText, const IntlWrapper&) const override;
+diff --git a/include/svx/sxekitm.hxx b/include/svx/sxekitm.hxx
+index 922db82..5bb1035 100644
+--- a/include/svx/sxekitm.hxx
++++ b/include/svx/sxekitm.hxx
+@@ -34,9 +34,7 @@ enum class SdrEdgeKind
+ class SVX_DLLPUBLIC SdrEdgeKindItem: public SfxEnumItem<SdrEdgeKind> {
+ public:
+     SdrEdgeKindItem(SdrEdgeKind eStyle=SdrEdgeKind::OrthoLines): SfxEnumItem(SDRATTR_EDGEKIND, eStyle) {}
+-    SdrEdgeKindItem(SvStream& rIn)                        : SfxEnumItem(SDRATTR_EDGEKIND,rIn)    {}
+     virtual SfxPoolItem* Clone(SfxItemPool* pPool=nullptr) const override;
+-    virtual SfxPoolItem* Create(SvStream& rIn, sal_uInt16 nVer) const override;
+     virtual sal_uInt16   GetValueCount() const override; // { return 5; }
+     virtual bool         QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+     virtual bool         PutValue( const css::uno::Any& rVal, sal_uInt8 nMemberId ) override;
+diff --git a/include/svx/sxmtpitm.hxx b/include/svx/sxmtpitm.hxx
+index 945710a..8f59e0e 100644
+--- a/include/svx/sxmtpitm.hxx
++++ b/include/svx/sxmtpitm.hxx
+@@ -32,12 +32,7 @@ public:
+         : SfxEnumItem(SDRATTR_MEASURETEXTHPOS, ePos)
+     {
+     }
+-    SdrMeasureTextHPosItem(SvStream& rIn)
+-        : SfxEnumItem(SDRATTR_MEASURETEXTHPOS, rIn)
+-    {
+-    }
+     virtual SfxPoolItem*   Clone(SfxItemPool* pPool=nullptr) const override;
+-    virtual SfxPoolItem*   Create(SvStream& rIn, sal_uInt16 nVer) const override;
+     virtual sal_uInt16     GetValueCount() const override; // { return 4; }
+ 
+     virtual bool QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+@@ -54,12 +49,7 @@ public:
+         : SfxEnumItem(SDRATTR_MEASURETEXTVPOS, ePos)
+     {
+     }
+-    SdrMeasureTextVPosItem(SvStream& rIn)
+-        : SfxEnumItem(SDRATTR_MEASURETEXTVPOS, rIn)
+-    {
+-    }
+     virtual SfxPoolItem*   Clone(SfxItemPool* pPool=nullptr) const override;
+-    virtual SfxPoolItem*   Create(SvStream& rIn, sal_uInt16 nVer) const override;
+     virtual sal_uInt16     GetValueCount() const override; // { return 5; }
+ 
+     virtual bool QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+diff --git a/include/svx/sxmuitm.hxx b/include/svx/sxmuitm.hxx
+index 7275505..9f8d725 100644
+--- a/include/svx/sxmuitm.hxx
++++ b/include/svx/sxmuitm.hxx
+@@ -29,9 +29,7 @@
+ class SVX_DLLPUBLIC SdrMeasureUnitItem: public SfxEnumItem<FieldUnit> {
+ public:
+     SdrMeasureUnitItem(FieldUnit eUnit=FUNIT_NONE): SfxEnumItem(SDRATTR_MEASUREUNIT, eUnit) {}
+-    SdrMeasureUnitItem(SvStream& rIn)             : SfxEnumItem(SDRATTR_MEASUREUNIT,rIn)   {}
+     virtual SfxPoolItem* Clone(SfxItemPool* pPool=nullptr) const override;
+-    virtual SfxPoolItem* Create(SvStream& rIn, sal_uInt16 nVer) const override;
+     virtual sal_uInt16   GetValueCount() const override; // { return 14; }
+ 
+     virtual bool         QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+diff --git a/include/svx/xfillit0.hxx b/include/svx/xfillit0.hxx
+index 7c16ffb..3c7d3f6 100644
+--- a/include/svx/xfillit0.hxx
++++ b/include/svx/xfillit0.hxx
+@@ -37,10 +37,8 @@ public:
+                             static SfxPoolItem* CreateDefault();
+ 
+                             XFillStyleItem(css::drawing::FillStyle = css::drawing::FillStyle_SOLID);
+-                            XFillStyleItem(SvStream& rIn);
+ 
+     virtual SfxPoolItem*    Clone(SfxItemPool* pPool = nullptr) const override;
+-    virtual SfxPoolItem*    Create(SvStream& rIn, sal_uInt16 nVer) const override;
+ 
+     virtual bool            QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+     virtual bool            PutValue( const css::uno::Any& rVal, sal_uInt8 nMemberId ) override;
+diff --git a/include/svx/xflbckit.hxx b/include/svx/xflbckit.hxx
+index 50f9b00..438b028 100644
+--- a/include/svx/xflbckit.hxx
++++ b/include/svx/xflbckit.hxx
+@@ -33,11 +33,8 @@ class SVX_DLLPUBLIC XFillBackgroundItem : public SfxBoolItem
+ {
+ public:
+                             XFillBackgroundItem( bool bFill = false );
+-                            SVX_DLLPRIVATE XFillBackgroundItem( SvStream& rIn );
+-
+ 
+     SVX_DLLPRIVATE virtual SfxPoolItem*    Clone( SfxItemPool* pPool = nullptr ) const override;
+-    SVX_DLLPRIVATE virtual SfxPoolItem*    Create( SvStream& rIn, sal_uInt16 nVer ) const override;
+ 
+     SVX_DLLPRIVATE virtual bool GetPresentation( SfxItemPresentation ePres,
+                                                  MapUnit eCoreMetric,
+diff --git a/include/svx/xflbmpit.hxx b/include/svx/xflbmpit.hxx
+index d3b0fc9..30d77a2 100644
+--- a/include/svx/xflbmpit.hxx
++++ b/include/svx/xflbmpit.hxx
+@@ -28,10 +28,8 @@ class SVX_DLLPUBLIC XFillBmpPosItem : public SfxEnumItem<RectPoint>
+ {
+ public:
+                             XFillBmpPosItem( RectPoint eRP = RectPoint::MM );
+-                            SVX_DLLPRIVATE XFillBmpPosItem( SvStream& rIn );
+ 
+     SVX_DLLPRIVATE virtual SfxPoolItem*    Clone( SfxItemPool* pPool = nullptr ) const override;
+-    SVX_DLLPRIVATE virtual SfxPoolItem*    Create( SvStream& rIn, sal_uInt16 nVer ) const override;
+ 
+     SVX_DLLPRIVATE virtual bool GetPresentation( SfxItemPresentation ePres,
+                                                  MapUnit eCoreMetric,
+diff --git a/include/svx/xflbmsli.hxx b/include/svx/xflbmsli.hxx
+index 7244c59..feb9018 100644
+--- a/include/svx/xflbmsli.hxx
++++ b/include/svx/xflbmsli.hxx
+@@ -27,10 +27,8 @@ class SVX_DLLPUBLIC XFillBmpSizeLogItem : public SfxBoolItem
+ {
+ public:
+                             XFillBmpSizeLogItem( bool bLog = true );
+-                            SVX_DLLPRIVATE XFillBmpSizeLogItem( SvStream& rIn );
+ 
+     SVX_DLLPRIVATE virtual SfxPoolItem*    Clone( SfxItemPool* pPool = nullptr ) const override;
+-    SVX_DLLPRIVATE virtual SfxPoolItem*    Create( SvStream& rIn, sal_uInt16 nVer ) const override;
+ 
+     SVX_DLLPRIVATE virtual bool GetPresentation( SfxItemPresentation ePres,
+                                                  MapUnit eCoreMetric,
+diff --git a/include/svx/xflbmsxy.hxx b/include/svx/xflbmsxy.hxx
+index eb5a8a0..e2cb834 100644
+--- a/include/svx/xflbmsxy.hxx
++++ b/include/svx/xflbmsxy.hxx
+@@ -27,10 +27,8 @@ class SVX_DLLPUBLIC XFillBmpSizeXItem : public SfxMetricItem
+ {
+ public:
+                             XFillBmpSizeXItem( long nSizeX = 0 );
+-                            SVX_DLLPRIVATE XFillBmpSizeXItem( SvStream& rIn );
+ 
+     SVX_DLLPRIVATE virtual SfxPoolItem*    Clone( SfxItemPool* pPool = nullptr ) const override;
+-    SVX_DLLPRIVATE virtual SfxPoolItem*    Create( SvStream& rIn, sal_uInt16 nVer ) const override;
+ 
+     SVX_DLLPRIVATE virtual bool GetPresentation( SfxItemPresentation ePres,
+                                                  MapUnit eCoreMetric,
+@@ -45,10 +43,8 @@ class SVX_DLLPUBLIC XFillBmpSizeYItem : public SfxMetricItem
+ {
+ public:
+                             XFillBmpSizeYItem( long nSizeY = 0 );
+-                            SVX_DLLPRIVATE XFillBmpSizeYItem( SvStream& rIn );
+ 
+     SVX_DLLPRIVATE virtual SfxPoolItem*    Clone( SfxItemPool* pPool = nullptr ) const override;
+-    SVX_DLLPRIVATE virtual SfxPoolItem*    Create( SvStream& rIn, sal_uInt16 nVer ) const override;
+ 
+     SVX_DLLPRIVATE virtual bool GetPresentation( SfxItemPresentation ePres,
+                                                  MapUnit eCoreMetric,
+diff --git a/include/svx/xflbmtit.hxx b/include/svx/xflbmtit.hxx
+index d7d0ea6..8900a25 100644
+--- a/include/svx/xflbmtit.hxx
++++ b/include/svx/xflbmtit.hxx
+@@ -27,10 +27,8 @@ class SVX_DLLPUBLIC XFillBmpTileItem : public SfxBoolItem
+ {
+ public:
+                             XFillBmpTileItem( bool bTile = true );
+-                            XFillBmpTileItem( SvStream& rIn );
+ 
+     virtual SfxPoolItem*    Clone( SfxItemPool* pPool = nullptr ) const override;
+-    virtual SfxPoolItem*    Create( SvStream& rIn, sal_uInt16 nVer ) const override;
+ 
+     virtual bool GetPresentation( SfxItemPresentation ePres,
+                                   MapUnit eCoreMetric,
+diff --git a/include/svx/xflboxy.hxx b/include/svx/xflboxy.hxx
+index f0f3adf..02e3ee0 100644
+--- a/include/svx/xflboxy.hxx
++++ b/include/svx/xflboxy.hxx
+@@ -27,10 +27,8 @@ class SVX_DLLPUBLIC XFillBmpPosOffsetXItem : public SfxUInt16Item
+ {
+ public:
+                             XFillBmpPosOffsetXItem( sal_uInt16 nOffPosX = 0 );
+-                            SVX_DLLPRIVATE XFillBmpPosOffsetXItem( SvStream& rIn );
+ 
+     SVX_DLLPRIVATE virtual SfxPoolItem*    Clone( SfxItemPool* pPool = nullptr ) const override;
+-    SVX_DLLPRIVATE virtual SfxPoolItem*    Create( SvStream& rIn, sal_uInt16 nVer ) const override;
+ 
+     SVX_DLLPRIVATE virtual bool GetPresentation( SfxItemPresentation ePres,
+                                                  MapUnit eCoreMetric,
+@@ -42,10 +40,8 @@ class SVX_DLLPUBLIC XFillBmpPosOffsetYItem : public SfxUInt16Item
+ {
+ public:
+                             XFillBmpPosOffsetYItem( sal_uInt16 nOffPosY = 0 );
+-                            SVX_DLLPRIVATE XFillBmpPosOffsetYItem( SvStream& rIn );
+ 
+     SVX_DLLPRIVATE virtual SfxPoolItem*    Clone( SfxItemPool* pPool = nullptr ) const override;
+-    SVX_DLLPRIVATE virtual SfxPoolItem*    Create( SvStream& rIn, sal_uInt16 nVer ) const override;
+ 
+     SVX_DLLPRIVATE virtual bool GetPresentation( SfxItemPresentation ePres,
+                                                  MapUnit eCoreMetric,
+diff --git a/include/svx/xflbstit.hxx b/include/svx/xflbstit.hxx
+index 5d7a807..3c0fda4 100644
+--- a/include/svx/xflbstit.hxx
++++ b/include/svx/xflbstit.hxx
+@@ -27,10 +27,8 @@ class SVX_DLLPUBLIC XFillBmpStretchItem : public SfxBoolItem
+ {
+ public:
+                             XFillBmpStretchItem( bool bStretch = true );
+-                            XFillBmpStretchItem( SvStream& rIn );
+ 
+     virtual SfxPoolItem*    Clone( SfxItemPool* pPool = nullptr ) const override;
+-    virtual SfxPoolItem*    Create( SvStream& rIn, sal_uInt16 nVer ) const override;
+ 
+     virtual bool GetPresentation( SfxItemPresentation ePres,
+                                   MapUnit eCoreMetric,
+diff --git a/include/svx/xflbtoxy.hxx b/include/svx/xflbtoxy.hxx
+index 61c2b2a..3ea0b6a 100644
+--- a/include/svx/xflbtoxy.hxx
++++ b/include/svx/xflbtoxy.hxx
+@@ -27,10 +27,8 @@ class SVX_DLLPUBLIC XFillBmpTileOffsetXItem : public SfxUInt16Item
+ {
+ public:
+                             XFillBmpTileOffsetXItem( sal_uInt16 nOffX = 0 );
+-                            SVX_DLLPRIVATE XFillBmpTileOffsetXItem( SvStream& rIn );
+ 
+     SVX_DLLPRIVATE virtual SfxPoolItem*    Clone( SfxItemPool* pPool = nullptr ) const override;
+-    SVX_DLLPRIVATE virtual SfxPoolItem*    Create( SvStream& rIn, sal_uInt16 nVer ) const override;
+ 
+     SVX_DLLPRIVATE virtual bool GetPresentation( SfxItemPresentation ePres,
+                                                  MapUnit eCoreMetric,
+@@ -42,10 +40,8 @@ class SVX_DLLPUBLIC XFillBmpTileOffsetYItem : public SfxUInt16Item
+ {
+ public:
+                             XFillBmpTileOffsetYItem( sal_uInt16 nOffX = 0 );
+-                            SVX_DLLPRIVATE XFillBmpTileOffsetYItem( SvStream& rIn );
+ 
+     SVX_DLLPRIVATE virtual SfxPoolItem*    Clone( SfxItemPool* pPool = nullptr ) const override;
+-    SVX_DLLPRIVATE virtual SfxPoolItem*    Create( SvStream& rIn, sal_uInt16 nVer ) const override;
+ 
+     SVX_DLLPRIVATE virtual bool GetPresentation( SfxItemPresentation ePres,
+                                                  MapUnit eCoreMetric,
+diff --git a/include/svx/xfltrit.hxx b/include/svx/xfltrit.hxx
+index 6cab8dc..57dcff4 100644
+--- a/include/svx/xfltrit.hxx
++++ b/include/svx/xfltrit.hxx
+@@ -33,9 +33,7 @@ class SVX_DLLPUBLIC XFillTransparenceItem: public SfxUInt16Item
+ {
+ public:
+                             XFillTransparenceItem(sal_uInt16 nFillTransparence = 0);
+-                            XFillTransparenceItem(SvStream& rIn);
+     virtual SfxPoolItem*    Clone(SfxItemPool* pPool = nullptr) const override;
+-    virtual SfxPoolItem*    Create(SvStream& rIn, sal_uInt16 nVer) const override;
+     virtual bool GetPresentation( SfxItemPresentation ePres,
+                                   MapUnit eCoreMetric,
+                                   MapUnit ePresMetric,
+diff --git a/include/svx/xftadit.hxx b/include/svx/xftadit.hxx
+index c7a418e..c4b6711 100644
+--- a/include/svx/xftadit.hxx
++++ b/include/svx/xftadit.hxx
+@@ -35,9 +35,7 @@ public:
+                             static SfxPoolItem* CreateDefault();
+ 
+                             XFormTextAdjustItem(XFormTextAdjust = XFormTextAdjust::Center);
+-                            XFormTextAdjustItem(SvStream& rIn);
+     virtual SfxPoolItem*    Clone(SfxItemPool* pPool = nullptr) const override;
+-    virtual SfxPoolItem*    Create(SvStream& rIn, sal_uInt16 nVer) const override;
+     virtual sal_uInt16      GetValueCount() const override;
+     // #FontWork#
+     virtual bool            QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+diff --git a/include/svx/xftdiit.hxx b/include/svx/xftdiit.hxx
+index 7c68166..5e776e0 100644
+--- a/include/svx/xftdiit.hxx
++++ b/include/svx/xftdiit.hxx
+@@ -34,9 +34,7 @@ class SVX_DLLPUBLIC XFormTextDistanceItem : public SfxMetricItem
+ public:
+                             static SfxPoolItem* CreateDefault();
+                             XFormTextDistanceItem(long nDist = 0);
+-                            XFormTextDistanceItem(SvStream& rIn);
+     virtual SfxPoolItem*    Clone(SfxItemPool* pPool = nullptr) const override;
+-    virtual SfxPoolItem*    Create(SvStream& rIn, sal_uInt16 nVer) const override;
+ };
+ 
+ #endif
+diff --git a/include/svx/xftmrit.hxx b/include/svx/xftmrit.hxx
+index 15edc6b..7ddc108 100644
+--- a/include/svx/xftmrit.hxx
++++ b/include/svx/xftmrit.hxx
+@@ -34,9 +34,7 @@ class SVX_DLLPUBLIC XFormTextMirrorItem : public SfxBoolItem
+ public:
+                             static SfxPoolItem* CreateDefault();
+                             XFormTextMirrorItem(bool bMirror = false);
+-                            XFormTextMirrorItem(SvStream& rIn);
+     virtual SfxPoolItem*    Clone(SfxItemPool* pPool = nullptr) const override;
+-    virtual SfxPoolItem*    Create(SvStream& rIn, sal_uInt16 nVer) const override;
+ };
+ 
+ #endif
+diff --git a/include/svx/xftouit.hxx b/include/svx/xftouit.hxx
+index d214a3d..ed46bd4 100644
+--- a/include/svx/xftouit.hxx
++++ b/include/svx/xftouit.hxx
+@@ -35,9 +35,7 @@ public:
+                             static SfxPoolItem* CreateDefault();
+ 
+                             XFormTextOutlineItem(bool bOutline = false);
+-                            XFormTextOutlineItem(SvStream& rIn);
+     virtual SfxPoolItem*    Clone(SfxItemPool* pPool = nullptr) const override;
+-    virtual SfxPoolItem*    Create(SvStream& rIn, sal_uInt16 nVer) const override;
+ };
+ 
+ #endif
+diff --git a/include/svx/xftshit.hxx b/include/svx/xftshit.hxx
+index 7f85186..a803970 100644
+--- a/include/svx/xftshit.hxx
++++ b/include/svx/xftshit.hxx
+@@ -36,9 +36,7 @@ public:
+                             static SfxPoolItem* CreateDefault();
+ 
+                             XFormTextShadowItem(XFormTextShadow = XFormTextShadow::NONE);
+-                            XFormTextShadowItem(SvStream& rIn);
+     virtual SfxPoolItem*    Clone(SfxItemPool* pPool = nullptr) const override;
+-    virtual SfxPoolItem*    Create(SvStream& rIn, sal_uInt16 nVer) const override;
+     virtual sal_uInt16      GetValueCount() const override;
+     // #FontWork#
+     virtual bool            QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+diff --git a/include/svx/xftshtit.hxx b/include/svx/xftshtit.hxx
+index 097aba3..e06b1e6 100644
+--- a/include/svx/xftshtit.hxx
++++ b/include/svx/xftshtit.hxx
+@@ -32,9 +32,7 @@ class XFormTextShadowTranspItem: public SfxUInt16Item
+ {
+ public:
+                             XFormTextShadowTranspItem(sal_uInt16 nShdwTransparence = 0);
+-                            XFormTextShadowTranspItem(SvStream& rIn);
+     virtual SfxPoolItem*    Clone(SfxItemPool* pPool = nullptr) const override;
+-    virtual SfxPoolItem*    Create(SvStream& rIn, sal_uInt16 nVer) const override;
+ };
+ 
+ #endif
+diff --git a/include/svx/xftshxy.hxx b/include/svx/xftshxy.hxx
+index 12a1e68..4e0d0b3 100644
+--- a/include/svx/xftshxy.hxx
++++ b/include/svx/xftshxy.hxx
+@@ -35,9 +35,7 @@ public:
+                             static SfxPoolItem* CreateDefault();
+ 
+                             XFormTextShadowXValItem(long nVal = 0);
+-                            XFormTextShadowXValItem(SvStream& rIn);
+     virtual SfxPoolItem*    Clone(SfxItemPool* pPool = nullptr) const override;
+-    virtual SfxPoolItem*    Create(SvStream& rIn, sal_uInt16 nVer) const override;
+ };
+ 
+ /*************************************************************************
+@@ -51,9 +49,7 @@ class SVX_DLLPUBLIC XFormTextShadowYValItem : public SfxMetricItem
+ public:
+                             static SfxPoolItem* CreateDefault();
+                             XFormTextShadowYValItem(long nVal = 0);
+-                            XFormTextShadowYValItem(SvStream& rIn);
+     virtual SfxPoolItem*    Clone(SfxItemPool* pPool = nullptr) const override;
+-    virtual SfxPoolItem*    Create(SvStream& rIn, sal_uInt16 nVer) const override;
+ };
+ 
+ #endif
+diff --git a/include/svx/xftstit.hxx b/include/svx/xftstit.hxx
+index fdabc45..035db12 100644
+--- a/include/svx/xftstit.hxx
++++ b/include/svx/xftstit.hxx
+@@ -35,9 +35,7 @@ public:
+                             static SfxPoolItem* CreateDefault();
+ 
+                             XFormTextStartItem(long nStart = 0);
+-                            XFormTextStartItem(SvStream& rIn);
+     virtual SfxPoolItem*    Clone(SfxItemPool* pPool = nullptr) const override;
+-    virtual SfxPoolItem*    Create(SvStream& rIn, sal_uInt16 nVer) const override;
+ };
+ 
+ #endif
+diff --git a/include/svx/xgrscit.hxx b/include/svx/xgrscit.hxx
+index 3cae1e1..b52009f 100644
+--- a/include/svx/xgrscit.hxx
++++ b/include/svx/xgrscit.hxx
+@@ -33,9 +33,7 @@ class SVX_DLLPUBLIC XGradientStepCountItem: public SfxUInt16Item
+ {
+ public:
+                             XGradientStepCountItem( sal_uInt16 nStepCount = 0 );
+-                            XGradientStepCountItem( SvStream& rIn );
+     virtual SfxPoolItem*    Clone( SfxItemPool* pPool = nullptr ) const override;
+-    virtual SfxPoolItem*    Create( SvStream& rIn, sal_uInt16 nVer ) const override;
+     virtual bool GetPresentation( SfxItemPresentation ePres,
+                                   MapUnit eCoreMetric,
+                                   MapUnit ePresMetric,
+diff --git a/include/svx/xlineit0.hxx b/include/svx/xlineit0.hxx
+index 612ec5f..2771df5 100644
+--- a/include/svx/xlineit0.hxx
++++ b/include/svx/xlineit0.hxx
+@@ -33,9 +33,7 @@ class SVX_DLLPUBLIC XLineStyleItem : public SfxEnumItem<css::drawing::LineStyle>
+ public:
+                             static SfxPoolItem* CreateDefault();
+                             XLineStyleItem(css::drawing::LineStyle = css::drawing::LineStyle_SOLID);
+-                            XLineStyleItem(SvStream& rIn);
+     virtual SfxPoolItem*    Clone(SfxItemPool* pPool = nullptr) const override;
+-    virtual SfxPoolItem*    Create(SvStream& rIn, sal_uInt16 nVer) const override;
+ 
+     virtual bool            QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+     virtual bool            PutValue( const css::uno::Any& rVal, sal_uInt8 nMemberId ) override;
+diff --git a/include/svx/xlinjoit.hxx b/include/svx/xlinjoit.hxx
+index 8111aed..e56df6b 100644
+--- a/include/svx/xlinjoit.hxx
++++ b/include/svx/xlinjoit.hxx
+@@ -34,11 +34,9 @@ class SVX_DLLPUBLIC XLineJointItem : public SfxEnumItem<css::drawing::LineJoint>
+ public:
+                             static SfxPoolItem* CreateDefault();
+                             XLineJointItem( css::drawing::LineJoint eLineJoint = css::drawing::LineJoint_ROUND );
+-                            XLineJointItem( SvStream& rIn );
+ 
+     virtual sal_uInt16      GetVersion( sal_uInt16 nFileFormatVersion ) const override;
+     virtual SfxPoolItem*    Clone( SfxItemPool* pPool = nullptr ) const override;
+-    virtual SfxPoolItem*    Create( SvStream& rIn, sal_uInt16 nVer ) const override;
+ 
+     virtual bool            QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+     virtual bool            PutValue( const css::uno::Any& rVal, sal_uInt8 nMemberId ) override;
+diff --git a/include/svx/xlncapit.hxx b/include/svx/xlncapit.hxx
+index f7d525b..20f5ed0 100644
+--- a/include/svx/xlncapit.hxx
++++ b/include/svx/xlncapit.hxx
+@@ -34,11 +34,9 @@ class SVX_DLLPUBLIC XLineCapItem : public SfxEnumItem<css::drawing::LineCap>
+ public:
+     static SfxPoolItem* CreateDefault();
+     XLineCapItem(css::drawing::LineCap eLineCap = css::drawing::LineCap_BUTT);
+-    XLineCapItem(SvStream& rIn);
+ 
+     virtual sal_uInt16      GetVersion( sal_uInt16 nFileFormatVersion ) const override;
+     virtual SfxPoolItem*    Clone( SfxItemPool* pPool = nullptr ) const override;
+-    virtual SfxPoolItem*    Create( SvStream& rIn, sal_uInt16 nVer ) const override;
+ 
+     virtual bool QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+     virtual bool PutValue( const css::uno::Any& rVal, sal_uInt8 nMemberId ) override;
+diff --git a/include/svx/xlnedcit.hxx b/include/svx/xlnedcit.hxx
+index 8770976..8befa98 100644
+--- a/include/svx/xlnedcit.hxx
++++ b/include/svx/xlnedcit.hxx
+@@ -30,9 +30,7 @@ class SVX_DLLPUBLIC XLineEndCenterItem : public SfxBoolItem
+ {
+ public:
+                             XLineEndCenterItem(bool bEndCenter = false);
+-                            XLineEndCenterItem(SvStream& rIn);
+     virtual SfxPoolItem*    Clone(SfxItemPool* pPool = nullptr) const override;
+-    virtual SfxPoolItem*    Create(SvStream& rIn, sal_uInt16 nVer) const override;
+ 
+     virtual bool            QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+     virtual bool            PutValue( const css::uno::Any& rVal, sal_uInt8 nMemberId ) override;
+diff --git a/include/svx/xlnedwit.hxx b/include/svx/xlnedwit.hxx
+index 738bfc1..6553e4b 100644
+--- a/include/svx/xlnedwit.hxx
++++ b/include/svx/xlnedwit.hxx
+@@ -33,9 +33,7 @@ class SVX_DLLPUBLIC XLineEndWidthItem : public SfxMetricItem
+ {
+ public:
+                             XLineEndWidthItem(long nWidth = LINE_END_WIDTH_DEFAULT);
+-                            XLineEndWidthItem(SvStream& rIn);
+     virtual SfxPoolItem*    Clone(SfxItemPool* pPool = nullptr) const override;
+-    virtual SfxPoolItem*    Create(SvStream& rIn, sal_uInt16 nVer) const override;
+ 
+     virtual bool            QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+     virtual bool            PutValue( const css::uno::Any& rVal, sal_uInt8 nMemberId ) override;
+diff --git a/include/svx/xlnstcit.hxx b/include/svx/xlnstcit.hxx
+index c5dd70c..133b80f 100644
+--- a/include/svx/xlnstcit.hxx
++++ b/include/svx/xlnstcit.hxx
+@@ -30,9 +30,7 @@ class SVX_DLLPUBLIC XLineStartCenterItem : public SfxBoolItem
+ {
+ public:
+                             XLineStartCenterItem(bool bStartCenter = false);
+-                            XLineStartCenterItem(SvStream& rIn);
+     virtual SfxPoolItem*    Clone(SfxItemPool* pPool = nullptr) const override;
+-    virtual SfxPoolItem*    Create(SvStream& rIn, sal_uInt16 nVer) const override;
+ 
+     virtual bool            QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+     virtual bool            PutValue( const css::uno::Any& rVal, sal_uInt8 nMemberId ) override;
+diff --git a/include/svx/xlnstwit.hxx b/include/svx/xlnstwit.hxx
+index 3dde5e2e..d0d2cb0 100644
+--- a/include/svx/xlnstwit.hxx
++++ b/include/svx/xlnstwit.hxx
+@@ -32,9 +32,7 @@ class SVX_DLLPUBLIC XLineStartWidthItem : public SfxMetricItem
+ {
+ public:
+             XLineStartWidthItem(long nWidth = LINE_START_WIDTH_DEFAULT);
+-            XLineStartWidthItem(SvStream& rIn);
+     virtual SfxPoolItem*    Clone(SfxItemPool* pPool = nullptr) const override;
+-    virtual SfxPoolItem*    Create(SvStream& rIn, sal_uInt16 nVer) const override;
+ 
+     virtual bool            QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+     virtual bool            PutValue( const css::uno::Any& rVal, sal_uInt8 nMemberId ) override;
+diff --git a/include/svx/xlntrit.hxx b/include/svx/xlntrit.hxx
+index 0876d77..e19db57 100644
+--- a/include/svx/xlntrit.hxx
++++ b/include/svx/xlntrit.hxx
+@@ -33,9 +33,7 @@ class SVX_DLLPUBLIC XLineTransparenceItem: public SfxUInt16Item
+ {
+ public:
+                             XLineTransparenceItem(sal_uInt16 nLineTransparence = 0);
+-                            XLineTransparenceItem(SvStream& rIn);
+     virtual SfxPoolItem*    Clone(SfxItemPool* pPool = nullptr) const override;
+-    virtual SfxPoolItem*    Create(SvStream& rIn, sal_uInt16 nVer) const override;
+     virtual bool GetPresentation( SfxItemPresentation ePres,
+                                   MapUnit eCoreMetric,
+                                   MapUnit ePresMetric,
+diff --git a/include/svx/xlnwtit.hxx b/include/svx/xlnwtit.hxx
+index 56ed5f9..53e232c 100644
+--- a/include/svx/xlnwtit.hxx
++++ b/include/svx/xlnwtit.hxx
+@@ -31,9 +31,7 @@ class SVX_DLLPUBLIC XLineWidthItem : public SfxMetricItem
+ public:
+                             static SfxPoolItem* CreateDefault();
+                             XLineWidthItem(long nWidth = 0);
+-                            XLineWidthItem(SvStream& rIn);
+     virtual SfxPoolItem*    Clone(SfxItemPool* pPool = nullptr) const override;
+-    virtual SfxPoolItem*    Create(SvStream& rIn, sal_uInt16 nVer) const override;
+ 
+     virtual bool            QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+     virtual bool            PutValue( const css::uno::Any& rVal, sal_uInt8 nMemberId ) override;
+diff --git a/include/svx/xtextit0.hxx b/include/svx/xtextit0.hxx
+index 8e4f570..04938f1 100644
+--- a/include/svx/xtextit0.hxx
++++ b/include/svx/xtextit0.hxx
+@@ -35,9 +35,7 @@ class SVX_DLLPUBLIC XFormTextStyleItem : public SfxEnumItem<XFormTextStyle>
+ public:
+                             static SfxPoolItem* CreateDefault();
+                             XFormTextStyleItem(XFormTextStyle = XFormTextStyle::NONE);
+-                            XFormTextStyleItem(SvStream& rIn);
+     virtual SfxPoolItem*    Clone(SfxItemPool* pPool = nullptr) const override;
+-    virtual SfxPoolItem*    Create(SvStream& rIn, sal_uInt16 nVer) const override;
+     virtual sal_uInt16      GetValueCount() const override;
+     // #FontWork#
+     virtual bool            QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+@@ -55,9 +53,7 @@ class SVX_DLLPUBLIC XFormTextHideFormItem : public SfxBoolItem
+ public:
+                             static SfxPoolItem* CreateDefault();
+                             XFormTextHideFormItem(bool bHide = false);
+-                            XFormTextHideFormItem(SvStream& rIn);
+     virtual SfxPoolItem*    Clone(SfxItemPool* pPool = nullptr) const override;
+-    virtual SfxPoolItem*    Create(SvStream& rIn, sal_uInt16 nVer) const override;
+ };
+ 
+ #endif
+diff --git a/svx/inc/sxcikitm.hxx b/svx/inc/sxcikitm.hxx
+index 0c9352e..5db76b7 100644
+--- a/svx/inc/sxcikitm.hxx
++++ b/svx/inc/sxcikitm.hxx
+@@ -30,9 +30,7 @@ enum SdrCircKind {SDRCIRC_FULL,
+ class SdrCircKindItem: public SfxEnumItem<SdrCircKind> {
+ public:
+     SdrCircKindItem(SdrCircKind eKind=SDRCIRC_FULL): SfxEnumItem(SDRATTR_CIRCKIND, eKind) {}
+-    SdrCircKindItem(SvStream& rIn)                 : SfxEnumItem(SDRATTR_CIRCKIND,rIn)   {}
+     virtual SfxPoolItem* Clone(SfxItemPool* pPool=nullptr) const override;
+-    virtual SfxPoolItem* Create(SvStream& rIn, sal_uInt16 nVer) const override;
+     virtual sal_uInt16   GetValueCount() const override; // { return 4; }
+ 
+     virtual bool QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+diff --git a/svx/inc/sxmkitm.hxx b/svx/inc/sxmkitm.hxx
+index 0362f85..1a9566f 100644
+--- a/svx/inc/sxmkitm.hxx
++++ b/svx/inc/sxmkitm.hxx
+@@ -30,9 +30,7 @@ enum SdrMeasureKind     {SDRMEASURE_STD,SDRMEASURE_RADIUS}; // n.i.
+ class SdrMeasureKindItem: public SfxEnumItem<SdrMeasureKind> {
+ public:
+     SdrMeasureKindItem() : SfxEnumItem(SDRATTR_MEASUREKIND, SDRMEASURE_STD) {}
+-    SdrMeasureKindItem(SvStream& rIn)                      : SfxEnumItem(SDRATTR_MEASUREKIND,rIn)    {}
+     virtual SfxPoolItem*   Clone(SfxItemPool* pPool=nullptr) const override;
+-    virtual SfxPoolItem*   Create(SvStream& rIn, sal_uInt16 nVer) const override;
+     virtual sal_uInt16     GetValueCount() const override; // { return 2; }
+ 
+     virtual bool           QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+diff --git a/svx/source/engine3d/svx3ditems.cxx b/svx/source/engine3d/svx3ditems.cxx
+index 346dd7d..87b0cbf 100644
+--- a/svx/source/engine3d/svx3ditems.cxx
++++ b/svx/source/engine3d/svx3ditems.cxx
+@@ -40,19 +40,6 @@ sal_uInt16 Svx3DReducedLineGeometryItem::GetVersion(sal_uInt16 /*nFileFormatVers
+     return 1;
+ }
+ 
+-SfxPoolItem* Svx3DReducedLineGeometryItem::Create(SvStream& rIn, sal_uInt16 nItemVersion) const
+-{
+-    SfxBoolItem* pRetval = new Svx3DReducedLineGeometryItem();
+-
+-    if(nItemVersion > 0)
+-    {
+-        SfxBoolItem aBoolItem(Which(), rIn);
+-        pRetval->SetValue(aBoolItem.GetValue());
+-    }
+-
+-    return pRetval;
+-}
+-
+ SfxPoolItem * Svx3DReducedLineGeometryItem::Clone(SfxItemPool *) const
+ {
+     return new Svx3DReducedLineGeometryItem(*this);
+@@ -96,19 +83,6 @@ sal_uInt16 Svx3DSmoothNormalsItem::GetVersion(sal_uInt16 /*nFileFormatVersion*/)
+     return 1;
+ }
+ 
+-SfxPoolItem* Svx3DSmoothNormalsItem::Create(SvStream& rIn, sal_uInt16 nItemVersion) const
+-{
+-    SfxBoolItem* pRetval = new Svx3DSmoothNormalsItem();
+-
+-    if(nItemVersion > 0)
+-    {
+-        SfxBoolItem aBoolItem(Which(), rIn);
+-        pRetval->SetValue(aBoolItem.GetValue());
+-    }
+-
+-    return pRetval;
+-}
+-
+ SfxPoolItem * Svx3DSmoothNormalsItem::Clone(SfxItemPool *) const
+ {
+     return new Svx3DSmoothNormalsItem(*this);
+@@ -124,19 +98,6 @@ sal_uInt16 Svx3DSmoothLidsItem::GetVersion(sal_uInt16 /*nFileFormatVersion*/) co
+     return 1;
+ }
+ 
+-SfxPoolItem* Svx3DSmoothLidsItem::Create(SvStream& rIn, sal_uInt16 nItemVersion) const
+-{
+-    SfxBoolItem* pRetval = new Svx3DSmoothLidsItem();
+-
+-    if(nItemVersion > 0)
+-    {
+-        SfxBoolItem aBoolItem(Which(), rIn);
+-        pRetval->SetValue(aBoolItem.GetValue());
+-    }
+-
+-    return pRetval;
+-}
+-
+ SfxPoolItem * Svx3DSmoothLidsItem::Clone(SfxItemPool *) const
+ {
+     return new Svx3DSmoothLidsItem(*this);
+@@ -152,19 +113,6 @@ sal_uInt16 Svx3DCharacterModeItem::GetVersion(sal_uInt16 /*nFileFormatVersion*/)
+     return 1;
+ }
+ 
+-SfxPoolItem* Svx3DCharacterModeItem::Create(SvStream& rIn, sal_uInt16 nItemVersion) const
+-{
+-    SfxBoolItem* pRetval = new Svx3DCharacterModeItem();
+-
+-    if(nItemVersion > 0)
+-    {
+-        SfxBoolItem aBoolItem(Which(), rIn);
+-        pRetval->SetValue(aBoolItem.GetValue());
+-    }
+-
+-    return pRetval;
+-}
+-
+ SfxPoolItem * Svx3DCharacterModeItem::Clone(SfxItemPool *) const
+ {
+     return new Svx3DCharacterModeItem(*this);
+@@ -180,19 +128,6 @@ sal_uInt16 Svx3DCloseFrontItem::GetVersion(sal_uInt16 /*nFileFormatVersion*/) co
+     return 1;
+ }
+ 
+-SfxPoolItem* Svx3DCloseFrontItem::Create(SvStream& rIn, sal_uInt16 nItemVersion) const
+-{
+-    SfxBoolItem* pRetval = new Svx3DCloseFrontItem();
+-
+-    if(nItemVersion > 0)
+-    {
+-        SfxBoolItem aBoolItem(Which(), rIn);
+-        pRetval->SetValue(aBoolItem.GetValue());
+-    }
+-
+-    return pRetval;
+-}
+-
+ SfxPoolItem * Svx3DCloseFrontItem::Clone(SfxItemPool *) const
+ {
+     return new Svx3DCloseFrontItem(*this);
+@@ -208,19 +143,6 @@ sal_uInt16 Svx3DCloseBackItem::GetVersion(sal_uInt16 /*nFileFormatVersion*/) con
+     return 1;
+ }
+ 
+-SfxPoolItem* Svx3DCloseBackItem::Create(SvStream& rIn, sal_uInt16 nItemVersion) const
+-{
+-    SfxBoolItem* pRetval = new Svx3DCloseBackItem();
+-
+-    if(nItemVersion > 0)
+-    {
+-        SfxBoolItem aBoolItem(Which(), rIn);
+-        pRetval->SetValue(aBoolItem.GetValue());
+-    }
+-
+-    return pRetval;
+-}
+-
+ SfxPoolItem * Svx3DCloseBackItem::Clone(SfxItemPool *) const
+ {
+     return new Svx3DCloseBackItem(*this);
+diff --git a/svx/source/items/chrtitem.cxx b/svx/source/items/chrtitem.cxx
+index 8c8edff..30b3497 100644
+--- a/svx/source/items/chrtitem.cxx
++++ b/svx/source/items/chrtitem.cxx
+@@ -39,24 +39,12 @@ SvxChartTextOrderItem::SvxChartTextOrderItem(SvxChartTextOrder eOrder,
+ }
+ 
+ 
+-SvxChartTextOrderItem::SvxChartTextOrderItem(SvStream& rIn, sal_uInt16 nId) :
+-    SfxEnumItem(nId, rIn)
+-{
+-}
+-
+-
+ SfxPoolItem* SvxChartTextOrderItem::Clone(SfxItemPool* /*pPool*/) const
+ {
+     return new SvxChartTextOrderItem(*this);
+ }
+ 
+ 
+-SfxPoolItem* SvxChartTextOrderItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new SvxChartTextOrderItem(rIn, Which());
+-}
+-
+-
+ bool SvxChartTextOrderItem::QueryValue( css::uno::Any& rVal, sal_uInt8 /*nMemberId*/ ) const
+ {
+     // the order of the two enums is not equal, so a mapping is required
+@@ -165,24 +153,12 @@ SvxChartKindErrorItem::SvxChartKindErrorItem(SvxChartKindError eOrient,
+ }
+ 
+ 
+-SvxChartKindErrorItem::SvxChartKindErrorItem(SvStream& rIn, sal_uInt16 nId) :
+-    SfxEnumItem(nId, rIn)
+-{
+-}
+-
+-
+ SfxPoolItem* SvxChartKindErrorItem::Clone(SfxItemPool* /*pPool*/) const
+ {
+     return new SvxChartKindErrorItem(*this);
+ }
+ 
+ 
+-SfxPoolItem* SvxChartKindErrorItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new SvxChartKindErrorItem(rIn, Which());
+-}
+-
+-
+ sal_uInt16 SvxChartKindErrorItem::GetVersion (sal_uInt16 nFileFormatVersion) const
+ {
+     return (nFileFormatVersion == SOFFICE_FILEFORMAT_31)
+@@ -197,24 +173,12 @@ SvxChartIndicateItem::SvxChartIndicateItem(SvxChartIndicate eOrient,
+ }
+ 
+ 
+-SvxChartIndicateItem::SvxChartIndicateItem(SvStream& rIn, sal_uInt16 nId) :
+-    SfxEnumItem(nId, rIn)
+-{
+-}
+-
+-
+ SfxPoolItem* SvxChartIndicateItem::Clone(SfxItemPool* /*pPool*/) const
+ {
+     return new SvxChartIndicateItem(*this);
+ }
+ 
+ 
+-SfxPoolItem* SvxChartIndicateItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new SvxChartIndicateItem(rIn, Which());
+-}
+-
+-
+ sal_uInt16 SvxChartIndicateItem::GetVersion (sal_uInt16 nFileFormatVersion) const
+ {
+     return (nFileFormatVersion == SOFFICE_FILEFORMAT_31)
+@@ -229,24 +193,12 @@ SvxChartRegressItem::SvxChartRegressItem(SvxChartRegress eOrient,
+ }
+ 
+ 
+-SvxChartRegressItem::SvxChartRegressItem(SvStream& rIn, sal_uInt16 nId) :
+-    SfxEnumItem(nId, rIn)
+-{
+-}
+-
+-
+ SfxPoolItem* SvxChartRegressItem::Clone(SfxItemPool* /*pPool*/) const
+ {
+     return new SvxChartRegressItem(*this);
+ }
+ 
+ 
+-SfxPoolItem* SvxChartRegressItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new SvxChartRegressItem(rIn, Which());
+-}
+-
+-
+ sal_uInt16 SvxChartRegressItem::GetVersion (sal_uInt16 nFileFormatVersion) const
+ {
+     return (nFileFormatVersion == SOFFICE_FILEFORMAT_31)
+diff --git a/svx/source/svdraw/svdattr.cxx b/svx/source/svdraw/svdattr.cxx
+index 016c19d..3589843 100644
+--- a/svx/source/svdraw/svdattr.cxx
++++ b/svx/source/svdraw/svdattr.cxx
+@@ -698,11 +698,6 @@ SfxPoolItem* SdrOnOffItem::Clone(SfxItemPool* /*pPool*/) const
+     return new SdrOnOffItem(Which(),GetValue());
+ }
+ 
+-SfxPoolItem* SdrOnOffItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new SdrOnOffItem(Which(),rIn);
+-}
+-
+ OUString SdrOnOffItem::GetValueTextByVal(bool bVal) const
+ {
+     if (bVal)
+@@ -729,11 +724,6 @@ SfxPoolItem* SdrYesNoItem::Clone(SfxItemPool* /*pPool*/) const
+     return new SdrYesNoItem(Which(),GetValue());
+ }
+ 
+-SfxPoolItem* SdrYesNoItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new SdrYesNoItem(Which(),rIn);
+-}
+-
+ OUString SdrYesNoItem::GetValueTextByVal(bool bVal) const
+ {
+     if (bVal)
+@@ -763,11 +753,6 @@ SfxPoolItem* SdrPercentItem::Clone(SfxItemPool* /*pPool*/) const
+     return new SdrPercentItem(Which(),GetValue());
+ }
+ 
+-SfxPoolItem* SdrPercentItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new SdrPercentItem(Which(),rIn);
+-}
+-
+ bool SdrPercentItem::GetPresentation(
+     SfxItemPresentation ePres, MapUnit /*eCoreMetric*/,
+     MapUnit /*ePresMetric*/, OUString& rText, const IntlWrapper&) const
+@@ -795,11 +780,6 @@ SfxPoolItem* SdrAngleItem::Clone(SfxItemPool* /*pPool*/) const
+     return new SdrAngleItem(Which(),GetValue());
+ }
+ 
+-SfxPoolItem* SdrAngleItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new SdrAngleItem(Which(),rIn);
+-}
+-
+ bool SdrAngleItem::GetPresentation(
+     SfxItemPresentation ePres, MapUnit /*eCoreMetric*/, MapUnit /*ePresMetric*/,
+     OUString& rText, const IntlWrapper& rIntlWrapper) const
+@@ -871,11 +851,6 @@ SfxPoolItem* SdrMetricItem::Clone(SfxItemPool* /*pPool*/) const
+     return new SdrMetricItem(Which(),GetValue());
+ }
+ 
+-SfxPoolItem* SdrMetricItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new SdrMetricItem(Which(),rIn);
+-}
+-
+ bool SdrMetricItem::HasMetrics() const
+ {
+     return true;
+@@ -916,8 +891,6 @@ bool SdrMetricItem::GetPresentation(SfxItemPresentation ePres,
+ 
+ SfxPoolItem* SdrCaptionTypeItem::Clone(SfxItemPool* /*pPool*/) const                { return new SdrCaptionTypeItem(*this); }
+ 
+-SfxPoolItem* SdrCaptionTypeItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const       { return new SdrCaptionTypeItem(rIn); }
+-
+ sal_uInt16 SdrCaptionTypeItem::GetValueCount() const { return 4; }
+ 
+ OUString SdrCaptionTypeItem::GetValueTextByPos(sal_uInt16 nPos) const
+@@ -941,8 +914,6 @@ bool SdrCaptionTypeItem::GetPresentation(SfxItemPresentation ePres,
+ 
+ SfxPoolItem* SdrCaptionEscDirItem::Clone(SfxItemPool* /*pPool*/) const              { return new SdrCaptionEscDirItem(*this); }
+ 
+-SfxPoolItem* SdrCaptionEscDirItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const     { return new SdrCaptionEscDirItem(rIn); }
+-
+ sal_uInt16 SdrCaptionEscDirItem::GetValueCount() const { return 3; }
+ 
+ OUString SdrCaptionEscDirItem::GetValueTextByPos(sal_uInt16 nPos) const
+@@ -973,8 +944,6 @@ SfxPoolItem* SdrTextFitToSizeTypeItem::CreateDefault() { return new SdrTextFitTo
+ 
+ SfxPoolItem* SdrTextFitToSizeTypeItem::Clone(SfxItemPool* /*pPool*/) const         { return new SdrTextFitToSizeTypeItem(*this); }
+ 
+-SfxPoolItem* SdrTextFitToSizeTypeItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const { return new SdrTextFitToSizeTypeItem(rIn); }
+-
+ sal_uInt16 SdrTextFitToSizeTypeItem::GetValueCount() const { return 4; }
+ 
+ OUString SdrTextFitToSizeTypeItem::GetValueTextByPos(sal_uInt16 nPos) const
+@@ -1032,8 +1001,6 @@ bool SdrTextFitToSizeTypeItem::PutValue( const uno::Any& rVal, sal_uInt8 /*nMemb
+ 
+ SfxPoolItem* SdrTextVertAdjustItem::Clone(SfxItemPool* /*pPool*/) const            { return new SdrTextVertAdjustItem(*this); }
+ 
+-SfxPoolItem* SdrTextVertAdjustItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const   { return new SdrTextVertAdjustItem(rIn); }
+-
+ sal_uInt16 SdrTextVertAdjustItem::GetValueCount() const { return 5; }
+ 
+ OUString SdrTextVertAdjustItem::GetValueTextByPos(sal_uInt16 nPos) const
+@@ -1087,8 +1054,6 @@ void SdrTextVertAdjustItem::dumpAsXml(struct _xmlTextWriter* pWriter) const
+ 
+ SfxPoolItem* SdrTextHorzAdjustItem::Clone(SfxItemPool* /*pPool*/) const            { return new SdrTextHorzAdjustItem(*this); }
+ 
+-SfxPoolItem* SdrTextHorzAdjustItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const   { return new SdrTextHorzAdjustItem(rIn); }
+-
+ sal_uInt16 SdrTextHorzAdjustItem::GetValueCount() const { return 5; }
+ 
+ OUString SdrTextHorzAdjustItem::GetValueTextByPos(sal_uInt16 nPos) const
+@@ -1135,8 +1100,6 @@ bool SdrTextHorzAdjustItem::PutValue( const uno::Any& rVal, sal_uInt8 /*nMemberI
+ 
+ SfxPoolItem* SdrTextAniKindItem::Clone(SfxItemPool* /*pPool*/) const            { return new SdrTextAniKindItem(*this); }
+ 
+-SfxPoolItem* SdrTextAniKindItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const   { return new SdrTextAniKindItem(rIn); }
+-
+ sal_uInt16 SdrTextAniKindItem::GetValueCount() const { return 5; }
+ 
+ OUString SdrTextAniKindItem::GetValueTextByPos(sal_uInt16 nPos) const
+@@ -1182,8 +1145,6 @@ bool SdrTextAniKindItem::PutValue( const uno::Any& rVal, sal_uInt8 /*nMemberId*/
+ 
+ SfxPoolItem* SdrTextAniDirectionItem::Clone(SfxItemPool* /*pPool*/) const            { return new SdrTextAniDirectionItem(*this); }
+ 
+-SfxPoolItem* SdrTextAniDirectionItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const   { return new SdrTextAniDirectionItem(rIn); }
+-
+ sal_uInt16 SdrTextAniDirectionItem::GetValueCount() const { return 4; }
+ 
+ OUString SdrTextAniDirectionItem::GetValueTextByPos(sal_uInt16 nPos) const
+@@ -1230,8 +1191,6 @@ bool SdrTextAniDirectionItem::PutValue( const uno::Any& rVal, sal_uInt8 /*nMembe
+ 
+ SfxPoolItem* SdrTextAniDelayItem::Clone(SfxItemPool* /*pPool*/) const            { return new SdrTextAniDelayItem(*this); }
+ 
+-SfxPoolItem* SdrTextAniDelayItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const   { return new SdrTextAniDelayItem(rIn); }
+-
+ bool SdrTextAniDelayItem::GetPresentation(
+     SfxItemPresentation ePres, MapUnit /*eCoreMetric*/, MapUnit /*ePresMetric*/,
+     OUString& rText, const IntlWrapper&) const
+@@ -1252,8 +1211,6 @@ bool SdrTextAniDelayItem::GetPresentation(
+ 
+ SfxPoolItem* SdrTextAniAmountItem::Clone(SfxItemPool* /*pPool*/) const            { return new SdrTextAniAmountItem(*this); }
+ 
+-SfxPoolItem* SdrTextAniAmountItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const   { return new SdrTextAniAmountItem(rIn); }
+-
+ bool SdrTextAniAmountItem::HasMetrics() const
+ {
+     return GetValue()>0;
+@@ -1460,8 +1417,6 @@ bool SdrCustomShapeAdjustmentItem::PutValue( const uno::Any& rVal, sal_uInt8 /*n
+ 
+ SfxPoolItem* SdrEdgeKindItem::Clone(SfxItemPool* /*pPool*/) const            { return new SdrEdgeKindItem(*this); }
+ 
+-SfxPoolItem* SdrEdgeKindItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const   { return new SdrEdgeKindItem(rIn); }
+-
+ sal_uInt16 SdrEdgeKindItem::GetValueCount() const { return 4; }
+ 
+ OUString SdrEdgeKindItem::GetValueTextByPos(sal_uInt16 nPos) const
+@@ -1625,8 +1580,6 @@ SfxPoolItem* SdrEdgeNode2GlueDistItem::Clone(SfxItemPool* /*pPool*/) const
+ 
+ SfxPoolItem* SdrMeasureKindItem::Clone(SfxItemPool* /*pPool*/) const            { return new SdrMeasureKindItem(*this); }
+ 
+-SfxPoolItem* SdrMeasureKindItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const   { return new SdrMeasureKindItem(rIn); }
+-
+ sal_uInt16 SdrMeasureKindItem::GetValueCount() const { return 2; }
+ 
+ OUString SdrMeasureKindItem::GetValueTextByPos(sal_uInt16 nPos) const
+@@ -1672,8 +1625,6 @@ bool SdrMeasureKindItem::PutValue( const uno::Any& rVal, sal_uInt8 /*nMemberId*/
+ 
+ SfxPoolItem* SdrMeasureTextHPosItem::Clone(SfxItemPool* /*pPool*/) const            { return new SdrMeasureTextHPosItem(*this); }
+ 
+-SfxPoolItem* SdrMeasureTextHPosItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const   { return new SdrMeasureTextHPosItem(rIn); }
+-
+ sal_uInt16 SdrMeasureTextHPosItem::GetValueCount() const { return 4; }
+ 
+ OUString SdrMeasureTextHPosItem::GetValueTextByPos(sal_uInt16 nPos) const
+@@ -1719,8 +1670,6 @@ bool SdrMeasureTextHPosItem::PutValue( const uno::Any& rVal, sal_uInt8 /*nMember
+ 
+ SfxPoolItem* SdrMeasureTextVPosItem::Clone(SfxItemPool* /*pPool*/) const            { return new SdrMeasureTextVPosItem(*this); }
+ 
+-SfxPoolItem* SdrMeasureTextVPosItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const   { return new SdrMeasureTextVPosItem(rIn); }
+-
+ sal_uInt16 SdrMeasureTextVPosItem::GetValueCount() const { return 5; }
+ 
+ OUString SdrMeasureTextVPosItem::GetValueTextByPos(sal_uInt16 nPos) const
+@@ -1765,8 +1714,6 @@ bool SdrMeasureTextVPosItem::PutValue( const uno::Any& rVal, sal_uInt8 /*nMember
+ 
+ SfxPoolItem* SdrMeasureUnitItem::Clone(SfxItemPool* /*pPool*/) const            { return new SdrMeasureUnitItem(*this); }
+ 
+-SfxPoolItem* SdrMeasureUnitItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const   { return new SdrMeasureUnitItem(rIn); }
+-
+ sal_uInt16 SdrMeasureUnitItem::GetValueCount() const { return 14; }
+ 
+ OUString SdrMeasureUnitItem::GetValueTextByPos(sal_uInt16 nPos) const
+@@ -1813,8 +1760,6 @@ bool SdrMeasureUnitItem::PutValue( const uno::Any& rVal, sal_uInt8 /*nMemberId*/
+ 
+ SfxPoolItem* SdrCircKindItem::Clone(SfxItemPool* /*pPool*/) const          { return new SdrCircKindItem(*this); }
+ 
+-SfxPoolItem* SdrCircKindItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const { return new SdrCircKindItem(rIn); }
+-
+ sal_uInt16 SdrCircKindItem::GetValueCount() const { return 4; }
+ 
+ OUString SdrCircKindItem::GetValueTextByPos(sal_uInt16 nPos) const
+@@ -1866,11 +1811,6 @@ SfxPoolItem* SdrSignedPercentItem::Clone(SfxItemPool* /*pPool*/) const
+     return new SdrSignedPercentItem( Which(), GetValue() );
+ }
+ 
+-SfxPoolItem* SdrSignedPercentItem::Create( SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new SdrSignedPercentItem( Which(), rIn );
+-}
+-
+ bool SdrSignedPercentItem::GetPresentation(
+     SfxItemPresentation ePres, MapUnit /*eCoreMetric*/, MapUnit /*ePresMetric*/,
+     OUString& rText, const IntlWrapper&) const
+@@ -1895,66 +1835,36 @@ SfxPoolItem* SdrGrafRedItem::Clone( SfxItemPool* /*pPool*/) const
+     return new SdrGrafRedItem( *this );
+ }
+ 
+-SfxPoolItem* SdrGrafRedItem::Create( SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new SdrGrafRedItem( rIn );
+-}
+-
+ 
+ SfxPoolItem* SdrGrafGreenItem::Clone( SfxItemPool* /*pPool*/) const
+ {
+     return new SdrGrafGreenItem( *this );
+ }
+ 
+-SfxPoolItem* SdrGrafGreenItem::Create( SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new SdrGrafGreenItem( rIn );
+-}
+-
+ 
+ SfxPoolItem* SdrGrafBlueItem::Clone( SfxItemPool* /*pPool*/) const
+ {
+     return new SdrGrafBlueItem( *this );
+ }
+ 
+-SfxPoolItem* SdrGrafBlueItem::Create( SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new SdrGrafBlueItem( rIn );
+-}
+-
+ 
+ SfxPoolItem* SdrGrafLuminanceItem::Clone( SfxItemPool* /*pPool*/) const
+ {
+     return new SdrGrafLuminanceItem( *this );
+ }
+ 
+-SfxPoolItem* SdrGrafLuminanceItem::Create( SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new SdrGrafLuminanceItem( rIn );
+-}
+-
+ 
+ SfxPoolItem* SdrGrafContrastItem::Clone( SfxItemPool* /*pPool*/) const
+ {
+     return new SdrGrafContrastItem( *this );
+ }
+ 
+-SfxPoolItem* SdrGrafContrastItem::Create( SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new SdrGrafContrastItem( rIn );
+-}
+-
+ 
+ SfxPoolItem* SdrGrafGamma100Item::Clone( SfxItemPool* /*pPool */) const
+ {
+     return new SdrGrafGamma100Item( *this );
+ }
+ 
+-SfxPoolItem* SdrGrafGamma100Item::Create( SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new SdrGrafGamma100Item( rIn );
+-}
+-
+ bool SdrGrafGamma100Item::QueryValue( uno::Any& rVal, sal_uInt8 /*nMemberId*/) const
+ {
+     rVal <<= ((double)GetValue()) / 100.0;
+@@ -1977,33 +1887,18 @@ SfxPoolItem* SdrGrafInvertItem::Clone( SfxItemPool* /*pPool*/) const
+     return new SdrGrafInvertItem( *this );
+ }
+ 
+-SfxPoolItem* SdrGrafInvertItem::Create( SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new SdrGrafInvertItem( rIn );
+-}
+-
+ 
+ SfxPoolItem* SdrGrafTransparenceItem::Clone( SfxItemPool* /*pPool*/) const
+ {
+     return new SdrGrafTransparenceItem( *this );
+ }
+ 
+-SfxPoolItem* SdrGrafTransparenceItem::Create( SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new SdrGrafTransparenceItem( rIn );
+-}
+-
+ 
+ SfxPoolItem* SdrGrafModeItem::Clone(SfxItemPool* /*pPool*/) const
+ {
+     return new SdrGrafModeItem( *this );
+ }
+ 
+-SfxPoolItem* SdrGrafModeItem::Create( SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new SdrGrafModeItem( rIn );
+-}
+-
+ sal_uInt16 SdrGrafModeItem::GetValueCount() const
+ {
+     return 4;
+@@ -2063,11 +1958,6 @@ SfxPoolItem* SdrGrafCropItem::Clone( SfxItemPool* /*pPool*/) const
+     return new SdrGrafCropItem( *this );
+ }
+ 
+-SfxPoolItem* SdrGrafCropItem::Create( SvStream& rIn, sal_uInt16 nVer ) const
+-{
+-    return( ( 0 == nVer ) ? Clone() : SvxGrfCrop::Create( rIn, nVer ) );
+-}
+-
+ sal_uInt16 SdrGrafCropItem::GetVersion( sal_uInt16 /*nFileVersion*/) const
+ {
+     // GRFCROP_VERSION_MOVETOSVX is 1
+diff --git a/svx/source/xoutdev/xattr.cxx b/svx/source/xoutdev/xattr.cxx
+index 0b2405d..c0b1141 100644
+--- a/svx/source/xoutdev/xattr.cxx
++++ b/svx/source/xoutdev/xattr.cxx
+@@ -319,21 +319,11 @@ XLineStyleItem::XLineStyleItem(css::drawing::LineStyle eTheLineStyle) :
+ {
+ }
+ 
+-XLineStyleItem::XLineStyleItem(SvStream& rIn) :
+-    SfxEnumItem(XATTR_LINESTYLE, rIn)
+-{
+-}
+-
+ SfxPoolItem* XLineStyleItem::Clone(SfxItemPool* /*pPool*/) const
+ {
+     return new XLineStyleItem( *this );
+ }
+ 
+-SfxPoolItem* XLineStyleItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XLineStyleItem(rIn);
+-}
+-
+ bool XLineStyleItem::GetPresentation
+ (
+     SfxItemPresentation /*ePres*/,
+@@ -934,21 +924,11 @@ XLineWidthItem::XLineWidthItem(long nWidth) :
+ {
+ }
+ 
+-XLineWidthItem::XLineWidthItem(SvStream& rIn) :
+-    SfxMetricItem(XATTR_LINEWIDTH, rIn)
+-{
+-}
+-
+ SfxPoolItem* XLineWidthItem::Clone(SfxItemPool* /*pPool*/) const
+ {
+     return new XLineWidthItem(*this);
+ }
+ 
+-SfxPoolItem* XLineWidthItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XLineWidthItem(rIn);
+-}
+-
+ bool XLineWidthItem::GetPresentation
+ (
+     SfxItemPresentation /*ePres*/,
+@@ -1665,21 +1645,11 @@ XLineStartWidthItem::XLineStartWidthItem(long nWidth) :
+ {
+ }
+ 
+-XLineStartWidthItem::XLineStartWidthItem(SvStream& rIn) :
+-    SfxMetricItem(XATTR_LINESTARTWIDTH, rIn)
+-{
+-}
+-
+ SfxPoolItem* XLineStartWidthItem::Clone(SfxItemPool* /*pPool*/) const
+ {
+     return new XLineStartWidthItem(*this);
+ }
+ 
+-SfxPoolItem* XLineStartWidthItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XLineStartWidthItem(rIn);
+-}
+-
+ bool XLineStartWidthItem::GetPresentation
+ (
+     SfxItemPresentation /*ePres*/,
+@@ -1713,21 +1683,11 @@ XLineEndWidthItem::XLineEndWidthItem(long nWidth) :
+ {
+ }
+ 
+-XLineEndWidthItem::XLineEndWidthItem(SvStream& rIn) :
+-    SfxMetricItem(XATTR_LINEENDWIDTH, rIn)
+-{
+-}
+-
+ SfxPoolItem* XLineEndWidthItem::Clone(SfxItemPool* /*pPool*/) const
+ {
+     return new XLineEndWidthItem(*this);
+ }
+ 
+-SfxPoolItem* XLineEndWidthItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XLineEndWidthItem(rIn);
+-}
+-
+ bool XLineEndWidthItem::GetPresentation
+ (
+     SfxItemPresentation /*ePres*/,
+@@ -1761,21 +1721,11 @@ XLineStartCenterItem::XLineStartCenterItem(bool bStartCenter) :
+ {
+ }
+ 
+-XLineStartCenterItem::XLineStartCenterItem(SvStream& rIn) :
+-    SfxBoolItem(XATTR_LINESTARTCENTER, rIn)
+-{
+-}
+-
+ SfxPoolItem* XLineStartCenterItem::Clone(SfxItemPool* /*pPool*/) const
+ {
+     return new XLineStartCenterItem(*this);
+ }
+ 
+-SfxPoolItem* XLineStartCenterItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XLineStartCenterItem(rIn);
+-}
+-
+ bool XLineStartCenterItem::GetPresentation
+ (
+     SfxItemPresentation /*ePres*/,
+@@ -1810,21 +1760,11 @@ XLineEndCenterItem::XLineEndCenterItem(bool bEndCenter) :
+ {
+ }
+ 
+-XLineEndCenterItem::XLineEndCenterItem(SvStream& rIn) :
+-    SfxBoolItem(XATTR_LINEENDCENTER, rIn)
+-{
+-}
+-
+ SfxPoolItem* XLineEndCenterItem::Clone(SfxItemPool* /*pPool*/) const
+ {
+     return new XLineEndCenterItem(*this);
+ }
+ 
+-SfxPoolItem* XLineEndCenterItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XLineEndCenterItem(rIn);
+-}
+-
+ bool XLineEndCenterItem::GetPresentation
+ (
+     SfxItemPresentation /*ePres*/,
+@@ -1864,21 +1804,11 @@ XFillStyleItem::XFillStyleItem(drawing::FillStyle eFillStyle) :
+ {
+ }
+ 
+-XFillStyleItem::XFillStyleItem(SvStream& rIn) :
+-    SfxEnumItem(XATTR_FILLSTYLE, rIn)
+-{
+-}
+-
+ SfxPoolItem* XFillStyleItem::Clone(SfxItemPool* /*pPool*/) const
+ {
+     return new XFillStyleItem( *this );
+ }
+ 
+-SfxPoolItem* XFillStyleItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XFillStyleItem(rIn);
+-}
+-
+ bool XFillStyleItem::GetPresentation
+ (
+     SfxItemPresentation /*ePres*/,
+@@ -2763,21 +2693,11 @@ XFormTextStyleItem::XFormTextStyleItem(XFormTextStyle eTheStyle) :
+ {
+ }
+ 
+-XFormTextStyleItem::XFormTextStyleItem(SvStream& rIn) :
+-    SfxEnumItem(XATTR_FORMTXTSTYLE, rIn)
+-{
+-}
+-
+ SfxPoolItem* XFormTextStyleItem::Clone(SfxItemPool* /*pPool*/) const
+ {
+     return new XFormTextStyleItem( *this );
+ }
+ 
+-SfxPoolItem* XFormTextStyleItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XFormTextStyleItem(rIn);
+-}
+-
+ sal_uInt16 XFormTextStyleItem::GetValueCount() const
+ {
+     return 5;
+@@ -2806,21 +2726,11 @@ XFormTextAdjustItem::XFormTextAdjustItem(XFormTextAdjust eTheAdjust) :
+ {
+ }
+ 
+-XFormTextAdjustItem::XFormTextAdjustItem(SvStream& rIn) :
+-    SfxEnumItem(XATTR_FORMTXTADJUST, rIn)
+-{
+-}
+-
+ SfxPoolItem* XFormTextAdjustItem::Clone(SfxItemPool* /*pPool*/) const
+ {
+     return new XFormTextAdjustItem( *this );
+ }
+ 
+-SfxPoolItem* XFormTextAdjustItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XFormTextAdjustItem(rIn);
+-}
+-
+ sal_uInt16 XFormTextAdjustItem::GetValueCount() const
+ {
+     return 4;
+@@ -2849,21 +2759,11 @@ XFormTextDistanceItem::XFormTextDistanceItem(long nDist) :
+ {
+ }
+ 
+-XFormTextDistanceItem::XFormTextDistanceItem(SvStream& rIn) :
+-    SfxMetricItem(XATTR_FORMTXTDISTANCE, rIn)
+-{
+-}
+-
+ SfxPoolItem* XFormTextDistanceItem::Clone(SfxItemPool* /*pPool*/) const
+ {
+     return new XFormTextDistanceItem(*this);
+ }
+ 
+-SfxPoolItem* XFormTextDistanceItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XFormTextDistanceItem(rIn);
+-}
+-
+ SfxPoolItem* XFormTextStartItem::CreateDefault() { return new XFormTextStartItem; }
+ 
+ XFormTextStartItem::XFormTextStartItem(long nStart) :
+@@ -2871,21 +2771,11 @@ XFormTextStartItem::XFormTextStartItem(long nStart) :
+ {
+ }
+ 
+-XFormTextStartItem::XFormTextStartItem(SvStream& rIn) :
+-    SfxMetricItem(XATTR_FORMTXTSTART, rIn)
+-{
+-}
+-
+ SfxPoolItem* XFormTextStartItem::Clone(SfxItemPool* /*pPool*/) const
+ {
+     return new XFormTextStartItem(*this);
+ }
+ 
+-SfxPoolItem* XFormTextStartItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XFormTextStartItem(rIn);
+-}
+-
+ 
+ SfxPoolItem* XFormTextMirrorItem::CreateDefault() { return new XFormTextMirrorItem; }
+ 
+@@ -2894,21 +2784,11 @@ XFormTextMirrorItem::XFormTextMirrorItem(bool bMirror) :
+ {
+ }
+ 
+-XFormTextMirrorItem::XFormTextMirrorItem(SvStream& rIn) :
+-    SfxBoolItem(XATTR_FORMTXTMIRROR, rIn)
+-{
+-}
+-
+ SfxPoolItem* XFormTextMirrorItem::Clone(SfxItemPool* /*pPool*/) const
+ {
+     return new XFormTextMirrorItem(*this);
+ }
+ 
+-SfxPoolItem* XFormTextMirrorItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XFormTextMirrorItem(rIn);
+-}
+-
+ 
+ SfxPoolItem* XFormTextOutlineItem::CreateDefault() { return new XFormTextOutlineItem; }
+ 
+@@ -2917,21 +2797,11 @@ XFormTextOutlineItem::XFormTextOutlineItem(bool bOutline) :
+ {
+ }
+ 
+-XFormTextOutlineItem::XFormTextOutlineItem(SvStream& rIn) :
+-    SfxBoolItem(XATTR_FORMTXTOUTLINE, rIn)
+-{
+-}
+-
+ SfxPoolItem* XFormTextOutlineItem::Clone(SfxItemPool* /*pPool*/) const
+ {
+     return new XFormTextOutlineItem(*this);
+ }
+ 
+-SfxPoolItem* XFormTextOutlineItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XFormTextOutlineItem(rIn);
+-}
+-
+ 
+ SfxPoolItem* XFormTextShadowItem::CreateDefault() { return new XFormTextShadowItem; }
+ 
+@@ -2940,21 +2810,11 @@ XFormTextShadowItem::XFormTextShadowItem(XFormTextShadow eFormTextShadow) :
+ {
+ }
+ 
+-XFormTextShadowItem::XFormTextShadowItem(SvStream& rIn) :
+-    SfxEnumItem(XATTR_FORMTXTSHADOW, rIn)
+-{
+-}
+-
+ SfxPoolItem* XFormTextShadowItem::Clone(SfxItemPool* /*pPool*/) const
+ {
+     return new XFormTextShadowItem( *this );
+ }
+ 
+-SfxPoolItem* XFormTextShadowItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XFormTextShadowItem(rIn);
+-}
+-
+ sal_uInt16 XFormTextShadowItem::GetValueCount() const
+ {
+     return 3;
+@@ -2996,21 +2856,11 @@ XFormTextShadowXValItem::XFormTextShadowXValItem(long nVal) :
+ {
+ }
+ 
+-XFormTextShadowXValItem::XFormTextShadowXValItem(SvStream& rIn) :
+-    SfxMetricItem(XATTR_FORMTXTSHDWXVAL, rIn)
+-{
+-}
+-
+ SfxPoolItem* XFormTextShadowXValItem::Clone(SfxItemPool* /*pPool*/) const
+ {
+     return new XFormTextShadowXValItem(*this);
+ }
+ 
+-SfxPoolItem* XFormTextShadowXValItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XFormTextShadowXValItem(rIn);
+-}
+-
+ 
+ SfxPoolItem* XFormTextShadowYValItem::CreateDefault() { return new XFormTextShadowYValItem; }
+ 
+@@ -3019,21 +2869,11 @@ XFormTextShadowYValItem::XFormTextShadowYValItem(long nVal) :
+ {
+ }
+ 
+-XFormTextShadowYValItem::XFormTextShadowYValItem(SvStream& rIn) :
+-    SfxMetricItem(XATTR_FORMTXTSHDWYVAL, rIn)
+-{
+-}
+-
+ SfxPoolItem* XFormTextShadowYValItem::Clone(SfxItemPool* /*pPool*/) const
+ {
+     return new XFormTextShadowYValItem(*this);
+ }
+ 
+-SfxPoolItem* XFormTextShadowYValItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XFormTextShadowYValItem(rIn);
+-}
+-
+ 
+ SfxPoolItem* XFormTextHideFormItem::CreateDefault() { return new XFormTextHideFormItem; }
+ 
+@@ -3042,21 +2882,11 @@ XFormTextHideFormItem::XFormTextHideFormItem(bool bHide) :
+ {
+ }
+ 
+-XFormTextHideFormItem::XFormTextHideFormItem(SvStream& rIn) :
+-    SfxBoolItem(XATTR_FORMTXTHIDEFORM, rIn)
+-{
+-}
+-
+ SfxPoolItem* XFormTextHideFormItem::Clone(SfxItemPool* /*pPool*/) const
+ {
+     return new XFormTextHideFormItem(*this);
+ }
+ 
+-SfxPoolItem* XFormTextHideFormItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XFormTextHideFormItem(rIn);
+-}
+-
+ // --- SetItems ---
+ 
+ 
+diff --git a/svx/source/xoutdev/xattr2.cxx b/svx/source/xoutdev/xattr2.cxx
+index e48ab30..8883ecb 100644
+--- a/svx/source/xoutdev/xattr2.cxx
++++ b/svx/source/xoutdev/xattr2.cxx
+@@ -40,21 +40,11 @@ XLineTransparenceItem::XLineTransparenceItem(sal_uInt16 nLineTransparence) :
+ {
+ }
+ 
+-XLineTransparenceItem::XLineTransparenceItem(SvStream& rIn) :
+-    SfxUInt16Item(XATTR_LINETRANSPARENCE, rIn)
+-{
+-}
+-
+ SfxPoolItem* XLineTransparenceItem::Clone(SfxItemPool* /*pPool*/) const
+ {
+     return new XLineTransparenceItem(*this);
+ }
+ 
+-SfxPoolItem* XLineTransparenceItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XLineTransparenceItem(rIn);
+-}
+-
+ bool XLineTransparenceItem::GetPresentation
+ (
+     SfxItemPresentation ePres,
+@@ -87,26 +77,11 @@ XLineJointItem::XLineJointItem( css::drawing::LineJoint eLineJoint ) :
+ {
+ }
+ 
+-XLineJointItem::XLineJointItem( SvStream& rIn ) :
+-    SfxEnumItem( XATTR_LINEJOINT, rIn )
+-{
+-}
+-
+ sal_uInt16 XLineJointItem::GetVersion( sal_uInt16 /*nFileFormatVersion*/) const
+ {
+     return 1;
+ }
+ 
+-SfxPoolItem* XLineJointItem::Create( SvStream& rIn, sal_uInt16 nVer ) const
+-{
+-    XLineJointItem* pRet = new XLineJointItem( rIn );
+-
+-    if(nVer < 1)
+-        pRet->SetValue(css::drawing::LineJoint_ROUND);
+-
+-    return pRet;
+-}
+-
+ SfxPoolItem* XLineJointItem::Clone(SfxItemPool* /*pPool*/) const
+ {
+     return new XLineJointItem( *this );
+@@ -264,26 +239,11 @@ XLineCapItem::XLineCapItem(css::drawing::LineCap eLineCap)
+ {
+ }
+ 
+-XLineCapItem::XLineCapItem( SvStream& rIn )
+-:   SfxEnumItem(XATTR_LINECAP, rIn)
+-{
+-}
+-
+ sal_uInt16 XLineCapItem::GetVersion( sal_uInt16 /*nFileFormatVersion*/) const
+ {
+     return 1;
+ }
+ 
+-SfxPoolItem* XLineCapItem::Create( SvStream& rIn, sal_uInt16 nVer ) const
+-{
+-    XLineCapItem* pRet = new XLineCapItem( rIn );
+-
+-    if(nVer < 1)
+-        pRet->SetValue(css::drawing::LineCap_BUTT);
+-
+-    return pRet;
+-}
+-
+ SfxPoolItem* XLineCapItem::Clone(SfxItemPool* /*pPool*/) const
+ {
+     return new XLineCapItem( *this );
+@@ -371,21 +331,11 @@ XFillTransparenceItem::XFillTransparenceItem(sal_uInt16 nFillTransparence) :
+ {
+ }
+ 
+-XFillTransparenceItem::XFillTransparenceItem(SvStream& rIn) :
+-    SfxUInt16Item(XATTR_FILLTRANSPARENCE, rIn)
+-{
+-}
+-
+ SfxPoolItem* XFillTransparenceItem::Clone(SfxItemPool* /*pPool*/) const
+ {
+     return new XFillTransparenceItem(*this);
+ }
+ 
+-SfxPoolItem* XFillTransparenceItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XFillTransparenceItem(rIn);
+-}
+-
+ bool XFillTransparenceItem::GetPresentation
+ (
+     SfxItemPresentation ePres,
+@@ -424,21 +374,11 @@ XFormTextShadowTranspItem::XFormTextShadowTranspItem(sal_uInt16 nShdwTransparenc
+ {
+ }
+ 
+-XFormTextShadowTranspItem::XFormTextShadowTranspItem(SvStream& rIn) :
+-    SfxUInt16Item(XATTR_FORMTXTSHDWTRANSP, rIn)
+-{
+-}
+-
+ SfxPoolItem* XFormTextShadowTranspItem::Clone(SfxItemPool* /*pPool*/) const
+ {
+     return new XFormTextShadowTranspItem(*this);
+ }
+ 
+-SfxPoolItem* XFormTextShadowTranspItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XFormTextShadowTranspItem(rIn);
+-}
+-
+ // class XFillGradientStepCountItem
+ 
+ XGradientStepCountItem::XGradientStepCountItem( sal_uInt16 nStepCount ) :
+@@ -446,21 +386,11 @@ XGradientStepCountItem::XGradientStepCountItem( sal_uInt16 nStepCount ) :
+ {
+ }
+ 
+-XGradientStepCountItem::XGradientStepCountItem( SvStream& rIn ) :
+-    SfxUInt16Item( XATTR_GRADIENTSTEPCOUNT, rIn )
+-{
+-}
+-
+ SfxPoolItem* XGradientStepCountItem::Clone( SfxItemPool* /*pPool*/) const
+ {
+     return new XGradientStepCountItem( *this );
+ }
+ 
+-SfxPoolItem* XGradientStepCountItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XGradientStepCountItem( rIn );
+-}
+-
+ bool XGradientStepCountItem::GetPresentation
+ (
+     SfxItemPresentation /*ePres*/,
+@@ -481,21 +411,11 @@ XFillBmpTileItem::XFillBmpTileItem( bool bTile ) :
+ {
+ }
+ 
+-XFillBmpTileItem::XFillBmpTileItem( SvStream& rIn ) :
+-            SfxBoolItem( XATTR_FILLBMP_TILE, rIn )
+-{
+-}
+-
+ SfxPoolItem* XFillBmpTileItem::Clone( SfxItemPool* /*pPool*/) const
+ {
+     return new XFillBmpTileItem( *this );
+ }
+ 
+-SfxPoolItem* XFillBmpTileItem::Create( SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XFillBmpTileItem( rIn );
+-}
+-
+ bool XFillBmpTileItem::GetPresentation
+ (
+     SfxItemPresentation /*ePres*/,
+@@ -524,21 +444,11 @@ XFillBmpPosItem::XFillBmpPosItem( RectPoint eRP ) :
+ {
+ }
+ 
+-XFillBmpPosItem::XFillBmpPosItem( SvStream& rIn ) :
+-            SfxEnumItem( XATTR_FILLBMP_POS, rIn )
+-{
+-}
+-
+ SfxPoolItem* XFillBmpPosItem::Clone( SfxItemPool* /*pPool*/) const
+ {
+     return new XFillBmpPosItem( *this );
+ }
+ 
+-SfxPoolItem* XFillBmpPosItem::Create( SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XFillBmpPosItem( rIn );
+-}
+-
+ bool XFillBmpPosItem::GetPresentation
+ (
+     SfxItemPresentation /*ePres*/,
+@@ -571,21 +481,11 @@ XFillBmpSizeXItem::XFillBmpSizeXItem( long nSizeX ) :
+ {
+ }
+ 
+-XFillBmpSizeXItem::XFillBmpSizeXItem( SvStream& rIn ) :
+-            SfxMetricItem( XATTR_FILLBMP_SIZEX, rIn )
+-{
+-}
+-
+ SfxPoolItem* XFillBmpSizeXItem::Clone( SfxItemPool* /*pPool*/) const
+ {
+     return new XFillBmpSizeXItem( *this );
+ }
+ 
+-SfxPoolItem* XFillBmpSizeXItem::Create( SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XFillBmpSizeXItem( rIn );
+-}
+-
+ bool XFillBmpSizeXItem::GetPresentation
+ (
+     SfxItemPresentation /*ePres*/,
+@@ -611,21 +511,11 @@ XFillBmpSizeYItem::XFillBmpSizeYItem( long nSizeY ) :
+ {
+ }
+ 
+-XFillBmpSizeYItem::XFillBmpSizeYItem( SvStream& rIn ) :
+-            SfxMetricItem( XATTR_FILLBMP_SIZEY, rIn )
+-{
+-}
+-
+ SfxPoolItem* XFillBmpSizeYItem::Clone( SfxItemPool* /*pPool*/) const
+ {
+     return new XFillBmpSizeYItem( *this );
+ }
+ 
+-SfxPoolItem* XFillBmpSizeYItem::Create( SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XFillBmpSizeYItem( rIn );
+-}
+-
+ bool XFillBmpSizeYItem::GetPresentation
+ (
+     SfxItemPresentation /*ePres*/,
+@@ -650,21 +540,11 @@ XFillBmpSizeLogItem::XFillBmpSizeLogItem( bool bLog ) :
+ {
+ }
+ 
+-XFillBmpSizeLogItem::XFillBmpSizeLogItem( SvStream& rIn ) :
+-            SfxBoolItem( XATTR_FILLBMP_SIZELOG, rIn )
+-{
+-}
+-
+ SfxPoolItem* XFillBmpSizeLogItem::Clone( SfxItemPool* /*pPool*/) const
+ {
+     return new XFillBmpSizeLogItem( *this );
+ }
+ 
+-SfxPoolItem* XFillBmpSizeLogItem::Create( SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XFillBmpSizeLogItem( rIn );
+-}
+-
+ bool XFillBmpSizeLogItem::GetPresentation
+ (
+     SfxItemPresentation /*ePres*/,
+@@ -685,21 +565,11 @@ XFillBmpTileOffsetXItem::XFillBmpTileOffsetXItem( sal_uInt16 nOffX ) :
+ {
+ }
+ 
+-XFillBmpTileOffsetXItem::XFillBmpTileOffsetXItem( SvStream& rIn ) :
+-            SfxUInt16Item( XATTR_FILLBMP_TILEOFFSETX, rIn )
+-{
+-}
+-
+ SfxPoolItem* XFillBmpTileOffsetXItem::Clone( SfxItemPool* /*pPool*/) const
+ {
+     return new XFillBmpTileOffsetXItem( *this );
+ }
+ 
+-SfxPoolItem* XFillBmpTileOffsetXItem::Create( SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XFillBmpTileOffsetXItem( rIn );
+-}
+-
+ bool XFillBmpTileOffsetXItem::GetPresentation
+ (
+     SfxItemPresentation /*ePres*/,
+@@ -719,21 +589,11 @@ XFillBmpTileOffsetYItem::XFillBmpTileOffsetYItem( sal_uInt16 nOffY ) :
+ {
+ }
+ 
+-XFillBmpTileOffsetYItem::XFillBmpTileOffsetYItem( SvStream& rIn ) :
+-            SfxUInt16Item( XATTR_FILLBMP_TILEOFFSETY, rIn )
+-{
+-}
+-
+ SfxPoolItem* XFillBmpTileOffsetYItem::Clone( SfxItemPool* /*pPool*/) const
+ {
+     return new XFillBmpTileOffsetYItem( *this );
+ }
+ 
+-SfxPoolItem* XFillBmpTileOffsetYItem::Create( SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XFillBmpTileOffsetYItem( rIn );
+-}
+-
+ bool XFillBmpTileOffsetYItem::GetPresentation
+ (
+     SfxItemPresentation /*ePres*/,
+@@ -751,21 +611,11 @@ XFillBmpStretchItem::XFillBmpStretchItem( bool bStretch ) :
+ {
+ }
+ 
+-XFillBmpStretchItem::XFillBmpStretchItem( SvStream& rIn ) :
+-            SfxBoolItem( XATTR_FILLBMP_STRETCH, rIn )
+-{
+-}
+-
+ SfxPoolItem* XFillBmpStretchItem::Clone( SfxItemPool* /*pPool*/) const
+ {
+     return new XFillBmpStretchItem( *this );
+ }
+ 
+-SfxPoolItem* XFillBmpStretchItem::Create( SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XFillBmpStretchItem( rIn );
+-}
+-
+ bool XFillBmpStretchItem::GetPresentation
+ (
+     SfxItemPresentation /*ePres*/,
+@@ -793,21 +643,11 @@ XFillBmpPosOffsetXItem::XFillBmpPosOffsetXItem( sal_uInt16 nOffPosX ) :
+ {
+ }
+ 
+-XFillBmpPosOffsetXItem::XFillBmpPosOffsetXItem( SvStream& rIn ) :
+-            SfxUInt16Item( XATTR_FILLBMP_POSOFFSETX, rIn )
+-{
+-}
+-
+ SfxPoolItem* XFillBmpPosOffsetXItem::Clone( SfxItemPool* /*pPool*/) const
+ {
+     return new XFillBmpPosOffsetXItem( *this );
+ }
+ 
+-SfxPoolItem* XFillBmpPosOffsetXItem::Create( SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XFillBmpPosOffsetXItem( rIn );
+-}
+-
+ bool XFillBmpPosOffsetXItem::GetPresentation
+ (
+     SfxItemPresentation /*ePres*/,
+@@ -827,21 +667,11 @@ XFillBmpPosOffsetYItem::XFillBmpPosOffsetYItem( sal_uInt16 nOffPosY ) :
+ {
+ }
+ 
+-XFillBmpPosOffsetYItem::XFillBmpPosOffsetYItem( SvStream& rIn ) :
+-            SfxUInt16Item( XATTR_FILLBMP_POSOFFSETY, rIn )
+-{
+-}
+-
+ SfxPoolItem* XFillBmpPosOffsetYItem::Clone( SfxItemPool* /*pPool*/) const
+ {
+     return new XFillBmpPosOffsetYItem( *this );
+ }
+ 
+-SfxPoolItem* XFillBmpPosOffsetYItem::Create( SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XFillBmpPosOffsetYItem( rIn );
+-}
+-
+ bool XFillBmpPosOffsetYItem::GetPresentation
+ (
+     SfxItemPresentation /*ePres*/,
+@@ -859,21 +689,11 @@ XFillBackgroundItem::XFillBackgroundItem( bool bFill ) :
+ {
+ }
+ 
+-XFillBackgroundItem::XFillBackgroundItem( SvStream& rIn ) :
+-    SfxBoolItem( XATTR_FILLBACKGROUND, rIn )
+-{
+-}
+-
+ SfxPoolItem* XFillBackgroundItem::Clone( SfxItemPool* /*pPool*/) const
+ {
+     return new XFillBackgroundItem( *this );
+ }
+ 
+-SfxPoolItem* XFillBackgroundItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new XFillBackgroundItem( rIn );
+-}
+-
+ bool XFillBackgroundItem::GetPresentation( SfxItemPresentation /*ePres*/, MapUnit /*eCoreUnit*/,
+                                            MapUnit /*ePresUnit*/, OUString& rText, const IntlWrapper&) const
+ {
+-- 
+2.7.4
+

@@ -1,0 +1,442 @@
+From 006a7b50546c57e260245d4630de565705f2fc38 Mon Sep 17 00:00:00 2001
+From: Varun Dhall <varun.dhall@studentpartner.com>
+Date: Thu, 17 Aug 2017 01:57:59 +0530
+Subject: [PATCH] Removing unused serialisation code
+
+Change-Id: I86911c77f0831d448ff803afae2a74ec55ad4dd8
+Reviewed-on: https://gerrit.libreoffice.org/41233
+Tested-by: Jenkins <ci@libreoffice.org>
+Reviewed-by: Michael Stahl <mstahl@redhat.com>
+---
+ editeng/qa/unit/core-test.cxx                  |  2 +-
+ editeng/source/editeng/editdoc.cxx             |  6 ++---
+ editeng/source/editeng/editdoc.hxx             |  2 +-
+ editeng/source/editeng/editeng.cxx             |  4 ++--
+ include/editeng/editeng.hxx                    |  2 +-
+ include/svl/itempool.hxx                       |  7 +-----
+ include/svl/macitem.hxx                        |  2 --
+ include/svx/svdpool.hxx                        |  2 +-
+ include/svx/xpool.hxx                          |  2 +-
+ sc/source/core/data/docpool.cxx                |  2 +-
+ sc/source/core/data/poolhelp.cxx               |  1 -
+ sd/source/ui/annotations/annotationmanager.cxx |  2 +-
+ sfx2/source/explorer/nochaos.cxx               |  2 --
+ svl/source/inc/poolio.hxx                      | 32 --------------------------
+ svl/source/items/itempool.cxx                  | 21 +----------------
+ svl/source/items/macitem.cxx                   | 14 -----------
+ svx/source/svdraw/svdattr.cxx                  |  5 ++--
+ svx/source/svdraw/svdmodel.cxx                 |  4 ++--
+ svx/source/xoutdev/xpool.cxx                   |  4 ++--
+ sw/source/core/attr/swatrset.cxx               |  2 +-
+ 20 files changed, 21 insertions(+), 97 deletions(-)
+
+diff --git a/editeng/qa/unit/core-test.cxx b/editeng/qa/unit/core-test.cxx
+index ceea79b..f806a05 100644
+--- a/editeng/qa/unit/core-test.cxx
++++ b/editeng/qa/unit/core-test.cxx
+@@ -118,7 +118,7 @@ void Test::setUp()
+ {
+     test::BootstrapFixture::setUp();
+ 
+-    mpItemPool = new EditEngineItemPool(true);
++    mpItemPool = new EditEngineItemPool();
+ 
+     SfxApplication::GetOrCreate();
+ }
+diff --git a/editeng/source/editeng/editdoc.cxx b/editeng/source/editeng/editdoc.cxx
+index 36c101f..3b974ec 100644
+--- a/editeng/source/editeng/editdoc.cxx
++++ b/editeng/source/editeng/editdoc.cxx
+@@ -1927,7 +1927,7 @@ void ItemList::Insert( const SfxPoolItem* pItem )
+ 
+ EditDoc::EditDoc( SfxItemPool* pPool ) :
+     nLastCache(0),
+-    pItemPool(pPool ? pPool : new EditEngineItemPool(false)),
++    pItemPool(pPool ? pPool : new EditEngineItemPool()),
+     nDefTab(DEFTAB),
+     bIsVertical(false),
+     bIsTopToBottomVert(false),
+@@ -3021,9 +3021,9 @@ void CharAttribList::dumpAsXml(struct _xmlTextWriter* pWriter) const
+     xmlTextWriterEndElement(pWriter);
+ }
+ 
+-EditEngineItemPool::EditEngineItemPool( bool bPersistenRefCounts )
++EditEngineItemPool::EditEngineItemPool()
+     : SfxItemPool( "EditEngineItemPool", EE_ITEMS_START, EE_ITEMS_END,
+-                    aItemInfos, nullptr, bPersistenRefCounts )
++                    aItemInfos, nullptr )
+ {
+     m_xDefItems = EditDLL::Get().GetGlobalData()->GetDefItems();
+     SetDefaults(m_xDefItems->getDefaults());
+diff --git a/editeng/source/editeng/editdoc.hxx b/editeng/source/editeng/editdoc.hxx
+index 40cbcd1..5665b2e 100644
+--- a/editeng/source/editeng/editdoc.hxx
++++ b/editeng/source/editeng/editdoc.hxx
+@@ -836,7 +836,7 @@ class EditEngineItemPool : public SfxItemPool
+ private:
+     std::shared_ptr<DefItems> m_xDefItems;
+ public:
+-    EditEngineItemPool(bool bPersistenRefCounts);
++    EditEngineItemPool();
+ protected:
+     virtual ~EditEngineItemPool() override;
+ };
+diff --git a/editeng/source/editeng/editeng.cxx b/editeng/source/editeng/editeng.cxx
+index 402f1ab..f3a1abd 100644
+--- a/editeng/source/editeng/editeng.cxx
++++ b/editeng/source/editeng/editeng.cxx
+@@ -2570,9 +2570,9 @@ void EditEngine::FieldClicked( const SvxFieldItem&, sal_Int32, sal_Int32 )
+ 
+ // ======================     Static Methods     =======================
+ 
+-SfxItemPool* EditEngine::CreatePool( bool bPersistentRefCounts )
++SfxItemPool* EditEngine::CreatePool()
+ {
+-    SfxItemPool* pPool = new EditEngineItemPool( bPersistentRefCounts );
++    SfxItemPool* pPool = new EditEngineItemPool();
+     return pPool;
+ }
+ 
+diff --git a/include/editeng/editeng.hxx b/include/editeng/editeng.hxx
+index 55fe8dc..e7b33cf 100644
+--- a/include/editeng/editeng.hxx
++++ b/include/editeng/editeng.hxx
+@@ -506,7 +506,7 @@ public:
+ 
+     virtual tools::Rectangle GetBulletArea( sal_Int32 nPara );
+ 
+-    static SfxItemPool* CreatePool( bool bLoadRefCounts = true );
++    static SfxItemPool* CreatePool();
+     static SfxItemPool& GetGlobalItemPool();
+     static bool     DoesKeyChangeText( const KeyEvent& rKeyEvent );
+     static bool     DoesKeyMoveCursor( const KeyEvent& rKeyEvent );
+diff --git a/include/svl/itempool.hxx b/include/svl/itempool.hxx
+index f2940ad..f8d5ca3 100644
+--- a/include/svl/itempool.hxx
++++ b/include/svl/itempool.hxx
+@@ -91,8 +91,7 @@ public:
+                                     SfxItemPool( const OUString &rName,
+                                                  sal_uInt16 nStart, sal_uInt16 nEnd,
+                                                  const SfxItemInfo *pItemInfos,
+-                                                 std::vector<SfxPoolItem*> *pDefaults = nullptr,
+-                                                 bool bLoadRefCounts = true );
++                                                 std::vector<SfxPoolItem*> *pDefaults = nullptr );
+ 
+ protected:
+     virtual                         ~SfxItemPool();
+@@ -159,7 +158,6 @@ public:
+     sal_uInt16                      GetFirstWhich() const;
+     sal_uInt16                      GetLastWhich() const;
+     bool                            IsInRange( sal_uInt16 nWhich ) const;
+-    bool                            IsInVersionsRange( sal_uInt16 nWhich ) const;
+     void                            SetSecondaryPool( SfxItemPool *pPool );
+     SfxItemPool*                    GetSecondaryPool() const;
+     SfxItemPool*                    GetMasterPool() const;
+@@ -176,9 +174,6 @@ public:
+     sal_uInt16                      GetTrueWhich( sal_uInt16 nSlot, bool bDeep = true ) const;
+     sal_uInt16                      GetTrueSlotId( sal_uInt16 nWhich ) const;
+ 
+-    sal_uInt16                      GetNewWhich( sal_uInt16 nOldWhich ) const;
+-    void                            SetFileFormatVersion( sal_uInt16 nFileFormatVersion );
+-
+     static bool                     IsWhich(sal_uInt16 nId) {
+                                         return nId && nId <= SFX_WHICH_MAX; }
+     static bool                     IsSlot(sal_uInt16 nId) {
+diff --git a/include/svl/macitem.hxx b/include/svl/macitem.hxx
+index 788a721..504a8dc 100644
+--- a/include/svl/macitem.hxx
++++ b/include/svl/macitem.hxx
+@@ -130,8 +130,6 @@ public:
+                                   OUString &rText,
+                                   const IntlWrapper& ) const override;
+     virtual SfxPoolItem*    Clone( SfxItemPool *pPool = nullptr ) const override;
+-    virtual SfxPoolItem*    Create(SvStream &, sal_uInt16) const override;
+-    virtual SvStream&       Store(SvStream &, sal_uInt16 nItemVersion ) const override;
+     virtual sal_uInt16          GetVersion( sal_uInt16 nFileFormatVersion ) const override;
+ 
+     const SvxMacroTableDtor& GetMacroTable() const { return aMacroTable;}
+diff --git a/include/svx/svdpool.hxx b/include/svx/svdpool.hxx
+index f82f886..da8c241 100644
+--- a/include/svx/svdpool.hxx
++++ b/include/svx/svdpool.hxx
+@@ -31,7 +31,7 @@ class XFillAttrSetItem;
+ class SVX_DLLPUBLIC SdrItemPool : public XOutdevItemPool
+ {
+ public:
+-    SdrItemPool(SfxItemPool* pMaster = nullptr, bool bLoadRefCounts = true);
++    SdrItemPool(SfxItemPool* pMaster = nullptr);
+     SdrItemPool(const SdrItemPool& rPool);
+ protected:
+     virtual ~SdrItemPool() override;
+diff --git a/include/svx/xpool.hxx b/include/svx/xpool.hxx
+index 6d31221..b849cbe 100644
+--- a/include/svx/xpool.hxx
++++ b/include/svx/xpool.hxx
+@@ -38,7 +38,7 @@ protected:
+     std::unique_ptr<SfxItemInfo[]> mpLocalItemInfos;
+ 
+ public:
+-    XOutdevItemPool( SfxItemPool* pMaster, bool bLoadRefCounts = true);
++    XOutdevItemPool( SfxItemPool* pMaster);
+     XOutdevItemPool(const XOutdevItemPool& rPool);
+ 
+     virtual SfxItemPool* Clone() const override;
+diff --git a/sc/source/core/data/docpool.cxx b/sc/source/core/data/docpool.cxx
+index 85b57a7..f42ab0b 100644
+--- a/sc/source/core/data/docpool.cxx
++++ b/sc/source/core/data/docpool.cxx
+@@ -179,7 +179,7 @@ ScDocumentPool::ScDocumentPool()
+ 
+     :   SfxItemPool ( "ScDocumentPool",
+                         ATTR_STARTINDEX, ATTR_ENDINDEX,
+-                        aItemInfos, nullptr, false/*bLoadRefCounts*/ ),
++                        aItemInfos, nullptr ),
+     mnCurrentMaxKey(0)
+ {
+     //  latin font from GetDefaultFonts is not used, DEFAULTFONT_LATIN_SPREADSHEET instead
+diff --git a/sc/source/core/data/poolhelp.cxx b/sc/source/core/data/poolhelp.cxx
+index 0ad8c56..2ee99f2 100644
+--- a/sc/source/core/data/poolhelp.cxx
++++ b/sc/source/core/data/poolhelp.cxx
+@@ -53,7 +53,6 @@ SfxItemPool*        ScPoolHelper::GetEditPool() const
+         pEditPool = EditEngine::CreatePool();
+         pEditPool->SetDefaultMetric( MapUnit::Map100thMM );
+         pEditPool->FreezeIdRanges();
+-        pEditPool->SetFileFormatVersion( SOFFICE_FILEFORMAT_50 );   // used in ScGlobal::EETextObjEqual
+     }
+     return pEditPool;
+ }
+diff --git a/sd/source/ui/annotations/annotationmanager.cxx b/sd/source/ui/annotations/annotationmanager.cxx
+index fd351bb..d5e67d6 100644
+--- a/sd/source/ui/annotations/annotationmanager.cxx
++++ b/sd/source/ui/annotations/annotationmanager.cxx
+@@ -109,7 +109,7 @@ SfxItemPool* GetAnnotationPool()
+     static SfxItemPool* s_pAnnotationPool = nullptr;
+     if( s_pAnnotationPool == nullptr )
+     {
+-        s_pAnnotationPool = EditEngine::CreatePool( false );
++        s_pAnnotationPool = EditEngine::CreatePool();
+         s_pAnnotationPool->SetPoolDefaultItem(SvxFontHeightItem(423,100,EE_CHAR_FONTHEIGHT));
+ 
+         vcl::Font aAppFont( Application::GetSettings().GetStyleSettings().GetAppFont() );
+diff --git a/sfx2/source/explorer/nochaos.cxx b/sfx2/source/explorer/nochaos.cxx
+index a499764..2ba551d 100644
+--- a/sfx2/source/explorer/nochaos.cxx
++++ b/sfx2/source/explorer/nochaos.cxx
+@@ -98,8 +98,6 @@ CntItemPool::CntItemPool()
+ : SfxItemPool( "chaos", WID_CHAOS_START, WID_CHAOS_START, nullptr ),
+   _nRefs( 0 )
+ {
+-    SetFileFormatVersion( SOFFICE_FILEFORMAT_50 );
+-
+     FreezeIdRanges();
+ 
+     // Create static defaults.
+diff --git a/svl/source/inc/poolio.hxx b/svl/source/inc/poolio.hxx
+index 22189d6..8695dfe 100644
+--- a/svl/source/inc/poolio.hxx
++++ b/svl/source/inc/poolio.hxx
+@@ -38,29 +38,6 @@ static const sal_uInt32 SFX_ITEMS_DIRECT  = 0xffffffff;
+ static const sal_uInt32 SFX_ITEMS_NULL    = 0xfffffff0;  // instead StoreSurrogate
+ static const sal_uInt32 SFX_ITEMS_DEFAULT = 0xfffffffe;
+ 
+-struct SfxPoolVersion_Impl
+-{
+-    sal_uInt16          _nVer;
+-    sal_uInt16          _nStart, _nEnd;
+-    const sal_uInt16*         _pMap;
+-
+-                    SfxPoolVersion_Impl( sal_uInt16 nVer, sal_uInt16 nStart, sal_uInt16 nEnd,
+-                                         const sal_uInt16 *pMap )
+-                    :   _nVer( nVer ),
+-                        _nStart( nStart ),
+-                        _nEnd( nEnd ),
+-                        _pMap( pMap )
+-                    {}
+-                    SfxPoolVersion_Impl( const SfxPoolVersion_Impl &rOrig )
+-                    :   _nVer( rOrig._nVer ),
+-                        _nStart( rOrig._nStart ),
+-                        _nEnd( rOrig._nEnd ),
+-                        _pMap( rOrig._pMap )
+-                    {}
+-};
+-
+-typedef std::shared_ptr< SfxPoolVersion_Impl > SfxPoolVersion_ImplPtr;
+-
+ /**
+  * This array contains a set of SfxPoolItems, if those items are
+  * poolable then each item has a unique set of properties, and we
+@@ -106,13 +83,9 @@ struct SfxItemPool_Impl
+     sal_uInt16*                     mpPoolRanges;
+     sal_uInt16                      mnStart;
+     sal_uInt16                      mnEnd;
+-    sal_uInt16                      mnFileFormatVersion;
+-    sal_uInt16                      nVersion;
+     sal_uInt16                      nInitRefCount; // 1, during load, may be 2
+-    sal_uInt16                      nVerStart, nVerEnd; // WhichRange in versions
+     MapUnit                         eDefMetric;
+     bool                            bInSetItem;
+-    bool                            mbPersistentRefCounts;
+ 
+     SfxItemPool_Impl( SfxItemPool* pMaster, const OUString& rName, sal_uInt16 nStart, sal_uInt16 nEnd )
+         : maPoolItems(nEnd - nStart + 1)
+@@ -124,14 +97,9 @@ struct SfxItemPool_Impl
+         , mpPoolRanges(nullptr)
+         , mnStart(nStart)
+         , mnEnd(nEnd)
+-        , mnFileFormatVersion(0)
+-        , nVersion(0)
+         , nInitRefCount(0)
+-        , nVerStart(0)
+-        , nVerEnd(0)
+         , eDefMetric(MapUnit::MapCM)
+         , bInSetItem(false)
+-        , mbPersistentRefCounts(false)
+     {
+         DBG_ASSERT(mnStart, "Start-Which-Id must be greater 0" );
+     }
+diff --git a/svl/source/items/itempool.cxx b/svl/source/items/itempool.cxx
+index 98983b6..58f422c 100644
+--- a/svl/source/items/itempool.cxx
++++ b/svl/source/items/itempool.cxx
+@@ -168,19 +168,16 @@ SfxItemPool::SfxItemPool
+     sal_uInt16          nEndWhich,      /* Last WhichId of the Pool */
+     const SfxItemInfo*  pInfo,          /* SID Map and Item flags */
+     std::vector<SfxPoolItem*>*
+-                        pDefaults,      /* Pointer to static Defaults;
++                        pDefaults       /* Pointer to static Defaults;
+                                            is directly referenced by the Pool,
+                                            but no transfer of ownership */
+-    bool                bLoadRefCounts  /* Load RefCounts or set to 1? */
+ ) :
+     pItemInfos(pInfo),
+     pImpl( new SfxItemPool_Impl( this, rName, nStartWhich, nEndWhich ) )
+ {
+     pImpl->eDefMetric = MapUnit::MapTwip;
+-    pImpl->nVersion = 0;
+     pImpl->nInitRefCount = 1;
+     pImpl->bInSetItem = false;
+-    pImpl->mbPersistentRefCounts = bLoadRefCounts;
+ 
+     if ( pDefaults )
+         SetDefaults(pDefaults);
+@@ -205,10 +202,8 @@ SfxItemPool::SfxItemPool
+     pImpl( new SfxItemPool_Impl( this, rPool.pImpl->aName, rPool.pImpl->mnStart, rPool.pImpl->mnEnd ) )
+ {
+     pImpl->eDefMetric = rPool.pImpl->eDefMetric;
+-    pImpl->nVersion = rPool.pImpl->nVersion;
+     pImpl->nInitRefCount = 1;
+     pImpl->bInSetItem = false;
+-    pImpl->mbPersistentRefCounts = rPool.pImpl->mbPersistentRefCounts;
+ 
+     // Take over static Defaults
+     if ( bCloneStaticDefaults )
+@@ -963,20 +958,6 @@ sal_uInt16 SfxItemPool::GetTrueSlotId( sal_uInt16 nWhich ) const
+     return pItemInfos[nWhich - pImpl->mnStart]._nSID;
+ }
+ 
+-/**
+- * You must call this function to set the file format version after
+- * concatenating your secondary-pools but before you store any
+- * pool, itemset or item. Only set the version at the master pool,
+- * never at any secondary pool.
+- */
+-void SfxItemPool::SetFileFormatVersion( sal_uInt16 nFileFormatVersion )
+-{
+-    DBG_ASSERT( this == pImpl->mpMaster,
+-                "SfxItemPool::SetFileFormatVersion() but not a master pool" );
+-    for ( SfxItemPool *pPool = this; pPool; pPool = pPool->pImpl->mpSecondary )
+-        pPool->pImpl->mnFileFormatVersion = nFileFormatVersion;
+-}
+-
+ void SfxItemPool::dumpAsXml(xmlTextWriterPtr pWriter) const
+ {
+     xmlTextWriterStartElement(pWriter, BAD_CAST("SfxItemPool"));
+diff --git a/svl/source/items/macitem.cxx b/svl/source/items/macitem.cxx
+index 01a4ebd..7c4beb9 100644
+--- a/svl/source/items/macitem.cxx
++++ b/svl/source/items/macitem.cxx
+@@ -245,20 +245,6 @@ bool SvxMacroItem::GetPresentation
+ }
+ 
+ 
+-SvStream& SvxMacroItem::Store( SvStream& rStrm , sal_uInt16 ) const
+-{
+-    return aMacroTable.Write( rStrm );
+-}
+-
+-
+-SfxPoolItem* SvxMacroItem::Create( SvStream& rStrm, sal_uInt16 nVersion ) const
+-{
+-    SvxMacroItem* pAttr = new SvxMacroItem( Which() );
+-    pAttr->aMacroTable.Read( rStrm, nVersion );
+-    return pAttr;
+-}
+-
+-
+ void SvxMacroItem::SetMacro( SvMacroItemId nEvent, const SvxMacro& rMacro )
+ {
+     aMacroTable.Insert( nEvent, rMacro);
+diff --git a/svx/source/svdraw/svdattr.cxx b/svx/source/svdraw/svdattr.cxx
+index 8326e0b..b37b929 100644
+--- a/svx/source/svdraw/svdattr.cxx
++++ b/svx/source/svdraw/svdattr.cxx
+@@ -107,9 +107,8 @@
+ using namespace ::com::sun::star;
+ 
+ SdrItemPool::SdrItemPool(
+-    SfxItemPool* _pMaster,
+-    bool bLoadRefCounts)
+-:   XOutdevItemPool(_pMaster, bLoadRefCounts)
++    SfxItemPool* _pMaster)
++:   XOutdevItemPool(_pMaster)
+ {
+     // prepare some constants
+     const Color aNullCol(RGB_Color(COL_BLACK));
+diff --git a/svx/source/svdraw/svdmodel.cxx b/svx/source/svdraw/svdmodel.cxx
+index 0029b9f..72414a3 100644
+--- a/svx/source/svdraw/svdmodel.cxx
++++ b/svx/source/svdraw/svdmodel.cxx
+@@ -172,9 +172,9 @@ void SdrModel::ImpCtor(SfxItemPool* pPool, ::comphelper::IEmbeddedHelper* _pEmbe
+ 
+     if ( pPool == nullptr )
+     {
+-        pItemPool=new SdrItemPool(nullptr, false/*bLoadRefCounts*/);
++        pItemPool=new SdrItemPool(nullptr);
+         // Outliner doesn't have its own Pool, so use the EditEngine's
+-        SfxItemPool* pOutlPool=EditEngine::CreatePool( false/*bLoadRefCounts*/ );
++        SfxItemPool* pOutlPool=EditEngine::CreatePool();
+         // OutlinerPool as SecondaryPool of SdrPool
+         pItemPool->SetSecondaryPool(pOutlPool);
+         // remember that I created both pools myself
+diff --git a/svx/source/xoutdev/xpool.cxx b/svx/source/xoutdev/xpool.cxx
+index 367e07a..27e39b8 100644
+--- a/svx/source/xoutdev/xpool.cxx
++++ b/svx/source/xoutdev/xpool.cxx
+@@ -27,8 +27,8 @@
+ #include <svx/svxids.hrc>
+ #include <svl/itemset.hxx>
+ 
+-XOutdevItemPool::XOutdevItemPool(SfxItemPool* _pMaster, bool bLoadRefCounts)
+-    : SfxItemPool("XOutdevItemPool", SDRATTR_START, SDRATTR_END, nullptr, nullptr, bLoadRefCounts)
++XOutdevItemPool::XOutdevItemPool(SfxItemPool* _pMaster)
++    : SfxItemPool("XOutdevItemPool", SDRATTR_START, SDRATTR_END, nullptr, nullptr)
+     , mpLocalPoolDefaults(new std::vector<SfxPoolItem*>(SDRATTR_END - SDRATTR_START + 1))
+     , mpLocalItemInfos(new SfxItemInfo[SDRATTR_END - SDRATTR_START + 1])
+ {
+diff --git a/sw/source/core/attr/swatrset.cxx b/sw/source/core/attr/swatrset.cxx
+index 287193b..91c4cd7 100644
+--- a/sw/source/core/attr/swatrset.cxx
++++ b/sw/source/core/attr/swatrset.cxx
+@@ -90,7 +90,7 @@ void SwAttrPool::createAndAddSecondaryPools()
+     pSdrPool->SetPoolDefaultItem(makeSdrShadowXDistItem((300 * 72) / 127));
+     pSdrPool->SetPoolDefaultItem(makeSdrShadowYDistItem((300 * 72) / 127));
+ 
+-    SfxItemPool *pEEgPool = EditEngine::CreatePool(false);
++    SfxItemPool *pEEgPool = EditEngine::CreatePool();
+ 
+     pSdrPool->SetSecondaryPool(pEEgPool);
+ 
+-- 
+2.7.4
+

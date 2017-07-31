@@ -1,0 +1,100 @@
+From 16ca97a0c24da47cd7b0d2e7f3170d547cb063d2 Mon Sep 17 00:00:00 2001
+From: Varun <varun.dhall@studentpartner.com>
+Date: Wed, 24 Jun 2015 04:49:57 +0530
+Subject: [PATCH] Added Test for tdf#51741 bookmark rename doc mod
+
+Change-Id: I95149db78a34e35565fe8262f4933732183a7e16
+Reviewed-by: Michael Stahl <mstahl@redhat.com>
+---
+ sw/qa/extras/uiwriter/uiwriter.cxx | 61 ++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 61 insertions(+)
+
+diff --git a/sw/qa/extras/uiwriter/uiwriter.cxx b/sw/qa/extras/uiwriter/uiwriter.cxx
+index 815189d..afefed2 100644
+--- a/sw/qa/extras/uiwriter/uiwriter.cxx
++++ b/sw/qa/extras/uiwriter/uiwriter.cxx
+@@ -92,6 +92,7 @@ public:
+     void testTdf68183();
+     void testCp1000115();
+     void testTdf90003();
++    void testTdf51741();
+     void testdelofTableRedlines();
+     void testExportToPicture();
+     void testSearchWithTransliterate();
+@@ -135,6 +136,7 @@ public:
+     CPPUNIT_TEST(testTdf68183);
+     CPPUNIT_TEST(testCp1000115);
+     CPPUNIT_TEST(testTdf90003);
++    CPPUNIT_TEST(testTdf51741);
+     CPPUNIT_TEST(testdelofTableRedlines);
+     CPPUNIT_TEST(testExportToPicture);
+     CPPUNIT_TEST(testSearchWithTransliterate);
+@@ -880,6 +882,65 @@ void SwUiWriterTest::testTdf90003()
+     assertXPath(pXmlDoc, "//Special[@nType='POR_FLY']", 0);
+ }
+ 
++void SwUiWriterTest::testTdf51741()
++{
++    SwDoc* pDoc = createDoc();
++    SwWrtShell* pWrtShell = pDoc->GetDocShell()->GetWrtShell();
++    sw::UndoManager& rUndoManager = pDoc->GetUndoManager();
++    IDocumentMarkAccess* const pMarkAccess = pDoc->getIDocumentMarkAccess();
++    SwPaM aPaM( SwNodeIndex(pDoc->GetNodes().GetEndOfContent(), -1) );
++    //Modification 1
++    pMarkAccess->makeMark(aPaM, OUString("Mark"), IDocumentMarkAccess::MarkType::BOOKMARK);
++    CPPUNIT_ASSERT(pWrtShell->IsModified());
++    pWrtShell->ResetModified();
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(1), pMarkAccess->getAllMarksCount());
++    //Modification 2
++    rUndoManager.Undo();
++    CPPUNIT_ASSERT(pWrtShell->IsModified());
++    pWrtShell->ResetModified();
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(0), pMarkAccess->getAllMarksCount());
++    //Modification 3
++    rUndoManager.Redo();
++    CPPUNIT_ASSERT(pWrtShell->IsModified());
++    pWrtShell->ResetModified();
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(1), pMarkAccess->getAllMarksCount());
++    IDocumentMarkAccess::const_iterator_t ppBkmk = pMarkAccess->findMark("Mark");
++    CPPUNIT_ASSERT(ppBkmk != pMarkAccess->getAllMarksEnd());
++    //Modification 4
++    pMarkAccess->renameMark(ppBkmk->get(), "Mark_");
++    CPPUNIT_ASSERT(pWrtShell->IsModified());
++    pWrtShell->ResetModified();
++    CPPUNIT_ASSERT(pMarkAccess->findMark("Mark") == pMarkAccess->getAllMarksEnd());
++    CPPUNIT_ASSERT(pMarkAccess->findMark("Mark_") != pMarkAccess->getAllMarksEnd());
++    //Modification 5
++    rUndoManager.Undo();
++    CPPUNIT_ASSERT(pWrtShell->IsModified());
++    pWrtShell->ResetModified();
++    CPPUNIT_ASSERT(pMarkAccess->findMark("Mark") != pMarkAccess->getAllMarksEnd());
++    CPPUNIT_ASSERT(pMarkAccess->findMark("Mark_") == pMarkAccess->getAllMarksEnd());
++    //Modification 6
++    rUndoManager.Redo();
++    CPPUNIT_ASSERT(pWrtShell->IsModified());
++    pWrtShell->ResetModified();
++    CPPUNIT_ASSERT(pMarkAccess->findMark("Mark") == pMarkAccess->getAllMarksEnd());
++    CPPUNIT_ASSERT(pMarkAccess->findMark("Mark_") != pMarkAccess->getAllMarksEnd());
++    //Modification 7
++    pMarkAccess->deleteMark( pMarkAccess->findMark("Mark_") );
++    CPPUNIT_ASSERT(pWrtShell->IsModified());
++    pWrtShell->ResetModified();
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(0), pMarkAccess->getAllMarksCount());
++    //Modification 8
++    rUndoManager.Undo();
++    CPPUNIT_ASSERT(pWrtShell->IsModified());
++    pWrtShell->ResetModified();
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(1), pMarkAccess->getAllMarksCount());
++    //Modification 9
++    rUndoManager.Redo();
++    CPPUNIT_ASSERT(pWrtShell->IsModified());
++    pWrtShell->ResetModified();
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(0), pMarkAccess->getAllMarksCount());
++}
++
+ void SwUiWriterTest::testdelofTableRedlines()
+ {
+     SwDoc* pDoc = createDoc();
+-- 
+2.1.4
+

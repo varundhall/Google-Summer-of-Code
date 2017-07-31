@@ -1,0 +1,102 @@
+From 33e53bf634b629357dd643a900d3969ad2622510 Mon Sep 17 00:00:00 2001
+From: Varun Dhall <varun.dhall@studentpartner.com>
+Date: Tue, 6 Jun 2017 21:25:08 +0530
+Subject: [PATCH] EditEngine: Added ODF_TEXT_FLAT copy for sc
+
+Change-Id: I5e48a6e711f1f7bb5f22b69e2e7c364e4d6edb6b
+Reviewed-on: https://gerrit.libreoffice.org/38460
+Reviewed-by: Michael Stahl <mstahl@redhat.com>
+Tested-by: Jenkins <ci@libreoffice.org>
+Reviewed-by: Eike Rathke <erack@redhat.com>
+---
+ sc/source/ui/app/seltrans.cxx |  3 +++
+ sc/source/ui/app/transobj.cxx | 29 ++++++++++++++++++++++-------
+ 2 files changed, 25 insertions(+), 7 deletions(-)
+
+diff --git a/sc/source/ui/app/seltrans.cxx b/sc/source/ui/app/seltrans.cxx
+index 9fcbf4a..eaa4d93 100644
+--- a/sc/source/ui/app/seltrans.cxx
++++ b/sc/source/ui/app/seltrans.cxx
+@@ -193,7 +193,10 @@ void ScSelectionTransferObj::AddSupportedFormats()
+             AddFormat( SotClipboardFormatId::RTF );
+             AddFormat( SotClipboardFormatId::RICHTEXT );
+             if ( eMode == SC_SELTRANS_CELL )
++            {
+                 AddFormat( SotClipboardFormatId::EDITENGINE );
++                AddFormat( SotClipboardFormatId::EDITENGINE_ODF_TEXT_FLAT );
++            }
+             break;
+ 
+         // different graphic formats as in ScDrawTransferObj::AddSupportedFormats:
+diff --git a/sc/source/ui/app/transobj.cxx b/sc/source/ui/app/transobj.cxx
+index 1ec4aa3..388e4bd 100644
+--- a/sc/source/ui/app/transobj.cxx
++++ b/sc/source/ui/app/transobj.cxx
+@@ -69,10 +69,11 @@
+ 
+ using namespace com::sun::star;
+ 
+-#define SCTRANS_TYPE_IMPEX          SotClipboardFormatId::STRING
+-#define SCTRANS_TYPE_EDIT_RTF       SotClipboardFormatId::BITMAP
+-#define SCTRANS_TYPE_EDIT_BIN       SotClipboardFormatId::GDIMETAFILE
+-#define SCTRANS_TYPE_EMBOBJ         SotClipboardFormatId::PRIVATE
++#define SCTRANS_TYPE_IMPEX              SotClipboardFormatId::STRING
++#define SCTRANS_TYPE_EDIT_RTF           SotClipboardFormatId::BITMAP
++#define SCTRANS_TYPE_EDIT_BIN           SotClipboardFormatId::GDIMETAFILE
++#define SCTRANS_TYPE_EMBOBJ             SotClipboardFormatId::PRIVATE
++#define SCTRANS_TYPE_EDIT_ODF_TEXT_FLAT SotClipboardFormatId::EDITENGINE_ODF_TEXT_FLAT
+ 
+ void ScTransferObj::GetAreaSize( ScDocument* pDoc, SCTAB nTab1, SCTAB nTab2, SCROW& nRow, SCCOL& nCol )
+ {
+@@ -242,7 +243,10 @@ void ScTransferObj::AddSupportedFormats()
+     AddFormat( SotClipboardFormatId::RTF );
+     AddFormat( SotClipboardFormatId::RICHTEXT );
+     if ( aBlock.aStart == aBlock.aEnd )
++    {
+         AddFormat( SotClipboardFormatId::EDITENGINE );
++        AddFormat( SotClipboardFormatId::EDITENGINE_ODF_TEXT_FLAT );
++    }
+ }
+ 
+ bool ScTransferObj::GetData( const datatransfer::DataFlavor& rFlavor, const OUString& /*rDestDoc*/ )
+@@ -257,8 +261,8 @@ bool ScTransferObj::GetData( const datatransfer::DataFlavor& rFlavor, const OUSt
+             bOK = SetTransferableObjectDescriptor( aObjDesc );
+         }
+         else if ( ( nFormat == SotClipboardFormatId::RTF || nFormat == SotClipboardFormatId::RICHTEXT ||
+-            nFormat == SotClipboardFormatId::EDITENGINE ) &&
+-                        aBlock.aStart == aBlock.aEnd )
++            nFormat == SotClipboardFormatId::EDITENGINE  || nFormat == SotClipboardFormatId::EDITENGINE_ODF_TEXT_FLAT )
++                        && aBlock.aStart == aBlock.aEnd )
+         {
+             //  RTF from a single cell is handled by EditEngine
+ 
+@@ -287,7 +291,7 @@ bool ScTransferObj::GetData( const datatransfer::DataFlavor& rFlavor, const OUSt
+             }
+ 
+             bOK = SetObject( &aEngine,
+-                            (nFormat == SotClipboardFormatId::RTF) ? SCTRANS_TYPE_EDIT_RTF : SCTRANS_TYPE_EDIT_BIN,
++                            (nFormat == SotClipboardFormatId::RTF) ? SCTRANS_TYPE_EDIT_RTF : ( (nFormat == SotClipboardFormatId::EDITENGINE_ODF_TEXT_FLAT) ? SCTRANS_TYPE_EDIT_ODF_TEXT_FLAT : SCTRANS_TYPE_EDIT_BIN),
+                             rFlavor );
+         }
+         else if ( ScImportExport::IsFormatSupported( nFormat ) || nFormat == SotClipboardFormatId::RTF
+@@ -449,6 +453,17 @@ bool ScTransferObj::WriteObject( tools::SvRef<SotStorageStream>& rxOStm, void* p
+             }
+             break;
+ 
++        case SCTRANS_TYPE_EDIT_ODF_TEXT_FLAT:
++            {
++                ScTabEditEngine* pEngine = static_cast<ScTabEditEngine*>(pUserObject);
++                if ( nUserObjectId == SCTRANS_TYPE_EDIT_ODF_TEXT_FLAT )
++                {
++                    pEngine->Write( *rxOStm, EE_FORMAT_XML );
++                    bRet = ( rxOStm->GetError() == ERRCODE_NONE );
++                }
++            }
++            break;
++
+         case SCTRANS_TYPE_EMBOBJ:
+             {
+                 // TODO/MBA: testing
+-- 
+2.7.4
+

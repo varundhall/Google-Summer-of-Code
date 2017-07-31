@@ -1,0 +1,59 @@
+From fec801d6d980f9bd277051ec07b55b8f2845ccc0 Mon Sep 17 00:00:00 2001
+From: Varun Dhall <varun.dhall@studentpartner.com>
+Date: Thu, 1 Jun 2017 02:46:28 +0530
+Subject: [PATCH] EditEngine Renamed InsertText to PasteText
+
+The multiple overloads of InsertText cause pain in debugging
+
+Change-Id: Icb5b40c23ae85e198d57f3054bc07a8c7eb05f55
+Reviewed-on: https://gerrit.libreoffice.org/38286
+Tested-by: Jenkins <ci@libreoffice.org>
+Reviewed-by: Michael Stahl <mstahl@redhat.com>
+---
+ editeng/source/editeng/editeng.cxx  | 2 +-
+ editeng/source/editeng/impedit.hxx  | 2 +-
+ editeng/source/editeng/impedit2.cxx | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/editeng/source/editeng/editeng.cxx b/editeng/source/editeng/editeng.cxx
+index 438608f..714c4db 100644
+--- a/editeng/source/editeng/editeng.cxx
++++ b/editeng/source/editeng/editeng.cxx
+@@ -801,7 +801,7 @@ EditSelection EditEngine::InsertText(
+     uno::Reference<datatransfer::XTransferable > const & rxDataObj,
+     const OUString& rBaseURL, const EditPaM& rPaM, bool bUseSpecial)
+ {
+-    return pImpEditEngine->InsertText(rxDataObj, rBaseURL, rPaM, bUseSpecial);
++    return pImpEditEngine->PasteText(rxDataObj, rBaseURL, rPaM, bUseSpecial);
+ }
+ 
+ EditPaM EditEngine::EndOfWord(const EditPaM& rPaM)
+diff --git a/editeng/source/editeng/impedit.hxx b/editeng/source/editeng/impedit.hxx
+index d0b1765..6b2b28a 100644
+--- a/editeng/source/editeng/impedit.hxx
++++ b/editeng/source/editeng/impedit.hxx
+@@ -548,7 +548,7 @@ private:
+ 
+     EditTextObject*     CreateTextObject(EditSelection aSelection, SfxItemPool*, bool bAllowBigObjects = false, sal_Int32 nBigObjStart = 0);
+     EditSelection       InsertTextObject( const EditTextObject&, EditPaM aPaM );
+-    EditSelection       InsertText( css::uno::Reference< css::datatransfer::XTransferable > const & rxDataObj, const OUString& rBaseURL, const EditPaM& rPaM, bool bUseSpecial );
++    EditSelection       PasteText( css::uno::Reference< css::datatransfer::XTransferable > const & rxDataObj, const OUString& rBaseURL, const EditPaM& rPaM, bool bUseSpecial );
+ 
+     void                CheckPageOverflow();
+ 
+diff --git a/editeng/source/editeng/impedit2.cxx b/editeng/source/editeng/impedit2.cxx
+index d30bfb9..d649b88 100644
+--- a/editeng/source/editeng/impedit2.cxx
++++ b/editeng/source/editeng/impedit2.cxx
+@@ -3512,7 +3512,7 @@ uno::Reference< datatransfer::XTransferable > ImpEditEngine::CreateTransferable(
+     return xDataObj;
+ }
+ 
+-EditSelection ImpEditEngine::InsertText( uno::Reference< datatransfer::XTransferable > const & rxDataObj, const OUString& rBaseURL, const EditPaM& rPaM, bool bUseSpecial )
++EditSelection ImpEditEngine::PasteText( uno::Reference< datatransfer::XTransferable > const & rxDataObj, const OUString& rBaseURL, const EditPaM& rPaM, bool bUseSpecial )
+ {
+     EditSelection aNewSelection( rPaM );
+ 
+-- 
+2.7.4
+

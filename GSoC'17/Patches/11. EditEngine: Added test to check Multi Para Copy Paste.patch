@@ -1,0 +1,87 @@
+From 84284429de635226342d745680fa5ddc324b4b3b Mon Sep 17 00:00:00 2001
+From: Varun Dhall <varun.dhall@studentpartner.com>
+Date: Thu, 22 Jun 2017 22:05:21 +0530
+Subject: [PATCH] EditEngine: Added test to check Multi Para Copy/Paste
+
+Change-Id: Ida45d5861068c71e5c8d75eb711aaacbf543be79
+Reviewed-on: https://gerrit.libreoffice.org/39119
+Tested-by: Jenkins <ci@libreoffice.org>
+Reviewed-by: Michael Stahl <mstahl@redhat.com>
+---
+ editeng/qa/unit/core-test.cxx | 46 +++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 46 insertions(+)
+
+diff --git a/editeng/qa/unit/core-test.cxx b/editeng/qa/unit/core-test.cxx
+index 1f67db2..0249c0d 100644
+--- a/editeng/qa/unit/core-test.cxx
++++ b/editeng/qa/unit/core-test.cxx
+@@ -72,6 +72,9 @@ public:
+     /// Test Copy/Paste with Underline text using Legacy Format
+     void testUnderlineCopyPaste();
+ 
++    /// Test Copy/Paste with mutiple paragraphs
++    void testMultiParaCopyPaste();
++
+     void testSectionAttributes();
+ 
+     CPPUNIT_TEST_SUITE(Test);
+@@ -84,6 +87,7 @@ public:
+     CPPUNIT_TEST(testHyperlinkSearch);
+     CPPUNIT_TEST(testBoldItalicCopyPaste);
+     CPPUNIT_TEST(testUnderlineCopyPaste);
++    CPPUNIT_TEST(testMultiParaCopyPaste);
+     CPPUNIT_TEST(testSectionAttributes);
+     CPPUNIT_TEST_SUITE_END();
+ 
+@@ -1035,6 +1039,48 @@ void Test::testUnderlineCopyPaste()
+     CPPUNIT_ASSERT_MESSAGE( "This section must be underlined.", hasUnderline(*pSecAttr) );
+ }
+ 
++void Test::testMultiParaCopyPaste()
++{
++    // Create EditEngine's instance
++    EditEngine aEditEngine( mpItemPool );
++
++    // Get EditDoc for current EditEngine's instance
++    EditDoc &rDoc = aEditEngine.GetEditDoc();
++
++    // Initially no text should be there
++    CPPUNIT_ASSERT_EQUAL( sal_uLong(0), rDoc.GetTextLen() );
++    CPPUNIT_ASSERT_EQUAL( OUString(), rDoc.GetParaAsString(sal_Int32(0)) );
++
++    // Insert initial text
++    OUString aFirstPara = "This is first paragraph";
++    OUString aSecondPara = "This is second paragraph";
++    OUString aThirdPara = "This is third paragraph";
++    OUString aText = aFirstPara + "\n" + aSecondPara + "\n" + aThirdPara;
++    sal_Int32 aTextLen = aFirstPara.getLength() + aSecondPara.getLength() + aThirdPara.getLength();
++    aEditEngine.SetText( aText );
++    sal_Int32 aCopyTextLen = aFirstPara.getLength() + aSecondPara.getLength();
++
++    // Assert changes
++    CPPUNIT_ASSERT_EQUAL( sal_uLong(aTextLen), rDoc.GetTextLen() );
++    CPPUNIT_ASSERT_EQUAL( aFirstPara, rDoc.GetParaAsString(sal_Int32(0)) );
++    CPPUNIT_ASSERT_EQUAL( aSecondPara, rDoc.GetParaAsString(sal_Int32(1)) );
++    CPPUNIT_ASSERT_EQUAL( aThirdPara, rDoc.GetParaAsString(sal_Int32(2)) );
++
++    // Copy initial text using legacy format
++    uno::Reference< datatransfer::XTransferable > xData = aEditEngine.CreateTransferable( ESelection(0,0,1,aSecondPara.getLength()) );
++
++    // Paste text at the end
++    aEditEngine.InsertText( xData, OUString(), rDoc.GetEndPaM(), true );
++
++    // Assert changes
++    OUString aThirdParaAfterCopyPaste = aThirdPara + aFirstPara;
++    CPPUNIT_ASSERT_EQUAL( sal_uLong(aTextLen + aCopyTextLen), rDoc.GetTextLen() );
++    CPPUNIT_ASSERT_EQUAL( aFirstPara, rDoc.GetParaAsString(sal_Int32(0)) );
++    CPPUNIT_ASSERT_EQUAL( aSecondPara, rDoc.GetParaAsString(sal_Int32(1)) );
++    CPPUNIT_ASSERT_EQUAL( aThirdParaAfterCopyPaste, rDoc.GetParaAsString(sal_Int32(2)) );
++    CPPUNIT_ASSERT_EQUAL( aSecondPara, rDoc.GetParaAsString(sal_Int32(3)) );
++}
++
+ void Test::testSectionAttributes()
+ {
+     EditEngine aEngine(mpItemPool);
+-- 
+2.7.4
+

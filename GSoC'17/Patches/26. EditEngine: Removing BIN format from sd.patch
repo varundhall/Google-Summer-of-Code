@@ -1,0 +1,114 @@
+From 8a8bcd65e8a0e177904f06fcd8a775456ff02eab Mon Sep 17 00:00:00 2001
+From: Varun Dhall <varun.dhall@studentpartner.com>
+Date: Sun, 23 Jul 2017 22:20:17 +0530
+Subject: [PATCH] EditEngine: Removing BIN format from sd
+
+Change-Id: Iafd88cdb0d0a84b611deda3bd276fb4b16604b92
+Reviewed-on: https://gerrit.libreoffice.org/40331
+Tested-by: Jenkins <ci@libreoffice.org>
+Reviewed-by: Michael Stahl <mstahl@redhat.com>
+---
+ sd/source/ui/func/fuinsert.cxx |  1 -
+ sd/source/ui/view/drviews7.cxx |  1 -
+ sd/source/ui/view/sdview2.cxx  |  3 +--
+ sd/source/ui/view/sdview3.cxx  | 32 +-------------------------------
+ 4 files changed, 2 insertions(+), 35 deletions(-)
+
+diff --git a/sd/source/ui/func/fuinsert.cxx b/sd/source/ui/func/fuinsert.cxx
+index e672179..e1e4c1e 100644
+--- a/sd/source/ui/func/fuinsert.cxx
++++ b/sd/source/ui/func/fuinsert.cxx
+@@ -253,7 +253,6 @@ void FuInsertClipboard::DoExecute( SfxRequest&  )
+         pDlg->Insert( SotClipboardFormatId::HTML, OUString() );
+         pDlg->Insert( SotClipboardFormatId::RTF, OUString() );
+         pDlg->Insert( SotClipboardFormatId::RICHTEXT, OUString() );
+-        pDlg->Insert( SotClipboardFormatId::EDITENGINE, OUString() );
+         pDlg->Insert( SotClipboardFormatId::EDITENGINE_ODF_TEXT_FLAT, OUString() );
+ 
+         //TODO/MBA: testing
+diff --git a/sd/source/ui/view/drviews7.cxx b/sd/source/ui/view/drviews7.cxx
+index 99f5bd3..ab318a9 100644
+--- a/sd/source/ui/view/drviews7.cxx
++++ b/sd/source/ui/view/drviews7.cxx
+@@ -167,7 +167,6 @@ using namespace ::com::sun::star::linguistic2;
+                 case SotClipboardFormatId::HTML:
+                 case SotClipboardFormatId::RTF:
+                 case SotClipboardFormatId::RICHTEXT:
+-                case SotClipboardFormatId::EDITENGINE:
+                 case SotClipboardFormatId::EDITENGINE_ODF_TEXT_FLAT:
+                     pResult->AddClipbrdFormat(nTestFormat);
+                     break;
+diff --git a/sd/source/ui/view/sdview2.cxx b/sd/source/ui/view/sdview2.cxx
+index ad13321..22f248c 100644
+--- a/sd/source/ui/view/sdview2.cxx
++++ b/sd/source/ui/view/sdview2.cxx
+@@ -572,7 +572,6 @@ sal_Int8 View::AcceptDrop( const AcceptDropEvent& rEvt, DropTargetHelper& rTarge
+                 if( !nRet )
+                 {
+                     const bool  bSBAFormat = rTargetHelper.IsDropFormatSupported( SotClipboardFormatId::SVX_FORMFIELDEXCH );
+-                    const bool  bEditEngine = rTargetHelper.IsDropFormatSupported( SotClipboardFormatId::EDITENGINE );
+                     const bool  bEditEngineODF = rTargetHelper.IsDropFormatSupported( SotClipboardFormatId::EDITENGINE_ODF_TEXT_FLAT );
+                     const bool  bString = rTargetHelper.IsDropFormatSupported( SotClipboardFormatId::STRING );
+                     const bool  bRTF = rTargetHelper.IsDropFormatSupported( SotClipboardFormatId::RTF );
+@@ -588,7 +587,7 @@ sal_Int8 View::AcceptDrop( const AcceptDropEvent& rEvt, DropTargetHelper& rTarge
+                     if( bBookmark && bFile && ( nDropAction & DND_ACTION_MOVE ) && mpViewSh && SlideShow::IsRunning(mpViewSh->GetViewShellBase()) )
+                         bBookmark = false;
+ 
+-                    if( bDrawing || bGraphic || bMtf || bBitmap || bBookmark || bFile || bFileList || bXFillExchange || bSBAFormat || bEditEngine || bEditEngineODF || bString || bRTF )
++                    if( bDrawing || bGraphic || bMtf || bBitmap || bBookmark || bFile || bFileList || bXFillExchange || bSBAFormat || bEditEngineODF || bString || bRTF )
+                         nRet = nDropAction;
+ 
+                     // For entries from the navigator, change action copy.
+diff --git a/sd/source/ui/view/sdview3.cxx b/sd/source/ui/view/sdview3.cxx
+index 5f5d9f5..de471dd 100644
+--- a/sd/source/ui/view/sdview3.cxx
++++ b/sd/source/ui/view/sdview3.cxx
+@@ -1392,9 +1392,7 @@ bool View::InsertData( const TransferableDataHelper& rDataHelper,
+         }
+     }
+ 
+-    char* ODF_XML_Env = getenv ("ODF_TEXT_FLAT_XML_ENV");
+-
+-    if(!bReturn && !bLink && CHECK_FORMAT_TRANS(SotClipboardFormatId::EDITENGINE_ODF_TEXT_FLAT) && ODF_XML_Env == nullptr)
++    if(!bReturn && !bLink && CHECK_FORMAT_TRANS(SotClipboardFormatId::EDITENGINE_ODF_TEXT_FLAT))
+     {
+         ::tools::SvRef<SotStorageStream> xStm;
+         if( aDataHelper.GetSotStorageStream( SotClipboardFormatId::EDITENGINE_ODF_TEXT_FLAT, xStm ) )
+@@ -1422,34 +1420,6 @@ bool View::InsertData( const TransferableDataHelper& rDataHelper,
+         }
+     }
+ 
+-    if(!bReturn && !bLink && CHECK_FORMAT_TRANS(SotClipboardFormatId::EDITENGINE) )
+-    {
+-        ::tools::SvRef<SotStorageStream> xStm;
+-        if( aDataHelper.GetSotStorageStream( SotClipboardFormatId::EDITENGINE, xStm ) )
+-        {
+-            OutlinerView* pOLV = GetTextEditOutlinerView();
+-
+-            xStm->Seek( 0 );
+-
+-            if( pOLV )
+-            {
+-                ::tools::Rectangle   aRect( pOLV->GetOutputArea() );
+-                   Point       aPos( pOLV->GetWindow()->PixelToLogic( maDropPos ) );
+-
+-                if( aRect.IsInside( aPos ) || ( !bDrag && IsTextEdit() ) )
+-                {
+-                    // mba: clipboard always must contain absolute URLs (could be from alien source)
+-                    pOLV->Read( *xStm, EE_FORMAT_BIN, mpDocSh->GetHeaderAttributes() );
+-                    bReturn = true;
+-                }
+-            }
+-
+-            if( !bReturn )
+-                // mba: clipboard always must contain absolute URLs (could be from alien source)
+-                bReturn = SdrView::Paste( *xStm, EE_FORMAT_BIN, maDropPos, pPage, nPasteOptions );
+-        }
+-    }
+-
+     bool bIsRTF = false;
+     if(!bReturn && !bLink && (( bIsRTF = CHECK_FORMAT_TRANS(SotClipboardFormatId::RTF) ) || CHECK_FORMAT_TRANS(SotClipboardFormatId::RICHTEXT) ))
+     {
+-- 
+2.7.4
+

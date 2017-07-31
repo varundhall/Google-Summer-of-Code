@@ -1,0 +1,77 @@
+From 2062d69c390d372ab4253832012e6cbb27df6dda Mon Sep 17 00:00:00 2001
+From: Varun <varun.dhall@studentpartner.com>
+Date: Thu, 16 Jul 2015 22:14:54 +0530
+Subject: [PATCH] Added UNO test coverage for SwXParagraph
+
+Change-Id: I2779114e2655e9574003b929b1517560c21ae4b5
+Reviewed-on: https://gerrit.libreoffice.org/17141
+Reviewed-by: Michael Stahl <mstahl@redhat.com>
+Tested-by: Michael Stahl <mstahl@redhat.com>
+---
+ sw/qa/extras/uiwriter/uiwriter.cxx | 36 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 36 insertions(+)
+
+diff --git a/sw/qa/extras/uiwriter/uiwriter.cxx b/sw/qa/extras/uiwriter/uiwriter.cxx
+index 72e5a8c..55ae22b 100644
+--- a/sw/qa/extras/uiwriter/uiwriter.cxx
++++ b/sw/qa/extras/uiwriter/uiwriter.cxx
+@@ -113,6 +113,7 @@ public:
+     void testTextSearch();
+     void testTdf69282();
+     void testTdf69282WithMirror();
++    void testUnoParagraph();
+     void testSearchWithTransliterate();
+     void testTdf80663();
+     void testTdf90808();
+@@ -170,6 +171,7 @@ public:
+     CPPUNIT_TEST(testTextSearch);
+     CPPUNIT_TEST(testTdf69282);
+     CPPUNIT_TEST(testTdf69282WithMirror);
++    CPPUNIT_TEST(testUnoParagraph);
+     CPPUNIT_TEST(testSearchWithTransliterate);
+     CPPUNIT_TEST(testTdf80663);
+     CPPUNIT_TEST(testTdf90808);
+@@ -1313,6 +1315,40 @@ void SwUiWriterTest::testTdf69282WithMirror()
+     xSourceDoc->dispose();
+ }
+ 
++void SwUiWriterTest::testUnoParagraph()
++{
++    SwDoc* pDoc = createDoc();
++    SwWrtShell* pWrtShell = pDoc->GetDocShell()->GetWrtShell();
++    //Inserting some text content in the document
++    pWrtShell->Insert("This is initial text in paragraph one");
++    pWrtShell->SplitNode();
++    //Inserting second paragraph
++    pWrtShell->Insert("This is initial text in paragraph two");
++    //now testing the SwXParagraph
++    uno::Reference<text::XTextDocument> xTextDocument(mxComponent, uno::UNO_QUERY);
++    uno::Reference<text::XText> xText(xTextDocument->getText());
++    uno::Reference<container::XEnumerationAccess> xParaAccess(xText, uno::UNO_QUERY);
++    uno::Reference<container::XEnumeration> xPara(xParaAccess->createEnumeration());
++    //getting first paragraph
++    uno::Reference<text::XTextContent> xFirstParaContent(xPara->nextElement(), uno::UNO_QUERY);
++    uno::Reference<text::XTextRange> xFirstPara(xFirstParaContent, uno::UNO_QUERY);
++    //testing the initial text
++    CPPUNIT_ASSERT_EQUAL(OUString("This is initial text in paragraph one"), xFirstPara->getString());
++    //changing the text content in first paragraph
++    xFirstPara->setString("This is modified text in paragraph one");
++    //testing the changes
++    CPPUNIT_ASSERT_EQUAL(OUString("This is modified text in paragraph one"), xFirstPara->getString());
++    //getting second paragraph
++    uno::Reference<text::XTextContent> xSecondParaContent(xPara->nextElement(), uno::UNO_QUERY);
++    uno::Reference<text::XTextRange> xSecondPara(xSecondParaContent, uno::UNO_QUERY);
++    //testing the initial text
++    CPPUNIT_ASSERT_EQUAL(OUString("This is initial text in paragraph two"), xSecondPara->getString());
++    //changing the text content in second paragraph
++    xSecondPara->setString("This is modified text in paragraph two");
++    //testing the changes
++    CPPUNIT_ASSERT_EQUAL(OUString("This is modified text in paragraph two"), xSecondPara->getString());
++}
++
+ void SwUiWriterTest::testSearchWithTransliterate()
+ {
+     SwDoc* pDoc = createDoc();
+-- 
+2.1.4
+

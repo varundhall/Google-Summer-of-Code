@@ -1,0 +1,55 @@
+From 7878bcf5547ae4d111aa8e835529e501c4e23838 Mon Sep 17 00:00:00 2001
+From: Varun Dhall <varun.dhall@studentpartner.com>
+Date: Fri, 7 Jul 2017 20:16:06 +0530
+Subject: [PATCH] xmloff: Updated XMLTextListBlockContext to insert elements
+ before NumRules
+
+Change-Id: If81d55aef96af4b764b62dc53a1986b5f0739d1e
+Reviewed-on: https://gerrit.libreoffice.org/39698
+Reviewed-by: Michael Stahl <mstahl@redhat.com>
+Tested-by: Jenkins <ci@libreoffice.org>
+---
+ xmloff/source/text/XMLTextListBlockContext.cxx | 6 +++---
+ xmloff/source/text/txtlists.cxx                | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/xmloff/source/text/XMLTextListBlockContext.cxx b/xmloff/source/text/XMLTextListBlockContext.cxx
+index 0552d01..190840a 100644
+--- a/xmloff/source/text/XMLTextListBlockContext.cxx
++++ b/xmloff/source/text/XMLTextListBlockContext.cxx
+@@ -125,6 +125,9 @@ XMLTextListBlockContext::XMLTextListBlockContext(
+         }
+     }
+ 
++    // Remember this list block.
++    mrTxtImport.GetTextListHelper().PushListContext( this );
++
+     mxNumRules = XMLTextListsHelper::MakeNumRule(GetImport(), mxNumRules,
+         sParentListStyleName, msListStyleName,
+         mnLevel, &mbRestartNumbering, &mbSetDefaults );
+@@ -224,9 +227,6 @@ XMLTextListBlockContext::XMLTextListBlockContext(
+                 sListStyleDefaultListId );
+         }
+     }
+-
+-    // Remember this list block.
+-    mrTxtImport.GetTextListHelper().PushListContext( this );
+ }
+ 
+ XMLTextListBlockContext::~XMLTextListBlockContext()
+diff --git a/xmloff/source/text/txtlists.cxx b/xmloff/source/text/txtlists.cxx
+index 420563c..f26df8a 100644
+--- a/xmloff/source/text/txtlists.cxx
++++ b/xmloff/source/text/txtlists.cxx
+@@ -451,7 +451,7 @@ XMLTextListsHelper::MakeNumRule(
+ 
+         xNumRules =
+             SvxXMLListStyleContext::CreateNumRule( i_rImport.GetModel() );
+-        assert(xNumRules.is());
++        SAL_INFO_IF(xNumRules.is(), "xmloff.core", "cannot create numrules");
+         if ( !xNumRules.is() )
+             return xNumRules;
+ 
+-- 
+2.7.4
+

@@ -1,0 +1,125 @@
+From bf5d569bb6af90195a339bb3b1a19d763d2210af Mon Sep 17 00:00:00 2001
+From: Varun <varun.dhall@studentpartner.com>
+Date: Wed, 22 Jul 2015 13:58:53 +0530
+Subject: [PATCH] Added test for tdf#57197 table row/column insert undo crash
+
+Change-Id: I143d657239dd983396847eb67019e84a202f0bcb
+Reviewed-on: https://gerrit.libreoffice.org/17284
+Tested-by: Jenkins <ci@libreoffice.org>
+Reviewed-by: Michael Stahl <mstahl@redhat.com>
+---
+ sw/qa/extras/uiwriter/uiwriter.cxx | 84 ++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 84 insertions(+)
+
+diff --git a/sw/qa/extras/uiwriter/uiwriter.cxx b/sw/qa/extras/uiwriter/uiwriter.cxx
+index 08158cc..16bd01f 100644
+--- a/sw/qa/extras/uiwriter/uiwriter.cxx
++++ b/sw/qa/extras/uiwriter/uiwriter.cxx
+@@ -118,6 +118,7 @@ public:
+     void testUnoParagraph();
+     void testSearchWithTransliterate();
+     void testTdf80663();
++    void testTdf57197();
+     void testTdf90808();
+     void testTdf75137();
+     void testTdf83798();
+@@ -177,6 +178,7 @@ public:
+     CPPUNIT_TEST(testUnoParagraph);
+     CPPUNIT_TEST(testSearchWithTransliterate);
+     CPPUNIT_TEST(testTdf80663);
++    CPPUNIT_TEST(testTdf57197);
+     CPPUNIT_TEST(testTdf90808);
+     CPPUNIT_TEST(testTdf75137);
+     CPPUNIT_TEST(testTdf83798);
+@@ -1520,6 +1522,88 @@ void SwUiWriterTest::testTdf80663()
+     CPPUNIT_ASSERT_EQUAL(sal_Int32(2), xTable->getColumns()->getCount());
+ }
+ 
++void SwUiWriterTest::testTdf57197()
++{
++    SwDoc* pDoc = createDoc();
++    SwWrtShell* pWrtShell = pDoc->GetDocShell()->GetWrtShell();
++    //Inserting 1x1 Table
++    sw::UndoManager& rUndoManager = pDoc->GetUndoManager();
++    SwInsertTableOptions TableOpt(tabopts::DEFAULT_BORDER, 0);
++    pWrtShell->InsertTable(TableOpt, 1, 1);
++    //Checking for the number of rows and columns
++    uno::Reference<text::XTextTable> xTable(getParagraphOrTable(1), uno::UNO_QUERY);
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(1), xTable->getRows()->getCount());
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(1), xTable->getColumns()->getCount());
++    //Inserting one row before the existing row
++    pWrtShell->SttDoc(); //moves the cursor to the start of Doc
++    pWrtShell->InsertRow(1, false);
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(2), xTable->getRows()->getCount());
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(1), xTable->getColumns()->getCount());
++    //Undo changes
++    rUndoManager.Undo();
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(1), xTable->getRows()->getCount());
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(1), xTable->getColumns()->getCount());
++    //Redo changes
++    rUndoManager.Redo();
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(2), xTable->getRows()->getCount());
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(1), xTable->getColumns()->getCount());
++    //Undo changes
++    rUndoManager.Undo();
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(1), xTable->getRows()->getCount());
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(1), xTable->getColumns()->getCount());
++    //Insering one row after the existing row
++    pWrtShell->SttDoc(); //moves the cursor to the start of Doc
++    pWrtShell->InsertRow(1, true);
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(2), xTable->getRows()->getCount());
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(1), xTable->getColumns()->getCount());
++    //Undo changes
++    rUndoManager.Undo();
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(1), xTable->getRows()->getCount());
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(1), xTable->getColumns()->getCount());
++    //Redo changes
++    rUndoManager.Redo();
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(2), xTable->getRows()->getCount());
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(1), xTable->getColumns()->getCount());
++    //Undo changes
++    rUndoManager.Undo();
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(1), xTable->getRows()->getCount());
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(1), xTable->getColumns()->getCount());
++    //Inserting one column before the existing column
++    pWrtShell->SttDoc(); //moves the cursor to the start of Doc
++    pWrtShell->InsertCol(1, false);
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(1), xTable->getRows()->getCount());
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(2), xTable->getColumns()->getCount());
++     //Undo changes
++    rUndoManager.Undo();
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(1), xTable->getRows()->getCount());
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(1), xTable->getColumns()->getCount());
++    //Redo changes
++    rUndoManager.Redo();
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(1), xTable->getRows()->getCount());
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(2), xTable->getColumns()->getCount());
++    //Undo changes
++    rUndoManager.Undo();
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(1), xTable->getRows()->getCount());
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(1), xTable->getColumns()->getCount());
++    //Inserting one column after the existing column
++    pWrtShell->SttDoc(); //moves the cursor to the start of Doc
++    pWrtShell->InsertCol(1, true);
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(1), xTable->getRows()->getCount());
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(2), xTable->getColumns()->getCount());
++    //Undo changes
++    rUndoManager.Undo();
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(1), xTable->getRows()->getCount());
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(1), xTable->getColumns()->getCount());
++    //Redo changes
++    rUndoManager.Redo();
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(1), xTable->getRows()->getCount());
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(2), xTable->getColumns()->getCount());
++    //Undo changes
++    rUndoManager.Undo();
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(1), xTable->getRows()->getCount());
++    CPPUNIT_ASSERT_EQUAL(sal_Int32(1), xTable->getColumns()->getCount());
++}
++
+ void SwUiWriterTest::testTdf90808()
+ {
+     createDoc();
+-- 
+2.1.4
+

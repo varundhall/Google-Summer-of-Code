@@ -1,0 +1,92 @@
+From 41f1474e63a40e682a424211e788cc4b801e6659 Mon Sep 17 00:00:00 2001
+From: Varun Dhall <varun.dhall@studentpartner.com>
+Date: Fri, 23 Jun 2017 09:39:21 +0530
+Subject: [PATCH] EditEngine: Added test to check MultiPara SelectiveSelection
+ Copy/Paste
+
+Change-Id: Iffb55599c90483b231820f60536c93ec3bfec2c9
+Reviewed-on: https://gerrit.libreoffice.org/39140
+Tested-by: Jenkins <ci@libreoffice.org>
+Reviewed-by: Michael Stahl <mstahl@redhat.com>
+---
+ editeng/qa/unit/core-test.cxx | 50 +++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 50 insertions(+)
+
+diff --git a/editeng/qa/unit/core-test.cxx b/editeng/qa/unit/core-test.cxx
+index 0249c0d..ba76dd8 100644
+--- a/editeng/qa/unit/core-test.cxx
++++ b/editeng/qa/unit/core-test.cxx
+@@ -60,6 +60,9 @@ public:
+     /// Test Copy/Paste using Legacy Format
+     void testCopyPaste();
+ 
++    /// Test Copy/Paste with selective selection over multiple paragraphs
++    void testMultiParaSelCopyPaste();
++
+     /// Test Copy/Paste with Tabs
+     void testTabsCopyPaste();
+ 
+@@ -83,6 +86,7 @@ public:
+     CPPUNIT_TEST(testAutocorrect);
+     CPPUNIT_TEST(testHyperlinkCopyPaste);
+     CPPUNIT_TEST(testCopyPaste);
++    CPPUNIT_TEST(testMultiParaSelCopyPaste);
+     CPPUNIT_TEST(testTabsCopyPaste);
+     CPPUNIT_TEST(testHyperlinkSearch);
+     CPPUNIT_TEST(testBoldItalicCopyPaste);
+@@ -567,6 +571,52 @@ void Test::testCopyPaste()
+     CPPUNIT_ASSERT_EQUAL( OUString(aText + aText), rDoc.GetParaAsString(sal_Int32(0)) );
+ }
+ 
++void Test::testMultiParaSelCopyPaste()
++{
++    // Create EditEngine's instance
++    EditEngine aEditEngine( mpItemPool );
++
++    // Get EditDoc for current EditEngine's instance
++    EditDoc &rDoc = aEditEngine.GetEditDoc();
++
++    // Initially no text should be there
++    CPPUNIT_ASSERT_EQUAL( sal_uLong(0), rDoc.GetTextLen() );
++    CPPUNIT_ASSERT_EQUAL( OUString(), rDoc.GetParaAsString(sal_Int32(0)) );
++
++    // Insert initial text
++    OUString aFirstPara = "This is first paragraph";
++    // Selection Ref       ........8..............
++    OUString aSecondPara = "This is second paragraph";
++    // Selection Ref        .............14.........
++    OUString aThirdPara = "This is third paragraph";
++    OUString aText = aFirstPara + "\n" + aSecondPara + "\n" + aThirdPara;
++    sal_Int32 aTextLen = aFirstPara.getLength() + aSecondPara.getLength() + aThirdPara.getLength();
++    aEditEngine.SetText( aText );
++    OUString aCopyText = "first paragraphThis is second";
++    sal_Int32 aCopyTextLen = aCopyText.getLength();
++
++    // Assert changes
++    CPPUNIT_ASSERT_EQUAL( sal_uLong(aTextLen), rDoc.GetTextLen() );
++    CPPUNIT_ASSERT_EQUAL( aFirstPara, rDoc.GetParaAsString(sal_Int32(0)) );
++    CPPUNIT_ASSERT_EQUAL( aSecondPara, rDoc.GetParaAsString(sal_Int32(1)) );
++    CPPUNIT_ASSERT_EQUAL( aThirdPara, rDoc.GetParaAsString(sal_Int32(2)) );
++
++    // Copy initial text using legacy format
++    uno::Reference< datatransfer::XTransferable > xData = aEditEngine.CreateTransferable( ESelection(0,8,1,14) );
++
++    // Paste text at the end
++    aEditEngine.InsertText( xData, OUString(), rDoc.GetEndPaM(), true );
++
++    // Assert changes
++    OUString aThirdParaAfterCopyPaste = aThirdPara + "first paragraph";
++    OUString aFourthPara = "This is second";
++    CPPUNIT_ASSERT_EQUAL( sal_uLong(aTextLen + aCopyTextLen), rDoc.GetTextLen() );
++    CPPUNIT_ASSERT_EQUAL( aFirstPara, rDoc.GetParaAsString(sal_Int32(0)) );
++    CPPUNIT_ASSERT_EQUAL( aSecondPara, rDoc.GetParaAsString(sal_Int32(1)) );
++    CPPUNIT_ASSERT_EQUAL( aThirdParaAfterCopyPaste, rDoc.GetParaAsString(sal_Int32(2)) );
++    CPPUNIT_ASSERT_EQUAL( aFourthPara, rDoc.GetParaAsString(sal_Int32(3)) );
++}
++
+ void Test::testTabsCopyPaste()
+ {
+     // Create EditEngine's instance
+-- 
+2.7.4
+

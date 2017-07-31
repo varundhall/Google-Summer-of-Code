@@ -1,0 +1,39 @@
+From 22f2d254ea045d8cd0503c91236ad9bb8365afb9 Mon Sep 17 00:00:00 2001
+From: Varun Dhall <varun.dhall@studentpartner.com>
+Date: Tue, 2 Jun 2015 00:09:40 +0200
+Subject: [PATCH] add script to remove thumbnail image from ODF files
+
+Change-Id: Iec23d361e36aa1ec3a5950d74de9f3d874e83b9b
+---
+ scripts/remove-thumbnail.sh |   19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+ create mode 100644 scripts/remove-thumbnail.sh
+
+diff --git a/scripts/remove-thumbnail.sh b/scripts/remove-thumbnail.sh
+new file mode 100644
+index 0000000..c1641df
+--- /dev/null
++++ b/scripts/remove-thumbnail.sh
+@@ -0,0 +1,19 @@
++#!/bin/sh
++
++# To Remove Thumbnail with its respective file entry in manifest.xml from LibreOffice Test Documents to conserve space
++# Usage: "./optimize.sh" "file_name.odt" Add relevant addresses if files are not in current working directory
++# Caution: Please make a copy of original file for backup. This script directly alters the original file
++# After running this script observe the change in size
++set -e
++cmdfolder=$(realpath "$1")
++echo $cmdfolder
++zip -d "$cmdfolder" "Thumbnails/*"
++TMPDIR=$(mktemp -d)
++unzip -j "$cmdfolder" "META-INF/manifest.xml" -d "$TMPDIR/META-INF/"
++cd "$TMPDIR/META-INF/"
++mv manifest.xml temp.xml
++grep -v "thumbnail" temp.xml > manifest.xml
++rm temp.xml
++cd ..
++zip -u "$cmdfolder" "META-INF/manifest.xml"
++rm -rf "$TMPDIR"
+-- 
+1.7.9.5
+

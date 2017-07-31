@@ -1,0 +1,733 @@
+From 9cc75c52369d6656a5812e950641d4b9b6d0cc35 Mon Sep 17 00:00:00 2001
+From: Varun Dhall <varun.dhall@studentpartner.com>
+Date: Tue, 8 Aug 2017 23:42:02 +0530
+Subject: [PATCH] Removing unused SfxItemPool serialisation from sc
+
+Change-Id: Ib8686d06f8cd477ff4fce948b0ac9c3fe463b129
+Reviewed-on: https://gerrit.libreoffice.org/40901
+Tested-by: Jenkins <ci@libreoffice.org>
+Reviewed-by: Michael Stahl <mstahl@redhat.com>
+---
+ editeng/source/editeng/editobj.cxx            | 362 --------------------------
+ editeng/source/editeng/editobj2.hxx           |   2 -
+ include/editeng/editobj.hxx                   |   2 -
+ sc/inc/attrib.hxx                             |   7 -
+ sc/source/core/data/attrib.cxx                | 192 --------------
+ sc/source/ui/condformat/condformatdlgitem.cxx |   5 -
+ sc/source/ui/inc/condformatdlgitem.hxx        |   1 -
+ 7 files changed, 571 deletions(-)
+
+diff --git a/editeng/source/editeng/editobj.cxx b/editeng/source/editeng/editobj.cxx
+index 14eebcf..f5122fe 100644
+--- a/editeng/source/editeng/editobj.cxx
++++ b/editeng/source/editeng/editobj.cxx
+@@ -393,36 +393,6 @@ SvtScriptType EditTextObject::GetScriptType() const
+ }
+ 
+ 
+-EditTextObject* EditTextObject::Create( SvStream& rIStream )
+-{
+-    sal_uInt64 const nStartPos = rIStream.Tell();
+-
+-    // First check what type of Object...
+-    sal_uInt16 nWhich;
+-    rIStream.ReadUInt16( nWhich );
+-
+-    sal_uInt32 nStructSz;
+-    rIStream.ReadUInt32( nStructSz );
+-
+-    if (nWhich != EE_FORMAT_BIN)
+-    {
+-        // Unknown object we no longer support.
+-        rIStream.SetError(EE_READWRITE_WRONGFORMAT);
+-        return nullptr;
+-    }
+-
+-    if ( rIStream.GetError() )
+-        return nullptr;
+-
+-    EditTextObject* pTxtObj = new EditTextObject(nullptr);
+-    pTxtObj->mpImpl->CreateData(rIStream);
+-
+-    // Make sure that the stream is left at the correct place.
+-    std::size_t nFullSz = sizeof( nWhich ) + sizeof( nStructSz ) + nStructSz;
+-    rIStream.Seek( nStartPos + nFullSz );
+-    return pTxtObj;
+-}
+-
+ EditTextObject* EditTextObject::Clone() const
+ {
+     return new EditTextObject(*this);
+@@ -1089,338 +1059,6 @@ void EditTextObjectImpl::ChangeStyleSheetName( SfxStyleFamily eFamily,
+     ImpChangeStyleSheets( rOldName, eFamily, rNewName, eFamily );
+ }
+ 
+-
+-namespace {
+-
+-class FindAttribByChar
+-{
+-    sal_uInt16 mnWhich;
+-    sal_Int32 mnChar;
+-public:
+-    FindAttribByChar(sal_uInt16 nWhich, sal_Int32 nChar) : mnWhich(nWhich), mnChar(nChar) {}
+-    bool operator() (const std::unique_ptr<XEditAttribute>& rAttr) const
+-    {
+-        return (rAttr->GetItem()->Which() == mnWhich) && (rAttr->GetStart() <= mnChar) && (rAttr->GetEnd() > mnChar);
+-    }
+-};
+-
+-}
+-
+-void EditTextObjectImpl::CreateData( SvStream& rIStream )
+-{
+-    rIStream.ReadUInt16( nVersion );
+-
+-    // The text object was first created with the current setting of
+-    // pTextObjectPool.
+-    bool bOwnerOfCurrent = bOwnerOfPool;
+-    bool b;
+-    rIStream.ReadCharAsBool( b );
+-    bOwnerOfPool = b;
+-
+-    if ( bOwnerOfCurrent && !bOwnerOfPool )
+-    {
+-        // A global Pool was used, but not handed over to me, but I need it!
+-        OSL_FAIL( "Give me the global TextObjectPool!" );
+-        return;
+-    }
+-    else if ( !bOwnerOfCurrent && bOwnerOfPool )
+-    {
+-        // A global Pool should be used, but this Textobject has its own.
+-        pPool = EditEngine::CreatePool();
+-    }
+-
+-    if ( bOwnerOfPool )
+-        GetPool()->Load( rIStream );
+-
+-    // CharSet, in which it was saved:
+-    sal_uInt16 nCharSet;
+-    rIStream.ReadUInt16( nCharSet );
+-
+-    rtl_TextEncoding eSrcEncoding = GetSOLoadTextEncoding( (rtl_TextEncoding)nCharSet );
+-
+-    // The number of paragraphs ...
+-    sal_uInt16 nParagraphs(0);
+-    rIStream.ReadUInt16( nParagraphs );
+-
+-    const size_t nMinParaRecordSize = 6 + eSrcEncoding == RTL_TEXTENCODING_UNICODE ? 4 : 2;
+-    const size_t nMaxParaRecords = rIStream.remainingSize() / nMinParaRecordSize;
+-    if (nParagraphs > nMaxParaRecords)
+-    {
+-        SAL_WARN("editeng", "Parsing error: " << nMaxParaRecords <<
+-                 " max possible entries, but " << nParagraphs<< " claimed, truncating");
+-        nParagraphs = nMaxParaRecords;
+-    }
+-
+-    // The individual paragraphs ...
+-    for ( sal_uLong nPara = 0; nPara < nParagraphs; nPara++ )
+-    {
+-        ContentInfo* pC = CreateAndInsertContent();
+-
+-        // The Text...
+-        OString aByteString = read_uInt16_lenPrefixed_uInt8s_ToOString(rIStream);
+-        pC->SetText(OStringToOUString(aByteString, eSrcEncoding));
+-
+-        // StyleName and Family...
+-        pC->SetStyle(rIStream.ReadUniOrByteString(eSrcEncoding));
+-        sal_uInt16 nStyleFamily(0);
+-        rIStream.ReadUInt16( nStyleFamily );
+-        pC->SetFamily((SfxStyleFamily)nStyleFamily);
+-
+-        // Paragraph attributes ...
+-        pC->GetParaAttribs().Load( rIStream );
+-
+-        // The number of attributes ...
+-        sal_uInt16 nTmp16(0);
+-        rIStream.ReadUInt16( nTmp16 );
+-        size_t nAttribs = nTmp16;
+-
+-        const size_t nMinRecordSize(10);
+-        const size_t nMaxRecords = rIStream.remainingSize() / nMinRecordSize;
+-        if (nAttribs > nMaxRecords)
+-        {
+-            SAL_WARN("editeng", "Parsing error: " << nMaxRecords <<
+-                     " max possible entries, but " << nAttribs << " claimed, truncating");
+-            nAttribs = nMaxRecords;
+-        }
+-
+-        // And the individual attributes
+-        // Items as Surrogate => always 8 bytes per Attributes
+-        // Which = 2; Surrogate = 2; Start = 2; End = 2;
+-        for (size_t nAttr = 0; nAttr < nAttribs; ++nAttr)
+-        {
+-            sal_uInt16 _nWhich(0), nStart(0), nEnd(0);
+-            const SfxPoolItem* pItem;
+-
+-            rIStream.ReadUInt16( _nWhich );
+-            _nWhich = pPool->GetNewWhich( _nWhich );
+-            pItem = pPool->LoadSurrogate( rIStream, _nWhich, 0 );
+-            rIStream.ReadUInt16( nStart );
+-            rIStream.ReadUInt16( nEnd );
+-            if ( pItem )
+-            {
+-                if ( pItem->Which() == EE_FEATURE_NOTCONV )
+-                {
+-                    sal_Char cEncodedChar = aByteString[nStart];
+-                    sal_Unicode cChar = OUString(&cEncodedChar, 1,
+-                        static_cast<const SvxCharSetColorItem*>(pItem)->GetCharSet()).toChar();
+-                    pC->SetText(pC->GetText().replaceAt(nStart, 1, OUString(cChar)));
+-                }
+-                else
+-                {
+-                    XEditAttribute* pAttr = new XEditAttribute( *pItem, nStart, nEnd );
+-                    pC->maCharAttribs.push_back(std::unique_ptr<XEditAttribute>(pAttr));
+-
+-                    if ( ( _nWhich >= EE_FEATURE_START ) && ( _nWhich <= EE_FEATURE_END ) )
+-                    {
+-                        // Convert CH_FEATURE to CH_FEATURE_OLD
+-                        DBG_ASSERT( (sal_uInt8) aByteString[nStart] == CH_FEATURE_OLD, "CreateData: CH_FEATURE expected!" );
+-                        if ( (sal_uInt8) aByteString[nStart] == CH_FEATURE_OLD )
+-                            pC->SetText(pC->GetText().replaceAt(nStart, 1, OUString(CH_FEATURE)));
+-                    }
+-                }
+-            }
+-        }
+-
+-        // But check for paragraph and character symbol attribs here,
+-        // FinishLoad will not be called in OpenOffice Calc, no StyleSheets...
+-
+-        bool bSymbolPara = false;
+-        if ( pC->GetParaAttribs().GetItemState( EE_CHAR_FONTINFO ) == SfxItemState::SET )
+-        {
+-            const SvxFontItem& rFontItem = static_cast<const SvxFontItem&>(pC->GetParaAttribs().Get( EE_CHAR_FONTINFO ));
+-            if ( rFontItem.GetCharSet() == RTL_TEXTENCODING_SYMBOL )
+-            {
+-                pC->SetText(OStringToOUString(aByteString, RTL_TEXTENCODING_SYMBOL));
+-                bSymbolPara = true;
+-            }
+-        }
+-
+-        for (size_t nAttr = pC->maCharAttribs.size(); nAttr; )
+-        {
+-            const XEditAttribute& rAttr = *pC->maCharAttribs[--nAttr].get();
+-            if ( rAttr.GetItem()->Which() == EE_CHAR_FONTINFO )
+-            {
+-                const SvxFontItem& rFontItem = static_cast<const SvxFontItem&>(*rAttr.GetItem());
+-                if ( ( !bSymbolPara && ( rFontItem.GetCharSet() == RTL_TEXTENCODING_SYMBOL ) )
+-                      || ( bSymbolPara && ( rFontItem.GetCharSet() != RTL_TEXTENCODING_SYMBOL ) ) )
+-                {
+-                    // Not correctly converted
+-                    OString aPart(aByteString.copy(rAttr.GetStart(), rAttr.GetEnd()-rAttr.GetStart()));
+-                    OUString aNew(OStringToOUString(aPart, rFontItem.GetCharSet()));
+-                    pC->SetText(pC->GetText().replaceAt(rAttr.GetStart(), rAttr.GetEnd()-rAttr.GetStart(), aNew));
+-                }
+-
+-                // Convert StarMath and StarBats to StarSymbol
+-                FontToSubsFontConverter hConv = CreateFontToSubsFontConverter( rFontItem.GetFamilyName(), FontToSubsFontFlags::IMPORT | FontToSubsFontFlags::ONLYOLDSOSYMBOLFONTS );
+-                if ( hConv )
+-                {
+-                    SvxFontItem aNewFontItem( rFontItem );
+-                    aNewFontItem.SetFamilyName( GetFontToSubsFontName( hConv ) );
+-
+-                    // Replace the existing attribute with a new one.
+-                    pPool->Remove(*rAttr.GetItem());
+-                    pC->maCharAttribs[nAttr].reset(CreateAttrib(aNewFontItem, rAttr.GetStart(), rAttr.GetEnd()));
+-
+-                    XEditAttribute* pNewAttr = pC->maCharAttribs[nAttr].get();
+-                    for ( sal_Int32 nChar = pNewAttr->GetStart(); nChar < pNewAttr->GetEnd(); nChar++ )
+-                    {
+-                        sal_Unicode cOld = pC->GetText()[ nChar ];
+-                        DBG_ASSERT( cOld >= 0xF000, "cOld not converted?!" );
+-                        sal_Unicode cConv = ConvertFontToSubsFontChar( hConv, cOld );
+-                        if ( cConv )
+-                            pC->SetText(pC->GetText().replaceAt(nChar, 1, OUString(cConv)));
+-                    }
+-                }
+-            }
+-        }
+-
+-
+-        // Convert StarMath and StarBats to StarSymbol
+-        // Maybe old symbol font as paragraph attribute?
+-        if ( pC->GetParaAttribs().GetItemState( EE_CHAR_FONTINFO ) == SfxItemState::SET )
+-        {
+-            const SvxFontItem& rFontItem = static_cast<const SvxFontItem&>(pC->GetParaAttribs().Get( EE_CHAR_FONTINFO ));
+-            FontToSubsFontConverter hConv = CreateFontToSubsFontConverter( rFontItem.GetFamilyName(), FontToSubsFontFlags::IMPORT | FontToSubsFontFlags::ONLYOLDSOSYMBOLFONTS );
+-            if ( hConv )
+-            {
+-                SvxFontItem aNewFontItem( rFontItem );
+-                aNewFontItem.SetFamilyName( GetFontToSubsFontName( hConv ) );
+-                pC->GetParaAttribs().Put( aNewFontItem );
+-
+-                for ( sal_Int32 nChar = 0; nChar < pC->GetText().getLength(); nChar++ )
+-                {
+-                    const ContentInfo::XEditAttributesType& rAttribs = pC->maCharAttribs;
+-                    if ( std::none_of(rAttribs.begin(), rAttribs.end(),
+-                                      FindAttribByChar(EE_CHAR_FONTINFO, nChar)) )
+-                    {
+-                        sal_Unicode cOld = pC->GetText()[ nChar ];
+-                        DBG_ASSERT( cOld >= 0xF000, "cOld not converted?!" );
+-                        sal_Unicode cConv = ConvertFontToSubsFontChar( hConv, cOld );
+-                        if ( cConv )
+-                            pC->SetText(pC->GetText().replaceAt(nChar, 1, OUString(cConv)));
+-                    }
+-                }
+-            }
+-        }
+-    }
+-
+-    // From 400 also the DefMetric:
+-    if ( nVersion >= 400 )
+-    {
+-        sal_uInt16 nTmpMetric;
+-        rIStream.ReadUInt16( nTmpMetric );
+-        if ( nVersion >= 401 )
+-        {
+-            // In the 400 there was a bug in text objects with the own Pool,
+-            // therefore evaluate only from 401
+-            nMetric = nTmpMetric;
+-            if ( bOwnerOfPool && pPool && ( nMetric != 0xFFFF ) )
+-                pPool->SetDefaultMetric( (MapUnit)nMetric );
+-        }
+-    }
+-
+-    if ( nVersion >= 600 )
+-    {
+-        sal_uInt16 nTmp;
+-        rIStream.ReadUInt16( nTmp );
+-        nUserType = (OutlinerMode)nTmp;
+-        rIStream.ReadUInt32( nObjSettings );
+-    }
+-
+-    if ( nVersion >= 601 )
+-    {
+-        bool bTmp(false);
+-        rIStream.ReadCharAsBool( bTmp );
+-        bVertical = bTmp;
+-    }
+-
+-    if (nVersion >= 603)
+-    {
+-        bool bTmp(false);
+-        rIStream.ReadCharAsBool(bTmp);
+-        bIsTopToBottomVert = bTmp;
+-    }
+-
+-    if ( nVersion >= 602 )
+-    {
+-        sal_uInt16 aTmp16;
+-        rIStream.ReadUInt16( aTmp16 );
+-        nScriptType = static_cast<SvtScriptType>(aTmp16);
+-
+-        bool bUnicodeStrings(false);
+-        rIStream.ReadCharAsBool( bUnicodeStrings );
+-        if ( bUnicodeStrings )
+-        {
+-            for (sal_uInt16 nPara = 0; nPara < nParagraphs; ++nPara)
+-            {
+-                ContentInfo& rC = *aContents[nPara].get();
+-                sal_uInt16 nL(0);
+-
+-                // Text
+-                rIStream.ReadUInt16(nL);
+-                if (nL)
+-                {
+-                    size_t nMaxElementsPossible = rIStream.remainingSize() / sizeof(sal_Unicode);
+-                    if (nL > nMaxElementsPossible)
+-                    {
+-                        SAL_WARN("editeng", "Parsing error: " << nMaxElementsPossible <<
+-                                 " max possible entries, but " << nL << " claimed, truncating");
+-                        nL = nMaxElementsPossible;
+-                    }
+-
+-                    rtl_uString *pStr = rtl_uString_alloc(nL);
+-                    // FIXME this isn't endian safe, but presumably this is just used for copy/paste?
+-                    rIStream.ReadBytes(pStr->buffer, nL*sizeof(sal_Unicode));
+-                    rC.SetText((OUString(pStr, SAL_NO_ACQUIRE)));
+-
+-                    nL = 0;
+-                }
+-
+-                // StyleSheetName
+-                rIStream.ReadUInt16( nL );
+-                if ( nL )
+-                {
+-                    size_t nMaxElementsPossible = rIStream.remainingSize() / sizeof(sal_Unicode);
+-                    if (nL > nMaxElementsPossible)
+-                    {
+-                        SAL_WARN("editeng", "Parsing error: " << nMaxElementsPossible <<
+-                                 " max possible entries, but " << nL << " claimed, truncating");
+-                        nL = nMaxElementsPossible;
+-                    }
+-
+-                    rtl_uString *pStr = rtl_uString_alloc(nL);
+-                    rIStream.ReadBytes(pStr->buffer, nL*sizeof(sal_Unicode) );
+-                    rC.SetStyle(OUString(pStr, SAL_NO_ACQUIRE));
+-                }
+-            }
+-        }
+-    }
+-
+-
+-    // from 500 the tabs are interpreted differently: TabPos + LI, previously only TabPos.
+-    // Works only if tab positions are set, not when DefTab.
+-    if ( nVersion < 500 )
+-    {
+-        for (std::unique_ptr<ContentInfo> & aContent : aContents)
+-        {
+-            ContentInfo& rC = *aContent.get();
+-            const SvxLRSpaceItem& rLRSpace = static_cast<const SvxLRSpaceItem&>(rC.GetParaAttribs().Get(EE_PARA_LRSPACE));
+-            if ( rLRSpace.GetTextLeft() && ( rC.GetParaAttribs().GetItemState( EE_PARA_TABS ) == SfxItemState::SET ) )
+-            {
+-                const SvxTabStopItem& rTabs = static_cast<const SvxTabStopItem&>(rC.GetParaAttribs().Get(EE_PARA_TABS));
+-                SvxTabStopItem aNewTabs( 0, 0, SvxTabAdjust::Left, EE_PARA_TABS );
+-                for ( sal_uInt16 t = 0; t < rTabs.Count(); t++ )
+-                {
+-                    const SvxTabStop& rT = rTabs[ t ];
+-                    aNewTabs.Insert( SvxTabStop( rT.GetTabPos() - rLRSpace.GetTextLeft(),
+-                                rT.GetAdjustment(), rT.GetDecimal(), rT.GetFill() ) );
+-                }
+-                rC.GetParaAttribs().Put( aNewTabs );
+-            }
+-        }
+-    }
+-}
+-
+ bool EditTextObjectImpl::operator==( const EditTextObjectImpl& rCompare ) const
+ {
+     return Equals( rCompare, true);
+diff --git a/editeng/source/editeng/editobj2.hxx b/editeng/source/editeng/editobj2.hxx
+index 3091dda..15724a4 100644
+--- a/editeng/source/editeng/editobj2.hxx
++++ b/editeng/source/editeng/editobj2.hxx
+@@ -201,8 +201,6 @@ private:
+                                const OUString& rNewName, SfxStyleFamily eNewFamily );
+ 
+ public:
+-    void CreateData( SvStream& rIStream );
+-
+     EditTextObjectImpl( EditTextObject* pFront, SfxItemPool* pPool );
+     EditTextObjectImpl( EditTextObject* pFront, const EditTextObjectImpl& r );
+     ~EditTextObjectImpl();
+diff --git a/include/editeng/editobj.hxx b/include/editeng/editobj.hxx
+index 520cf5b..ea35311 100644
+--- a/include/editeng/editobj.hxx
++++ b/include/editeng/editobj.hxx
+@@ -92,8 +92,6 @@ public:
+ 
+     EditTextObject* Clone() const;
+ 
+-    static EditTextObject* Create( SvStream& rIStream );
+-
+     sal_Int32 GetParagraphCount() const;
+ 
+     OUString GetText(sal_Int32 nPara) const;
+diff --git a/sc/inc/attrib.hxx b/sc/inc/attrib.hxx
+index f125040..5c88d55 100644
+--- a/sc/inc/attrib.hxx
++++ b/sc/inc/attrib.hxx
+@@ -64,7 +64,6 @@ public:
+ 
+     virtual bool            operator==( const SfxPoolItem& ) const override;
+     virtual SfxPoolItem*    Clone( SfxItemPool *pPool = nullptr ) const override;
+-    virtual SfxPoolItem*    Create( SvStream& rStream, sal_uInt16 nVer ) const override;
+ 
+             SCCOL          GetColMerge() const {return nColMerge; }
+             SCROW          GetRowMerge() const {return nRowMerge; }
+@@ -132,7 +131,6 @@ public:
+ 
+     virtual bool            operator==( const SfxPoolItem& ) const override;
+     virtual SfxPoolItem*    Clone( SfxItemPool *pPool = nullptr ) const override;
+-    virtual SfxPoolItem*    Create( SvStream& rStream, sal_uInt16 nVer ) const override;
+ 
+     virtual bool            QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+     virtual bool            PutValue( const css::uno::Any& rVal, sal_uInt8 nMemberId ) override;
+@@ -237,8 +235,6 @@ public:
+     virtual bool            operator==( const SfxPoolItem& ) const override;
+     virtual SfxPoolItem*    Clone( SfxItemPool *pPool = nullptr ) const override;
+ 
+-    virtual SfxPoolItem*    Create( SvStream& rStream, sal_uInt16 nVer ) const override;
+-
+     virtual bool            QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+     virtual bool            PutValue( const css::uno::Any& rVal, sal_uInt8 nMemberId ) override;
+ 
+@@ -265,7 +261,6 @@ public:
+ 
+     virtual sal_uInt16          GetValueCount() const override;
+     virtual SfxPoolItem*        Clone( SfxItemPool *pPool = nullptr ) const override;
+-    virtual SfxPoolItem*        Create(SvStream &, sal_uInt16) const override;
+     virtual sal_uInt16          GetVersion( sal_uInt16 nFileVersion ) const override;
+     virtual bool GetPresentation( SfxItemPresentation ePres,
+                                   MapUnit eCoreMetric,
+@@ -285,8 +280,6 @@ public:
+     virtual bool            operator==( const SfxPoolItem& ) const override;
+     virtual SfxPoolItem*    Clone( SfxItemPool *pPool = nullptr ) const override;
+ 
+-    virtual SfxPoolItem*    Create( SvStream& rStream, sal_uInt16 nVer ) const override;
+-
+ private:
+     double  nValue;
+ };
+diff --git a/sc/source/core/data/attrib.cxx b/sc/source/core/data/attrib.cxx
+index bdf2350..c2199ed 100644
+--- a/sc/source/core/data/attrib.cxx
++++ b/sc/source/core/data/attrib.cxx
+@@ -118,15 +118,6 @@ SfxPoolItem* ScMergeAttr::Clone( SfxItemPool * ) const
+     return new ScMergeAttr(*this);
+ }
+ 
+-SfxPoolItem* ScMergeAttr::Create( SvStream& rStream, sal_uInt16 /* nVer */ ) const
+-{
+-    sal_Int16   nCol;
+-    sal_Int16   nRow;
+-    rStream.ReadInt16( nCol );
+-    rStream.ReadInt16( nRow );
+-    return new ScMergeAttr(static_cast<SCCOL>(nCol),static_cast<SCROW>(nRow));
+-}
+-
+ void ScMergeAttr::dumpAsXml(xmlTextWriterPtr pWriter) const
+ {
+     xmlTextWriterStartElement(pWriter, BAD_CAST("ScMergeAttr"));
+@@ -361,21 +352,6 @@ SfxPoolItem* ScProtectionAttr::Clone( SfxItemPool * ) const
+     return new ScProtectionAttr(*this);
+ }
+ 
+-SfxPoolItem* ScProtectionAttr::Create( SvStream& rStream, sal_uInt16 /* n */ ) const
+-{
+-    bool bProtect;
+-    bool bHFormula;
+-    bool bHCell;
+-    bool bHPrint;
+-
+-    rStream.ReadCharAsBool( bProtect );
+-    rStream.ReadCharAsBool( bHFormula );
+-    rStream.ReadCharAsBool( bHCell );
+-    rStream.ReadCharAsBool( bHPrint );
+-
+-    return new ScProtectionAttr(bProtect,bHFormula,bHCell,bHPrint);
+-}
+-
+ void ScProtectionAttr::SetProtection( bool bProtect)
+ {
+     bProtection =  bProtect;
+@@ -654,143 +630,6 @@ SfxPoolItem* ScPageHFItem::Clone( SfxItemPool* ) const
+     return new ScPageHFItem( *this );
+ }
+ 
+-static void lcl_SetSpace( OUString& rStr, const ESelection& rSel )
+-{
+-    // Text replaced by a space to ensure they are positions:
+-    sal_Int32 nLen = rSel.nEndPos-rSel.nStartPos;
+-    rStr = rStr.replaceAt( rSel.nStartPos, nLen, " " );
+-}
+-
+-static bool lcl_ConvertFields(EditEngine& rEng, const OUString* pCommands)
+-{
+-    bool bChange = false;
+-    sal_Int32 nParCnt = rEng.GetParagraphCount();
+-    for (sal_Int32 nPar = 0; nPar<nParCnt; nPar++)
+-    {
+-        OUString aStr = rEng.GetText( nPar );
+-        sal_Int32 nPos;
+-
+-        while ((nPos = aStr.indexOf(pCommands[0])) != -1)
+-        {
+-            ESelection aSel( nPar,nPos, nPar,nPos+pCommands[0].getLength() );
+-            rEng.QuickInsertField( SvxFieldItem(SvxPageField(), EE_FEATURE_FIELD), aSel );
+-            lcl_SetSpace(aStr, aSel ); bChange = true;
+-        }
+-        while ((nPos = aStr.indexOf(pCommands[1])) != -1)
+-        {
+-            ESelection aSel( nPar,nPos, nPar,nPos+pCommands[1].getLength() );
+-            rEng.QuickInsertField( SvxFieldItem(SvxPagesField(), EE_FEATURE_FIELD), aSel );
+-            lcl_SetSpace(aStr, aSel ); bChange = true;
+-        }
+-        while ((nPos = aStr.indexOf(pCommands[2])) != -1)
+-        {
+-            ESelection aSel( nPar,nPos, nPar,nPos+pCommands[2].getLength() );
+-            rEng.QuickInsertField( SvxFieldItem(SvxDateField(Date( Date::SYSTEM ),SvxDateType::Var), EE_FEATURE_FIELD), aSel );
+-            lcl_SetSpace(aStr, aSel ); bChange = true;
+-        }
+-        while ((nPos = aStr.indexOf(pCommands[3])) != -1)
+-        {
+-            ESelection aSel( nPar,nPos, nPar,nPos+pCommands[3].getLength() );
+-            rEng.QuickInsertField( SvxFieldItem(SvxTimeField(), EE_FEATURE_FIELD ), aSel );
+-            lcl_SetSpace(aStr, aSel ); bChange = true;
+-        }
+-        while ((nPos = aStr.indexOf(pCommands[4])) != -1)
+-        {
+-            ESelection aSel( nPar,nPos, nPar,nPos+pCommands[4].getLength() );
+-            rEng.QuickInsertField( SvxFieldItem(SvxFileField(), EE_FEATURE_FIELD), aSel );
+-            lcl_SetSpace(aStr, aSel ); bChange = true;
+-        }
+-        while ((nPos = aStr.indexOf(pCommands[5])) != -1)
+-        {
+-            ESelection aSel( nPar,nPos, nPar,nPos+pCommands[5].getLength() );
+-            rEng.QuickInsertField( SvxFieldItem(SvxTableField(), EE_FEATURE_FIELD), aSel );
+-            lcl_SetSpace(aStr, aSel ); bChange = true;
+-        }
+-    }
+-    return bChange;
+-}
+-
+-#define SC_FIELD_COUNT  6
+-
+-SfxPoolItem* ScPageHFItem::Create( SvStream& rStream, sal_uInt16 nVer ) const
+-{
+-    EditTextObject* pLeft   = EditTextObject::Create(rStream);
+-    EditTextObject* pCenter = EditTextObject::Create(rStream);
+-    EditTextObject* pRight  = EditTextObject::Create(rStream);
+-
+-    OSL_ENSURE( pLeft && pCenter && pRight, "Error reading ScPageHFItem" );
+-
+-    if ( pLeft == nullptr   || pLeft->GetParagraphCount() == 0 ||
+-         pCenter == nullptr || pCenter->GetParagraphCount() == 0 ||
+-         pRight == nullptr  || pRight->GetParagraphCount() == 0 )
+-    {
+-        // If successfully loaded, each object contains at least one paragraph.
+-        // Excel import in 5.1 created broken TextObjects (#67442#) that are
+-        // corrected here to avoid saving wrong files again (#90487#).
+-        ScEditEngineDefaulter aEngine( EditEngine::CreatePool(), true );
+-        if ( pLeft == nullptr || pLeft->GetParagraphCount() == 0 )
+-        {
+-            delete pLeft;
+-            pLeft = aEngine.CreateTextObject();
+-        }
+-        if ( pCenter == nullptr || pCenter->GetParagraphCount() == 0 )
+-        {
+-            delete pCenter;
+-            pCenter = aEngine.CreateTextObject();
+-        }
+-        if ( pRight == nullptr || pRight->GetParagraphCount() == 0 )
+-        {
+-            delete pRight;
+-            pRight = aEngine.CreateTextObject();
+-        }
+-    }
+-
+-    if ( nVer < 1 ) // old field command conversions
+-    {
+-        sal_uInt16 i;
+-        const OUString& rDel = ScGlobal::GetRscString( STR_HFCMD_DELIMITER );
+-        OUString aCommands[SC_FIELD_COUNT];
+-        for (i=0; i<SC_FIELD_COUNT; i++)
+-            aCommands[i] = rDel;
+-        aCommands[0] += ScGlobal::GetRscString(STR_HFCMD_PAGE);
+-        aCommands[1] += ScGlobal::GetRscString(STR_HFCMD_PAGES);
+-        aCommands[2] += ScGlobal::GetRscString(STR_HFCMD_DATE);
+-        aCommands[3] += ScGlobal::GetRscString(STR_HFCMD_TIME);
+-        aCommands[4] += ScGlobal::GetRscString(STR_HFCMD_FILE);
+-        aCommands[5] += ScGlobal::GetRscString(STR_HFCMD_TABLE);
+-        for (i=0; i<SC_FIELD_COUNT; i++)
+-            aCommands[i] += rDel;
+-
+-        ScEditEngineDefaulter aEngine( EditEngine::CreatePool(), true );
+-        aEngine.SetText(*pLeft);
+-        if (lcl_ConvertFields(aEngine,aCommands))
+-        {
+-            delete pLeft;
+-            pLeft = aEngine.CreateTextObject();
+-        }
+-        aEngine.SetText(*pCenter);
+-        if (lcl_ConvertFields(aEngine,aCommands))
+-        {
+-            delete pCenter;
+-            pCenter = aEngine.CreateTextObject();
+-        }
+-        aEngine.SetText(*pRight);
+-        if (lcl_ConvertFields(aEngine,aCommands))
+-        {
+-            delete pRight;
+-            pRight = aEngine.CreateTextObject();
+-        }
+-    }
+-    else if ( nVer < 2 ) {} // nothing to do: SvxFileField is not exchanged for SvxExtFileField
+-
+-    ScPageHFItem* pItem = new ScPageHFItem( Which() );
+-    pItem->SetArea( pLeft,    SC_HF_LEFTAREA   );
+-    pItem->SetArea( pCenter, SC_HF_CENTERAREA );
+-    pItem->SetArea( pRight,  SC_HF_RIGHTAREA  );
+-
+-    return pItem;
+-}
+-
+ void ScPageHFItem::SetLeftArea( const EditTextObject& rNew )
+ {
+     delete pLeftArea;
+@@ -900,27 +739,6 @@ sal_uInt16 ScViewObjectModeItem::GetVersion( sal_uInt16 /* nFileVersion */ ) con
+     return 1;
+ }
+ 
+-SfxPoolItem* ScViewObjectModeItem::Create(
+-                                    SvStream&   rStream,
+-                                    sal_uInt16      nVersion ) const
+-{
+-    if ( nVersion == 0 )
+-    {
+-        // Old Version with AllEnuItem -> produce with Mode "Show"
+-        return new ScViewObjectModeItem( Which() );
+-    }
+-    else
+-    {
+-        sal_uInt16 nVal;
+-        rStream.ReadUInt16( nVal );
+-
+-        //#i80528# adapt to new range eventually
+-        if((sal_uInt16)VOBJ_MODE_HIDE < nVal) nVal = (sal_uInt16)VOBJ_MODE_SHOW;
+-
+-        return new ScViewObjectModeItem( Which(), (ScVObjMode)nVal);
+-    }
+-}
+-
+ /**
+  * Double
+  */
+@@ -948,16 +766,6 @@ SfxPoolItem* ScDoubleItem::Clone( SfxItemPool* ) const
+     return new ScDoubleItem( *this );
+ }
+ 
+-SfxPoolItem* ScDoubleItem::Create( SvStream& rStream, sal_uInt16 /* nVer */ ) const
+-{
+-    double nTmp=0;
+-    rStream.ReadDouble( nTmp );
+-
+-    ScDoubleItem* pItem = new ScDoubleItem( Which(), nTmp );
+-
+-    return pItem;
+-}
+-
+ ScDoubleItem::~ScDoubleItem()
+ {
+ }
+diff --git a/sc/source/ui/condformat/condformatdlgitem.cxx b/sc/source/ui/condformat/condformatdlgitem.cxx
+index 0bd3fcc..dc41bbc 100644
+--- a/sc/source/ui/condformat/condformatdlgitem.cxx
++++ b/sc/source/ui/condformat/condformatdlgitem.cxx
+@@ -37,11 +37,6 @@ SfxPoolItem* ScCondFormatDlgItem::Clone(SfxItemPool* /*pPool*/) const
+     return new ScCondFormatDlgItem(*this);
+ }
+ 
+-SfxPoolItem* ScCondFormatDlgItem::Create(SvStream& /*rStrm*/, sal_uInt16 /*nVer*/) const
+-{
+-    return nullptr;
+-}
+-
+ bool ScCondFormatDlgItem::IsManaged() const
+ {
+     return mbManaged;
+diff --git a/sc/source/ui/inc/condformatdlgitem.hxx b/sc/source/ui/inc/condformatdlgitem.hxx
+index e14e3d5..0daed60 100644
+--- a/sc/source/ui/inc/condformatdlgitem.hxx
++++ b/sc/source/ui/inc/condformatdlgitem.hxx
+@@ -44,7 +44,6 @@ public:
+ 
+     virtual bool operator==(const SfxPoolItem&) const override;
+     virtual SfxPoolItem* Clone(SfxItemPool* pPool = nullptr) const override;
+-    virtual SfxPoolItem* Create(SvStream& rStream, sal_uInt16 nVer) const override;
+ 
+     bool IsManaged() const;
+     condformat::dialog::ScCondFormatDialogType GetDialogType() const;
+-- 
+2.7.4
+

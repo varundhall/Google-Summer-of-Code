@@ -1,0 +1,289 @@
+From 4aef9f5e330a4228b2355fa97900dcede3e375c4 Mon Sep 17 00:00:00 2001
+From: Varun Dhall <varun.dhall@studentpartner.com>
+Date: Mon, 24 Jul 2017 19:46:37 +0530
+Subject: [PATCH] EditEngine: Removing BIN format
+
+Change-Id: I2752af754316e1402aa51b97895bcf0bf915676f
+Reviewed-on: https://gerrit.libreoffice.org/40372
+Tested-by: Jenkins <ci@libreoffice.org>
+Reviewed-by: Michael Stahl <mstahl@redhat.com>
+---
+ editeng/source/editeng/editobj.cxx  | 22 ---------------
+ editeng/source/editeng/eeobj.cxx    | 11 ++++----
+ editeng/source/editeng/eeobj.hxx    |  3 --
+ editeng/source/editeng/impedit.hxx  |  2 --
+ editeng/source/editeng/impedit2.cxx | 55 ++++++++-----------------------------
+ editeng/source/editeng/impedit4.cxx | 24 ----------------
+ include/editeng/editobj.hxx         |  2 --
+ 7 files changed, 16 insertions(+), 103 deletions(-)
+
+diff --git a/editeng/source/editeng/editobj.cxx b/editeng/source/editeng/editobj.cxx
+index c3ac63c..50e5163 100644
+--- a/editeng/source/editeng/editobj.cxx
++++ b/editeng/source/editeng/editobj.cxx
+@@ -393,28 +393,6 @@ SvtScriptType EditTextObject::GetScriptType() const
+ }
+ 
+ 
+-void EditTextObject::Store( SvStream& rOStream ) const
+-{
+-    if ( rOStream.GetError() )
+-        return;
+-
+-    sal_uInt64 const nStartPos = rOStream.Tell();
+-
+-    sal_uInt16 nWhich = static_cast<sal_uInt16>(EE_FORMAT_BIN);
+-    rOStream.WriteUInt16( nWhich );
+-
+-    sal_uInt32 nStructSz = 0;
+-    rOStream.WriteUInt32( nStructSz );
+-
+-    mpImpl->StoreData(rOStream);
+-
+-    sal_uInt64 const nEndPos = rOStream.Tell();
+-    nStructSz = nEndPos - nStartPos - sizeof( nWhich ) - sizeof( nStructSz );
+-    rOStream.Seek( nStartPos + sizeof( nWhich ) );
+-    rOStream.WriteUInt32( nStructSz );
+-    rOStream.Seek( nEndPos );
+-}
+-
+ EditTextObject* EditTextObject::Create( SvStream& rIStream )
+ {
+     sal_uInt64 const nStartPos = rIStream.Tell();
+diff --git a/editeng/source/editeng/eeobj.cxx b/editeng/source/editeng/eeobj.cxx
+index 83055dd..e498b7f 100644
+--- a/editeng/source/editeng/eeobj.cxx
++++ b/editeng/source/editeng/eeobj.cxx
+@@ -52,13 +52,13 @@ uno::Any EditDataObject::getTransferData( const datatransfer::DataFlavor& rFlavo
+     {
+         aAny <<= GetString();
+     }
+-    else if ( ( nT == SotClipboardFormatId::EDITENGINE ) || ( nT == SotClipboardFormatId::RTF ) || ( nT == SotClipboardFormatId::RICHTEXT ) || ( nT == SotClipboardFormatId::EDITENGINE_ODF_TEXT_FLAT ) )
++    else if ( ( nT == SotClipboardFormatId::RTF ) || ( nT == SotClipboardFormatId::RICHTEXT ) || ( nT == SotClipboardFormatId::EDITENGINE_ODF_TEXT_FLAT ) )
+     {
+         // No RTF on demand any more:
+         // 1) Was not working, because I had to flush() the clipboard immediately anyway
+         // 2) Don't have the old pool defaults and the StyleSheetPool here.
+ 
+-        SvMemoryStream* pStream = ( nT == SotClipboardFormatId::EDITENGINE ) ? &GetStream() : ( (nT == SotClipboardFormatId::EDITENGINE_ODF_TEXT_FLAT ) ? &GetODFStream() : &GetRTFStream() );
++        SvMemoryStream* pStream = (nT == SotClipboardFormatId::EDITENGINE_ODF_TEXT_FLAT ) ? &GetODFStream() : &GetRTFStream();
+         pStream->Seek( STREAM_SEEK_TO_END );
+         sal_Int32 nLen = pStream->Tell();
+         if (nLen < 0) { abort(); }
+@@ -79,12 +79,11 @@ uno::Any EditDataObject::getTransferData( const datatransfer::DataFlavor& rFlavo
+ 
+ uno::Sequence< datatransfer::DataFlavor > EditDataObject::getTransferDataFlavors(  )
+ {
+-    uno::Sequence< datatransfer::DataFlavor > aDataFlavors(5);
+-    SotExchange::GetFormatDataFlavor( SotClipboardFormatId::EDITENGINE, aDataFlavors.getArray()[0] );
++    uno::Sequence< datatransfer::DataFlavor > aDataFlavors(4);
++    SotExchange::GetFormatDataFlavor( SotClipboardFormatId::EDITENGINE_ODF_TEXT_FLAT, aDataFlavors.getArray()[0] );
+     SotExchange::GetFormatDataFlavor( SotClipboardFormatId::STRING, aDataFlavors.getArray()[1] );
+     SotExchange::GetFormatDataFlavor( SotClipboardFormatId::RTF, aDataFlavors.getArray()[2] );
+     SotExchange::GetFormatDataFlavor( SotClipboardFormatId::RICHTEXT, aDataFlavors.getArray()[3] );
+-    SotExchange::GetFormatDataFlavor( SotClipboardFormatId::EDITENGINE_ODF_TEXT_FLAT, aDataFlavors.getArray()[4] );
+ 
+     return aDataFlavors;
+ }
+@@ -95,7 +94,7 @@ sal_Bool EditDataObject::isDataFlavorSupported( const datatransfer::DataFlavor&
+ 
+     SotClipboardFormatId nT = SotExchange::GetFormat( rFlavor );
+     if ( ( nT == SotClipboardFormatId::STRING ) || ( nT == SotClipboardFormatId::RTF ) || ( nT == SotClipboardFormatId::RICHTEXT )
+-        || ( nT == SotClipboardFormatId::EDITENGINE ) || ( nT == SotClipboardFormatId::EDITENGINE_ODF_TEXT_FLAT ) )
++        || ( nT == SotClipboardFormatId::EDITENGINE_ODF_TEXT_FLAT ) )
+         bSupported = true;
+ 
+     return bSupported;
+diff --git a/editeng/source/editeng/eeobj.hxx b/editeng/source/editeng/eeobj.hxx
+index f515aa9..bc7fd66 100644
+--- a/editeng/source/editeng/eeobj.hxx
++++ b/editeng/source/editeng/eeobj.hxx
+@@ -28,18 +28,15 @@
+ class EditDataObject :  public ::cppu::WeakImplHelper<css::datatransfer::XTransferable>
+ {
+ private:
+-    SvMemoryStream  maBinData;
+     SvMemoryStream  maRTFData;
+     SvMemoryStream  maODFData;
+     OUString        maText;
+-
+     OUString        maOfficeBookmark;
+ 
+ public:
+                     EditDataObject();
+                     virtual ~EditDataObject() override;
+ 
+-    SvMemoryStream& GetStream() { return maBinData; }
+     SvMemoryStream& GetRTFStream() { return maRTFData; }
+     SvMemoryStream& GetODFStream() { return maODFData; }
+     OUString&       GetString() { return maText; }
+diff --git a/editeng/source/editeng/impedit.hxx b/editeng/source/editeng/impedit.hxx
+index ee05c3e..4d7365d 100644
+--- a/editeng/source/editeng/impedit.hxx
++++ b/editeng/source/editeng/impedit.hxx
+@@ -630,11 +630,9 @@ private:
+     EditPaM             ReadRTF( SvStream& rInput, EditSelection aSel );
+     EditPaM             ReadXML( SvStream& rInput, EditSelection aSel );
+     EditPaM             ReadHTML( SvStream& rInput, const OUString& rBaseURL, EditSelection aSel, SvKeyValueIterator* pHTTPHeaderAttrs );
+-    EditPaM             ReadBin( SvStream& rInput, EditSelection aSel );
+     ErrCode             WriteText( SvStream& rOutput, EditSelection aSel );
+     ErrCode             WriteRTF( SvStream& rOutput, EditSelection aSel );
+     sal_uInt32          WriteXML(SvStream& rOutput, const EditSelection& rSel);
+-    sal_uInt32          WriteBin(SvStream& rOutput, const EditSelection& rSel, bool bStoreUnicode = false);
+ 
+     void                WriteItemAsRTF( const SfxPoolItem& rItem, SvStream& rOutput, sal_Int32 nPara, sal_Int32 nPos,
+                             std::vector<SvxFontItem*>& rFontTable, SvxColorList& rColorList );
+diff --git a/editeng/source/editeng/impedit2.cxx b/editeng/source/editeng/impedit2.cxx
+index a90fe31..7884d4f 100644
+--- a/editeng/source/editeng/impedit2.cxx
++++ b/editeng/source/editeng/impedit2.cxx
+@@ -3462,11 +3462,6 @@ uno::Reference< datatransfer::XTransferable > ImpEditEngine::CreateTransferable(
+     OUString aText(convertLineEnd(GetSelected(aSelection), GetSystemLineEnd())); // System specific
+     pDataObj->GetString() = aText;
+ 
+-    SvxFontItem::EnableStoreUnicodeNames( true );
+-    WriteBin( pDataObj->GetStream(), aSelection, true );
+-    pDataObj->GetStream().Seek( 0 );
+-    SvxFontItem::EnableStoreUnicodeNames( false );
+-
+     WriteRTF( pDataObj->GetRTFStream(), aSelection );
+     pDataObj->GetRTFStream().Seek( 0 );
+ 
+@@ -3516,54 +3511,26 @@ EditSelection ImpEditEngine::PasteText( uno::Reference< datatransfer::XTransfera
+     datatransfer::DataFlavor aFlavor;
+     bool bDone = false;
+ 
+-    char* ODF_XML_Env = getenv ("ODF_TEXT_FLAT_XML_ENV");
+-
+     if ( bUseSpecial )
+     {
+-        // BIN
+-        SotExchange::GetFormatDataFlavor( SotClipboardFormatId::EDITENGINE, aFlavor );
++        // XML
++        SotExchange::GetFormatDataFlavor( SotClipboardFormatId::EDITENGINE_ODF_TEXT_FLAT, aFlavor );
+         if ( rxDataObj->isDataFlavorSupported( aFlavor ) )
+         {
+-            if ( ODF_XML_Env != nullptr )
++            try
+             {
+-                try
+-                {
+-                    uno::Any aData = rxDataObj->getTransferData( aFlavor );
+-                    uno::Sequence< sal_Int8 > aSeq;
+-                    aData >>= aSeq;
+-                    {
+-                        SvMemoryStream aBinStream( aSeq.getArray(), aSeq.getLength(), StreamMode::READ );
+-                        aNewSelection = Read( aBinStream, rBaseURL, EE_FORMAT_BIN, rPaM );
+-                    }
+-                    bDone = true;
+-                }
+-                catch( const css::uno::Exception& )
++                uno::Any aData = rxDataObj->getTransferData( aFlavor );
++                uno::Sequence< sal_Int8 > aSeq;
++                aData >>= aSeq;
+                 {
++                    SvMemoryStream aODFStream( aSeq.getArray(), aSeq.getLength(), StreamMode::READ );
++                    aNewSelection = Read( aODFStream, rBaseURL, EE_FORMAT_XML, rPaM );
+                 }
++                bDone = true;
+             }
+-        }
+-
+-        if ( !bDone )
+-        {
+-            // XML
+-            SotExchange::GetFormatDataFlavor( SotClipboardFormatId::EDITENGINE_ODF_TEXT_FLAT, aFlavor );
+-            if ( rxDataObj->isDataFlavorSupported( aFlavor ) )
++            catch( const css::uno::Exception& e)
+             {
+-                try
+-                {
+-                    uno::Any aData = rxDataObj->getTransferData( aFlavor );
+-                    uno::Sequence< sal_Int8 > aSeq;
+-                    aData >>= aSeq;
+-                    {
+-                        SvMemoryStream aODFStream( aSeq.getArray(), aSeq.getLength(), StreamMode::READ );
+-                        aNewSelection = Read( aODFStream, rBaseURL, EE_FORMAT_XML, rPaM );
+-                    }
+-                    bDone = true;
+-                }
+-                catch( const css::uno::Exception& e)
+-                {
+-                    SAL_WARN( "editeng", "Unable to paste EDITENGINE_ODF_TEXT_FLAT " << e.Message );
+-                }
++                SAL_WARN( "editeng", "Unable to paste EDITENGINE_ODF_TEXT_FLAT " << e.Message );
+             }
+         }
+ 
+diff --git a/editeng/source/editeng/impedit4.cxx b/editeng/source/editeng/impedit4.cxx
+index 7e6d2c7..f4aba7d 100644
+--- a/editeng/source/editeng/impedit4.cxx
++++ b/editeng/source/editeng/impedit4.cxx
+@@ -96,8 +96,6 @@ EditPaM ImpEditEngine::Read(SvStream& rInput, const OUString& rBaseURL, EETextFo
+         aPaM = ReadXML( rInput, rSel );
+     else if ( eFormat == EE_FORMAT_HTML )
+         aPaM = ReadHTML( rInput, rBaseURL, rSel, pHTTPHeaderAttrs );
+-    else if ( eFormat == EE_FORMAT_BIN)
+-        aPaM = ReadBin( rInput, rSel );
+     else
+     {
+         OSL_FAIL( "Read: Unknown Format" );
+@@ -184,18 +182,6 @@ EditPaM ImpEditEngine::ReadHTML( SvStream& rInput, const OUString& rBaseURL, Edi
+     return xPrsr->GetCurSelection().Max();
+ }
+ 
+-EditPaM ImpEditEngine::ReadBin( SvStream& rInput, EditSelection aSel )
+-{
+-    // Simply abuse a temporary text object ...
+-    std::unique_ptr<EditTextObject> xObj(EditTextObject::Create( rInput ));
+-
+-    EditPaM aLastPaM = aSel.Max();
+-    if (xObj)
+-        aLastPaM = InsertText( *xObj, aSel ).Max();
+-
+-    return aLastPaM;
+-}
+-
+ void ImpEditEngine::Write(SvStream& rOutput, EETextFormat eFormat, const EditSelection& rSel)
+ {
+     if ( !rOutput.IsWritable() )
+@@ -211,8 +197,6 @@ void ImpEditEngine::Write(SvStream& rOutput, EETextFormat eFormat, const EditSel
+             WriteXML( rOutput, rSel );
+         else if ( eFormat == EE_FORMAT_HTML )
+             ;
+-        else if ( eFormat == EE_FORMAT_BIN)
+-            WriteBin( rOutput, rSel );
+         else
+         {
+             OSL_FAIL( "Write: Unknown Format" );
+@@ -287,14 +271,6 @@ static void lcl_FindValidAttribs( ItemList& rLst, ContentNode* pNode, sal_Int32
+     }
+ }
+ 
+-sal_uInt32 ImpEditEngine::WriteBin(SvStream& rOutput, const EditSelection& rSel, bool bStoreUnicodeStrings)
+-{
+-    std::unique_ptr<EditTextObject> xObj(CreateTextObject(rSel, nullptr));
+-    xObj->mpImpl->StoreUnicodeStrings(bStoreUnicodeStrings);
+-    xObj->Store(rOutput);
+-    return 0;
+-}
+-
+ sal_uInt32 ImpEditEngine::WriteXML(SvStream& rOutput, const EditSelection& rSel)
+ {
+     ESelection aESel = CreateESel(rSel);
+diff --git a/include/editeng/editobj.hxx b/include/editeng/editobj.hxx
+index 2807aa9..33a32ec 100644
+--- a/include/editeng/editobj.hxx
++++ b/include/editeng/editobj.hxx
+@@ -92,8 +92,6 @@ public:
+ 
+     EditTextObject* Clone() const;
+ 
+-    void Store( SvStream& rOStream ) const;
+-
+     static EditTextObject* Create( SvStream& rIStream );
+ 
+     sal_Int32 GetParagraphCount() const;
+-- 
+2.7.4
+

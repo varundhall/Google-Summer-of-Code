@@ -1,0 +1,158 @@
+From 0703af9e782f1e03c243ee886d1301e80817aad8 Mon Sep 17 00:00:00 2001
+From: Varun Dhall <varun.dhall@studentpartner.com>
+Date: Wed, 24 May 2017 21:13:09 +0530
+Subject: [PATCH] Exporting EditEngine document into a buffer with ODF Filter
+
+Change-Id: Ib0304de5d873ac833dcc121235b8de494a1bb3bf
+Reviewed-on: https://gerrit.libreoffice.org/37999
+Tested-by: Jenkins <ci@libreoffice.org>
+Reviewed-by: Michael Stahl <mstahl@redhat.com>
+---
+ editeng/source/editeng/eeobj.hxx    |  2 ++
+ editeng/source/editeng/impedit2.cxx | 16 ++++++++++++++++
+ editeng/source/xml/xmltxtexp.cxx    |  6 +++---
+ include/xmloff/xmlexp.hxx           |  3 ++-
+ svx/source/xml/xmlxtexp.cxx         |  3 +--
+ xmloff/source/core/xmlexp.cxx       |  5 +++--
+ 6 files changed, 27 insertions(+), 8 deletions(-)
+
+diff --git a/editeng/source/editeng/eeobj.hxx b/editeng/source/editeng/eeobj.hxx
+index 30c90c4..f515aa9 100644
+--- a/editeng/source/editeng/eeobj.hxx
++++ b/editeng/source/editeng/eeobj.hxx
+@@ -30,6 +30,7 @@ class EditDataObject :  public ::cppu::WeakImplHelper<css::datatransfer::XTransf
+ private:
+     SvMemoryStream  maBinData;
+     SvMemoryStream  maRTFData;
++    SvMemoryStream  maODFData;
+     OUString        maText;
+ 
+     OUString        maOfficeBookmark;
+@@ -40,6 +41,7 @@ public:
+ 
+     SvMemoryStream& GetStream() { return maBinData; }
+     SvMemoryStream& GetRTFStream() { return maRTFData; }
++    SvMemoryStream& GetODFStream() { return maODFData; }
+     OUString&       GetString() { return maText; }
+     OUString&       GetURL()    { return maOfficeBookmark; }
+ 
+diff --git a/editeng/source/editeng/impedit2.cxx b/editeng/source/editeng/impedit2.cxx
+index 1225628..6346589 100644
+--- a/editeng/source/editeng/impedit2.cxx
++++ b/editeng/source/editeng/impedit2.cxx
+@@ -70,6 +70,9 @@
+ #include <algorithm>
+ #include <memory>
+ 
++#include <iostream>
++#include <fstream>
++
+ using namespace ::com::sun::star;
+ 
+ static sal_uInt16 lcl_CalcExtraSpace( ParaPortion*, const SvxLineSpacingItem& rLSItem )
+@@ -3473,6 +3476,19 @@ uno::Reference< datatransfer::XTransferable > ImpEditEngine::CreateTransferable(
+     WriteRTF( pDataObj->GetRTFStream(), aSelection );
+     pDataObj->GetRTFStream().Seek( 0 );
+ 
++    WriteXML( pDataObj->GetODFStream(), aSelection );
++    pDataObj->GetODFStream().Seek( 0 );
++
++    //Dumping the ODFStream to a XML file for testing purpose
++    /*
++    std::filebuf afilebuf;
++    afilebuf.open ("gsoc17_clipboard_test.xml",std::ios::out);
++    std::ostream os(&afilebuf);
++    os.write((const char*)(pDataObj->GetODFStream().GetBuffer()), pDataObj->GetODFStream().remainingSize());
++    afilebuf.close();
++    */
++    //dumping ends
++
+     if ( ( aSelection.Min().GetNode() == aSelection.Max().GetNode() )
+             && ( aSelection.Max().GetIndex() == (aSelection.Min().GetIndex()+1) ) )
+     {
+diff --git a/editeng/source/xml/xmltxtexp.cxx b/editeng/source/xml/xmltxtexp.cxx
+index dc21c86..c78bf1d 100644
+--- a/editeng/source/xml/xmltxtexp.cxx
++++ b/editeng/source/xml/xmltxtexp.cxx
+@@ -308,9 +308,10 @@ SvxXMLTextExportComponent::SvxXMLTextExportComponent(
+     const ESelection& rSel,
+     const OUString& rFileName,
+     const css::uno::Reference< css::xml::sax::XDocumentHandler > & xHandler)
+-:   SvXMLExport( xContext, "", rFileName, xHandler, (static_cast<frame::XModel*>(new SvxSimpleUnoModel())), FUNIT_CM )
++:   SvXMLExport( xContext, "", rFileName, xHandler, (static_cast<frame::XModel*>(new SvxSimpleUnoModel())), FUNIT_CM,
++    SvXMLExportFlags::OASIS  |  SvXMLExportFlags::AUTOSTYLES  |  SvXMLExportFlags::CONTENT )
+ {
+-    SvxEditEngineSource aEditSource( pEditEngine );
++        SvxEditEngineSource aEditSource( pEditEngine );
+ 
+     static const SfxItemPropertyMapEntry SvxXMLTextExportComponentPropertyMap[] =
+     {
+@@ -328,7 +329,6 @@ SvxXMLTextExportComponent::SvxXMLTextExportComponent(
+     pUnoText->SetSelection( rSel );
+     mxText = pUnoText;
+ 
+-    setExportFlags( SvXMLExportFlags::AUTOSTYLES|SvXMLExportFlags::CONTENT );
+ }
+ 
+ void SvxWriteXML( EditEngine& rEditEngine, SvStream& rStream, const ESelection& rSel )
+diff --git a/include/xmloff/xmlexp.hxx b/include/xmloff/xmlexp.hxx
+index cb134c7..c8d0ffe 100644
+--- a/include/xmloff/xmlexp.hxx
++++ b/include/xmloff/xmlexp.hxx
+@@ -281,7 +281,8 @@ public:
+         const OUString& rFileName,
+         const css::uno::Reference< css::xml::sax::XDocumentHandler > & rHandler,
+         const css::uno::Reference< css::frame::XModel > &,
+-        FieldUnit const eDefaultFieldUnit );
++        FieldUnit const eDefaultFieldUnit,
++        SvXMLExportFlags nExportFlag );
+ 
+     virtual ~SvXMLExport() override;
+ 
+diff --git a/svx/source/xml/xmlxtexp.cxx b/svx/source/xml/xmlxtexp.cxx
+index 62732b8..a3c4bb3 100644
+--- a/svx/source/xml/xmlxtexp.cxx
++++ b/svx/source/xml/xmlxtexp.cxx
+@@ -139,7 +139,7 @@ SvxXMLXTableExportComponent::SvxXMLXTableExportComponent(
+     const uno::Reference<xml::sax::XDocumentHandler> & rHandler,
+     const uno::Reference<container::XNameContainer >& xTable,
+     uno::Reference<document::XGraphicObjectResolver >& xGrfResolver )
+-:   SvXMLExport(rContext, "", rFileName, rHandler, nullptr, FUNIT_100TH_MM),
++:   SvXMLExport(rContext, "", rFileName, rHandler, nullptr, FUNIT_100TH_MM, SvXMLExportFlags::NONE),
+     mxTable( xTable )
+ {
+ 
+@@ -149,7 +149,6 @@ SvxXMLXTableExportComponent::SvxXMLXTableExportComponent(
+     GetNamespaceMap_().Add( GetXMLToken(XML_NP_XLINK), GetXMLToken(XML_N_XLINK), XML_NAMESPACE_XLINK );
+     GetNamespaceMap_().Add( GetXMLToken(XML_NP_SVG), GetXMLToken(XML_N_SVG),  XML_NAMESPACE_SVG );
+     SetGraphicResolver( xGrfResolver );
+-    setExportFlags( SvXMLExportFlags::NONE );
+ }
+ 
+ SvxXMLXTableExportComponent::~SvxXMLXTableExportComponent()
+diff --git a/xmloff/source/core/xmlexp.cxx b/xmloff/source/core/xmlexp.cxx
+index bfb18b8..f139faf 100644
+--- a/xmloff/source/core/xmlexp.cxx
++++ b/xmloff/source/core/xmlexp.cxx
+@@ -489,7 +489,8 @@ SvXMLExport::SvXMLExport(
+     const OUString &rFileName,
+     const uno::Reference< xml::sax::XDocumentHandler > & rHandler,
+     const Reference< XModel >& rModel,
+-    FieldUnit const eDefaultFieldUnit)
++    FieldUnit const eDefaultFieldUnit,
++    SvXMLExportFlags nExportFlag)
+ :   mpImpl( new SvXMLExport_Impl ),
+     m_xContext(xContext), m_implementationName(implementationName),
+     mxModel( rModel ),
+@@ -508,7 +509,7 @@ SvXMLExport::SvXMLExport(
+     mpImageMapExport( nullptr ),
+     mpXMLErrors( nullptr ),
+     meClass( XML_TOKEN_INVALID ),
+-    mnExportFlags( SvXMLExportFlags::NONE ),
++    mnExportFlags( nExportFlag ),
+     mnErrorFlags( SvXMLErrorFlags::NO ),
+     msWS( GetXMLToken(XML_WS) ),
+     mbSaveLinkedSections(true)
+-- 
+2.7.4
+

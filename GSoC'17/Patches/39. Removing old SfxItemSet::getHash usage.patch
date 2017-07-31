@@ -1,0 +1,40 @@
+From 57db6e24b5ad43d447c30e44a112c74c7e75b46b Mon Sep 17 00:00:00 2001
+From: Varun Dhall <varun.dhall@studentpartner.com>
+Date: Tue, 15 Aug 2017 02:51:07 +0530
+Subject: [PATCH] Removing old SfxItemSet::getHash usage
+
+Change-Id: I902da0f6e00253d5daf4bf65784dade2ae02740c
+Reviewed-on: https://gerrit.libreoffice.org/41155
+Reviewed-by: Michael Stahl <mstahl@redhat.com>
+Tested-by: Jenkins <ci@libreoffice.org>
+---
+ sd/source/core/stlpool.cxx | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/sd/source/core/stlpool.cxx b/sd/source/core/stlpool.cxx
+index 8065d00..6397dc1 100644
+--- a/sd/source/core/stlpool.cxx
++++ b/sd/source/core/stlpool.cxx
+@@ -651,9 +651,8 @@ void SdStyleSheetPool::CopySheets(SdStyleSheetPool& rSourcePool, SfxStyleFamily
+             // if we have a rename suffix, try to find a new name
+             pExistingSheet =
+                 GetStyleSheetByPositionInIndex(aSheetsWithName.front()).get();
+-            sal_Int32 nHash = xSheet->GetItemSet().getHash();
+             if (!rRenameSuffix.isEmpty() &&
+-                pExistingSheet->GetItemSet().getHash() != nHash)
++                pExistingSheet->GetItemSet().Equals(xSheet->GetItemSet(), false))
+             {
+                 // we have found a sheet with the same name, but different contents. Try to find a new name.
+                 // If we already have a sheet with the new name, and it is equal to the one in the source pool,
+@@ -665,7 +664,7 @@ void SdStyleSheetPool::CopySheets(SdStyleSheetPool& rSourcePool, SfxStyleFamily
+                     aTmpName = aName + rRenameSuffix + OUString::number(nSuffix);
+                     pExistingSheet = Find(aTmpName, eFamily);
+                     nSuffix++;
+-                } while( pExistingSheet && pExistingSheet->GetItemSet().getHash() != nHash );
++                } while( pExistingSheet && pExistingSheet->GetItemSet().Equals(xSheet->GetItemSet(), false) );
+                 aName = aTmpName;
+                 bAddToList = true;
+             }
+-- 
+2.7.4
+

@@ -1,0 +1,829 @@
+From 8b3fcb6a4f80e803586120535768745f6637b34d Mon Sep 17 00:00:00 2001
+From: Varun Dhall <varun.dhall@studentpartner.com>
+Date: Fri, 11 Aug 2017 10:01:25 +0530
+Subject: [PATCH] Removing unused SfxItemPool serialisation from svx
+
+Change-Id: Id479c77335c7c4d8dd959a70ebc382a8448077e1
+Reviewed-on: https://gerrit.libreoffice.org/41000
+Tested-by: Jenkins <ci@libreoffice.org>
+Reviewed-by: Michael Stahl <mstahl@redhat.com>
+---
+ include/svx/SmartTagItem.hxx         |   2 -
+ include/svx/chrtitem.hxx             |   2 -
+ include/svx/e3ditem.hxx              |   2 -
+ include/svx/galleryitem.hxx          |   3 -
+ include/svx/grfcrop.hxx              |   2 -
+ include/svx/hlnkitem.hxx             |   3 -
+ include/svx/numinf.hxx               |   2 -
+ include/svx/sdasaitm.hxx             |   3 -
+ include/svx/sdasitm.hxx              |   3 -
+ include/svx/sdtfchim.hxx             |   3 -
+ include/svx/sxfiitm.hxx              |   3 -
+ include/svx/sxsiitm.hxx              |   2 -
+ include/svx/viewlayoutitem.hxx       |   2 -
+ include/svx/zoomslideritem.hxx       |   2 -
+ svx/source/form/fmitems.cxx          |  14 ---
+ svx/source/inc/fmitems.hxx           |   2 -
+ svx/source/items/SmartTagItem.cxx    |  12 ---
+ svx/source/items/chrtitem.cxx        |  13 ---
+ svx/source/items/customshapeitem.cxx |  10 ---
+ svx/source/items/e3ditem.cxx         |  24 ------
+ svx/source/items/galleryitem.cxx     |  10 ---
+ svx/source/items/grfitem.cxx         |  39 ---------
+ svx/source/items/hlnkitem.cxx        | 162 -----------------------------------
+ svx/source/items/numinf.cxx          |  14 ---
+ svx/source/items/viewlayoutitem.cxx  |  12 ---
+ svx/source/items/zoomslideritem.cxx  |  12 ---
+ svx/source/svdraw/svdattr.cxx        |  82 ------------------
+ 27 files changed, 440 deletions(-)
+
+diff --git a/include/svx/SmartTagItem.hxx b/include/svx/SmartTagItem.hxx
+index ed59088..162f5bb 100644
+--- a/include/svx/SmartTagItem.hxx
++++ b/include/svx/SmartTagItem.hxx
+@@ -66,8 +66,6 @@ public:
+     // "purely virtual methods" from the SfxPoolItem
+     virtual bool             operator==( const SfxPoolItem& ) const override;
+     virtual SfxPoolItem*     Clone( SfxItemPool *pPool = nullptr ) const override;
+-    virtual SfxPoolItem*     Create(SvStream &, sal_uInt16) const override; // leer
+-    virtual SvStream&        Store(SvStream &, sal_uInt16 nItemVersion) const override; // leer
+     virtual bool             QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+     virtual bool             PutValue( const css::uno::Any& rVal, sal_uInt8 nMemberId ) override;
+ 
+diff --git a/include/svx/chrtitem.hxx b/include/svx/chrtitem.hxx
+index dc28dd5..b7b311b5 100644
+--- a/include/svx/chrtitem.hxx
++++ b/include/svx/chrtitem.hxx
+@@ -161,8 +161,6 @@ public:
+ 
+     virtual bool             operator == (const SfxPoolItem&) const override;
+     virtual SfxPoolItem* Clone(SfxItemPool *pPool = nullptr) const override;
+-    virtual SfxPoolItem* Create(SvStream& rIn, sal_uInt16 nVersion) const override;
+-    virtual SvStream& Store(SvStream& rOut, sal_uInt16 nItemVersion ) const override;
+ 
+     double GetValue() const { return fVal; }
+ };
+diff --git a/include/svx/e3ditem.hxx b/include/svx/e3ditem.hxx
+index 66565e2..57ccdb1 100644
+--- a/include/svx/e3ditem.hxx
++++ b/include/svx/e3ditem.hxx
+@@ -37,8 +37,6 @@ public:
+ 
+     virtual bool            operator==( const SfxPoolItem& ) const override;
+     virtual SfxPoolItem*    Clone( SfxItemPool *pPool = nullptr ) const override;
+-    virtual SfxPoolItem*    Create(SvStream &, sal_uInt16 nVersion) const override;
+-    virtual SvStream&       Store(SvStream &, sal_uInt16 nItemVersion ) const override;
+ 
+     virtual bool            QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+     virtual bool            PutValue( const css::uno::Any& rVal, sal_uInt8 nMemberId ) override;
+diff --git a/include/svx/galleryitem.hxx b/include/svx/galleryitem.hxx
+index db76b18..e3d9cc8 100644
+--- a/include/svx/galleryitem.hxx
++++ b/include/svx/galleryitem.hxx
+@@ -61,9 +61,6 @@ public:
+     // bridge to UNO
+     virtual bool         QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+     virtual bool         PutValue( const css::uno::Any& rVal, sal_uInt8 nMemberId ) override;
+-    // not implemented
+-    virtual SfxPoolItem* Create(SvStream &, sal_uInt16) const override;
+-    virtual SvStream&    Store(SvStream &, sal_uInt16 nItemVersion) const override;
+ };
+ 
+ #endif
+diff --git a/include/svx/grfcrop.hxx b/include/svx/grfcrop.hxx
+index 2c57b43..96fc7d5 100644
+--- a/include/svx/grfcrop.hxx
++++ b/include/svx/grfcrop.hxx
+@@ -38,8 +38,6 @@ public:
+ 
+     // "pure virtual methods" from SfxPoolItem
+     virtual bool                operator==( const SfxPoolItem& ) const override;
+-    virtual SfxPoolItem*        Create(SvStream &, sal_uInt16 nVer) const override;
+-    virtual SvStream&           Store(SvStream &, sal_uInt16 nIVer) const override;
+     virtual bool GetPresentation( SfxItemPresentation ePres,
+                                   MapUnit eCoreMetric,
+                                   MapUnit ePresMetric,
+diff --git a/include/svx/hlnkitem.hxx b/include/svx/hlnkitem.hxx
+index 63b5f5e..f4cc177 100644
+--- a/include/svx/hlnkitem.hxx
++++ b/include/svx/hlnkitem.hxx
+@@ -99,9 +99,6 @@ public:
+     void SetMacroEvents (const HyperDialogEvent nEvents) { nMacroEvents = nEvents; }
+     HyperDialogEvent GetMacroEvents() const { return nMacroEvents; }
+ 
+-    virtual SvStream&           Store( SvStream &, sal_uInt16 nItemVersion ) const override;
+-    virtual SfxPoolItem*        Create( SvStream &, sal_uInt16 nVer ) const override;
+-
+ };
+ 
+ #endif
+diff --git a/include/svx/numinf.hxx b/include/svx/numinf.hxx
+index 6fb9dd1..a94ee73 100644
+--- a/include/svx/numinf.hxx
++++ b/include/svx/numinf.hxx
+@@ -50,8 +50,6 @@ public:
+ 
+     virtual bool             operator==( const SfxPoolItem& ) const override;
+     virtual SfxPoolItem*     Clone( SfxItemPool *pPool = nullptr ) const override;
+-    virtual SfxPoolItem*     Create( SvStream& rStream, sal_uInt16 nVer ) const override;
+-    virtual SvStream&        Store( SvStream& , sal_uInt16 nItemVersion ) const override;
+ 
+     virtual bool GetPresentation( SfxItemPresentation ePres,
+                                   MapUnit eCoreMetric,
+diff --git a/include/svx/sdasaitm.hxx b/include/svx/sdasaitm.hxx
+index 98004ae..c5da0b4 100644
+--- a/include/svx/sdasaitm.hxx
++++ b/include/svx/sdasaitm.hxx
+@@ -38,15 +38,12 @@ class SVX_DLLPUBLIC SdrCustomShapeAdjustmentItem : public SfxPoolItem
+     public:
+ 
+             SdrCustomShapeAdjustmentItem();
+-            SdrCustomShapeAdjustmentItem( SvStream& rIn, sal_uInt16 nVersion );
+             virtual ~SdrCustomShapeAdjustmentItem() override;
+ 
+             virtual bool                operator==( const SfxPoolItem& ) const override;
+             virtual bool GetPresentation(SfxItemPresentation ePresentation,
+                                          MapUnit eCoreMetric, MapUnit ePresentationMetric,
+                                          OUString &rText, const IntlWrapper&) const override;
+-            virtual SfxPoolItem*        Create( SvStream&, sal_uInt16 nItem ) const override;
+-            virtual SvStream&           Store( SvStream&, sal_uInt16 nVersion ) const override;
+             virtual SfxPoolItem*        Clone( SfxItemPool* pPool = nullptr ) const override;
+             virtual sal_uInt16          GetVersion( sal_uInt16 nFileFormatVersion ) const override;
+ 
+diff --git a/include/svx/sdasitm.hxx b/include/svx/sdasitm.hxx
+index aaff619..8ad95dd 100644
+--- a/include/svx/sdasitm.hxx
++++ b/include/svx/sdasitm.hxx
+@@ -60,9 +60,6 @@ private:
+                                          MapUnit eCoreMetric, MapUnit ePresentationMetric,
+                                          OUString &rText, const IntlWrapper&) const override;
+ 
+-            virtual SfxPoolItem*        Create( SvStream&, sal_uInt16 nItem ) const override;
+-            virtual SvStream&           Store( SvStream&, sal_uInt16 nVersion ) const override;
+-
+             virtual SfxPoolItem*        Clone( SfxItemPool* pPool = nullptr ) const override;
+             virtual sal_uInt16          GetVersion( sal_uInt16 nFileFormatVersion ) const override;
+ 
+diff --git a/include/svx/sdtfchim.hxx b/include/svx/sdtfchim.hxx
+index 401de27..0372772 100644
+--- a/include/svx/sdtfchim.hxx
++++ b/include/svx/sdtfchim.hxx
+@@ -26,14 +26,11 @@ class SVX_DLLPUBLIC SdrTextFixedCellHeightItem : public SfxBoolItem
+ public:
+ 
+     SdrTextFixedCellHeightItem( bool bUseFixedCellHeight = false );
+-    SVX_DLLPRIVATE SdrTextFixedCellHeightItem( SvStream & rStream, sal_uInt16 nVersion );
+ 
+     SVX_DLLPRIVATE virtual bool GetPresentation(SfxItemPresentation ePresentation,
+                                                 MapUnit eCoreMetric, MapUnit ePresentationMetric,
+                                                 OUString &rText, const IntlWrapper&) const override;
+ 
+-    SVX_DLLPRIVATE virtual SfxPoolItem*     Create( SvStream&, sal_uInt16 nItem ) const override;
+-    SVX_DLLPRIVATE virtual SvStream&            Store( SvStream&, sal_uInt16 nVersion ) const override;
+     SVX_DLLPRIVATE virtual SfxPoolItem*     Clone( SfxItemPool* pPool = nullptr ) const override;
+     SVX_DLLPRIVATE virtual  sal_uInt16          GetVersion( sal_uInt16 nFileFormatVersion ) const override;
+ 
+diff --git a/include/svx/sxfiitm.hxx b/include/svx/sxfiitm.hxx
+index 2d89b4e..24984b5 100644
+--- a/include/svx/sxfiitm.hxx
++++ b/include/svx/sxfiitm.hxx
+@@ -30,11 +30,8 @@ class SdrFractionItem: public SfxPoolItem {
+     Fraction nValue;
+ public:
+     SdrFractionItem(sal_uInt16 nId, const Fraction& rVal): SfxPoolItem(nId), nValue(rVal) {}
+-    SdrFractionItem(sal_uInt16 nId, SvStream& rIn);
+     virtual bool             operator==(const SfxPoolItem&) const override;
+     virtual bool GetPresentation(SfxItemPresentation ePresentation, MapUnit eCoreMetric, MapUnit ePresentationMetric, OUString &rText, const IntlWrapper&) const override;
+-    virtual SfxPoolItem*     Create(SvStream&, sal_uInt16 nVer) const override;
+-    virtual SvStream&        Store(SvStream&, sal_uInt16 nItemVers) const override;
+     virtual SfxPoolItem*     Clone(SfxItemPool *pPool=nullptr) const override;
+             const Fraction&  GetValue() const { return nValue; }
+             void             SetValue(const Fraction& rVal) { nValue = rVal; }
+diff --git a/include/svx/sxsiitm.hxx b/include/svx/sxsiitm.hxx
+index 398ee29..d7a1cd0 100644
+--- a/include/svx/sxsiitm.hxx
++++ b/include/svx/sxsiitm.hxx
+@@ -24,9 +24,7 @@
+ class SdrScaleItem: public SdrFractionItem {
+ public:
+     SdrScaleItem(sal_uInt16 nId, const Fraction& rVal): SdrFractionItem(nId,rVal) {}
+-    SdrScaleItem(sal_uInt16 nId, SvStream& rIn): SdrFractionItem(nId,rIn) {}
+     virtual bool GetPresentation(SfxItemPresentation ePresentation, MapUnit eCoreMetric, MapUnit ePresentationMetric, OUString &rText, const IntlWrapper&) const override;
+-    virtual SfxPoolItem*     Create(SvStream&, sal_uInt16 nVer) const override;
+     virtual SfxPoolItem*     Clone(SfxItemPool *pPool=nullptr) const override;
+ };
+ 
+diff --git a/include/svx/viewlayoutitem.hxx b/include/svx/viewlayoutitem.hxx
+index 4db019d2..4191a8b 100644
+--- a/include/svx/viewlayoutitem.hxx
++++ b/include/svx/viewlayoutitem.hxx
+@@ -41,8 +41,6 @@ public:
+     // "purely virtual methods" from the SfxPoolItem
+     virtual bool            operator==( const SfxPoolItem& ) const override;
+     virtual SfxPoolItem*    Clone( SfxItemPool *pPool = nullptr ) const override;
+-    virtual SfxPoolItem*    Create( SvStream& rStrm, sal_uInt16 nVersion ) const override;                       // leer
+-    virtual SvStream&       Store( SvStream& rStrm , sal_uInt16 nItemVersion ) const override;                   // leer
+     virtual bool            QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override; // leer
+     virtual bool            PutValue( const css::uno::Any& rVal, sal_uInt8 nMemberId ) override;   // leer
+ };
+diff --git a/include/svx/zoomslideritem.hxx b/include/svx/zoomslideritem.hxx
+index a2b6988..0bff425 100644
+--- a/include/svx/zoomslideritem.hxx
++++ b/include/svx/zoomslideritem.hxx
+@@ -46,8 +46,6 @@ public:
+     // "purely virtual methods" from the SfxPoolItem
+     virtual bool            operator==( const SfxPoolItem& ) const override;
+     virtual SfxPoolItem*    Clone( SfxItemPool *pPool = nullptr ) const override;
+-    virtual SfxPoolItem*    Create( SvStream& rStrm, sal_uInt16 nVersion ) const override;                       // leer
+-    virtual SvStream&       Store( SvStream& rStrm , sal_uInt16 nItemVersion ) const override;                   // leer
+     virtual bool            QueryValue( css::uno::Any& rVal, sal_uInt8 nMemberId = 0 ) const override;
+     virtual bool            PutValue( const css::uno::Any& rVal, sal_uInt8 nMemberId ) override;
+ };
+diff --git a/svx/source/form/fmitems.cxx b/svx/source/form/fmitems.cxx
+index f7adc07..2d09ce0 100644
+--- a/svx/source/form/fmitems.cxx
++++ b/svx/source/form/fmitems.cxx
+@@ -39,18 +39,4 @@ SfxPoolItem* FmInterfaceItem::Clone( SfxItemPool* ) const
+ }
+ 
+ 
+-SvStream& FmInterfaceItem::Store( SvStream& rStrm , sal_uInt16 /*nItemVersion*/ ) const
+-{
+-    OSL_FAIL( "FmInterfaceItem::Store: not implemented!" );
+-    return rStrm;
+-}
+-
+-
+-SfxPoolItem* FmInterfaceItem::Create( SvStream& /*rStrm*/, sal_uInt16 ) const
+-{
+-    OSL_FAIL( "FmInterfaceItem::Create: not implemented!" );
+-    return new FmInterfaceItem( *this );
+-}
+-
+-
+ /* vim:set shiftwidth=4 softtabstop=4 expandtab: */
+diff --git a/svx/source/inc/fmitems.hxx b/svx/source/inc/fmitems.hxx
+index 884fc57..fd1ce3a 100644
+--- a/svx/source/inc/fmitems.hxx
++++ b/svx/source/inc/fmitems.hxx
+@@ -41,8 +41,6 @@ public:
+     virtual bool            operator==( const SfxPoolItem& ) const override;
+ 
+     virtual SfxPoolItem*    Clone( SfxItemPool *pPool = nullptr ) const override;
+-    virtual SfxPoolItem*    Create(SvStream &, sal_uInt16) const override;
+-    virtual SvStream&       Store(SvStream &, sal_uInt16 nItemVersion ) const override;
+ };
+ 
+ inline FmInterfaceItem& FmInterfaceItem::operator=( const FmInterfaceItem &rCpy )
+diff --git a/svx/source/items/SmartTagItem.cxx b/svx/source/items/SmartTagItem.cxx
+index 325d4f3..c70aad6 100644
+--- a/svx/source/items/SmartTagItem.cxx
++++ b/svx/source/items/SmartTagItem.cxx
+@@ -92,16 +92,4 @@ SfxPoolItem* SvxSmartTagItem::Clone( SfxItemPool * ) const
+     return new SvxSmartTagItem( *this );
+ }
+ 
+-
+-SvStream& SvxSmartTagItem::Store( SvStream& rStream, sal_uInt16 /*nItemVersion*/ ) const
+-{
+-    return rStream;
+-}
+-
+-
+-SfxPoolItem* SvxSmartTagItem::Create(SvStream& , sal_uInt16) const
+-{
+-    return nullptr;
+-}
+-
+ /* vim:set shiftwidth=4 softtabstop=4 expandtab: */
+diff --git a/svx/source/items/chrtitem.cxx b/svx/source/items/chrtitem.cxx
+index e6150b9..8c8edff 100644
+--- a/svx/source/items/chrtitem.cxx
++++ b/svx/source/items/chrtitem.cxx
+@@ -147,19 +147,6 @@ SfxPoolItem* SvxDoubleItem::Clone(SfxItemPool* /*pPool*/) const
+     return new SvxDoubleItem(*this);
+ }
+ 
+-SfxPoolItem* SvxDoubleItem::Create(SvStream& rIn, sal_uInt16 /*nVersion*/) const
+-{
+-    double _fVal;
+-    rIn.ReadDouble( _fVal );
+-    return new SvxDoubleItem(_fVal, Which());
+-}
+-
+-SvStream& SvxDoubleItem::Store(SvStream& rOut, sal_uInt16 /*nItemVersion*/) const
+-{
+-    rOut.WriteDouble( fVal );
+-    return rOut;
+-}
+-
+ bool SvxDoubleItem::QueryValue( uno::Any& rVal, sal_uInt8 /*nMemberId*/ ) const
+ {
+     rVal <<= fVal;
+diff --git a/svx/source/items/customshapeitem.cxx b/svx/source/items/customshapeitem.cxx
+index 4c89834..507a769 100644
+--- a/svx/source/items/customshapeitem.cxx
++++ b/svx/source/items/customshapeitem.cxx
+@@ -266,16 +266,6 @@ bool SdrCustomShapeGeometryItem::GetPresentation(
+     return false;
+ }
+ 
+-SfxPoolItem* SdrCustomShapeGeometryItem::Create( SvStream& /*rIn*/, sal_uInt16 /*nItemVersion*/ ) const
+-{
+-    return new SdrCustomShapeGeometryItem;
+-}
+-
+-SvStream& SdrCustomShapeGeometryItem::Store( SvStream& rOut, sal_uInt16 /*nItemVersion*/ ) const
+-{
+-    return rOut;
+-}
+-
+ SfxPoolItem* SdrCustomShapeGeometryItem::Clone( SfxItemPool * /*pPool*/ ) const
+ {
+     return new SdrCustomShapeGeometryItem( aPropSeq );
+diff --git a/svx/source/items/e3ditem.cxx b/svx/source/items/e3ditem.cxx
+index 048afaf..50a8f89 100644
+--- a/svx/source/items/e3ditem.cxx
++++ b/svx/source/items/e3ditem.cxx
+@@ -58,30 +58,6 @@ SfxPoolItem* SvxB3DVectorItem::Clone( SfxItemPool* /*pPool*/ ) const
+ }
+ 
+ 
+-SfxPoolItem* SvxB3DVectorItem::Create(SvStream &rStream, sal_uInt16 /*nVersion*/) const
+-{
+-    basegfx::B3DVector aStr;
+-    double fValue;
+-    rStream.ReadDouble( fValue ); aStr.setX(fValue);
+-    rStream.ReadDouble( fValue ); aStr.setY(fValue);
+-    rStream.ReadDouble( fValue ); aStr.setZ(fValue);
+-    return new SvxB3DVectorItem(Which(), aStr);
+-}
+-
+-
+-SvStream& SvxB3DVectorItem::Store(SvStream &rStream, sal_uInt16 /*nItemVersion*/) const
+-{
+-
+-    // ## if (nItemVersion)
+-    double fValue;
+-    fValue = aVal.getX(); rStream.WriteDouble( fValue );
+-    fValue = aVal.getY(); rStream.WriteDouble( fValue );
+-    fValue = aVal.getZ(); rStream.WriteDouble( fValue );
+-
+-    return rStream;
+-}
+-
+-
+ bool SvxB3DVectorItem::QueryValue( uno::Any& rVal, sal_uInt8 /*nMemberId*/ ) const
+ {
+     assert(!rtl::math::isNan(aVal.getX()) && !rtl::math::isNan(aVal.getY()) && !rtl::math::isNan(aVal.getZ()));
+diff --git a/svx/source/items/galleryitem.cxx b/svx/source/items/galleryitem.cxx
+index cd82898..c64d1e1 100644
+--- a/svx/source/items/galleryitem.cxx
++++ b/svx/source/items/galleryitem.cxx
+@@ -138,14 +138,4 @@ SfxPoolItem* SvxGalleryItem::Clone( SfxItemPool * ) const
+     return new SvxGalleryItem( *this );
+ }
+ 
+-SvStream& SvxGalleryItem::Store( SvStream& rStream, sal_uInt16 /*nItemVersion*/ ) const
+-{
+-    return rStream;
+-}
+-
+-SfxPoolItem* SvxGalleryItem::Create(SvStream& , sal_uInt16) const
+-{
+-    return nullptr;
+-}
+-
+ /* vim:set shiftwidth=4 softtabstop=4 expandtab: */
+diff --git a/svx/source/items/grfitem.cxx b/svx/source/items/grfitem.cxx
+index 8f2d989..31f4a3a 100644
+--- a/svx/source/items/grfitem.cxx
++++ b/svx/source/items/grfitem.cxx
+@@ -51,45 +51,6 @@ bool SvxGrfCrop::operator==( const SfxPoolItem& rAttr ) const
+            nBottom  == rCrop.GetBottom();
+ }
+ 
+-SfxPoolItem* SvxGrfCrop::Create( SvStream& rStrm, sal_uInt16 nVersion ) const
+-{
+-    sal_Int32 top, left, right, bottom;
+-    rStrm.ReadInt32( top ).ReadInt32( left ).ReadInt32( right ).ReadInt32( bottom );
+-
+-    if( GRFCROP_VERSION_SWDEFAULT == nVersion )
+-    {
+-        top = -top;
+-        bottom = -bottom;
+-        left = -left;
+-        right = -right;
+-    }
+-
+-    SvxGrfCrop* pNew = static_cast<SvxGrfCrop*>(Clone());
+-    pNew->SetLeft( left );
+-    pNew->SetRight( right );
+-    pNew->SetTop( top );
+-    pNew->SetBottom( bottom );
+-    return pNew;
+-}
+-
+-
+-SvStream& SvxGrfCrop::Store( SvStream& rStrm, sal_uInt16 nVersion ) const
+-{
+-    sal_Int32 left = GetLeft(), right = GetRight(),
+-            top = GetTop(), bottom = GetBottom();
+-    if( GRFCROP_VERSION_SWDEFAULT == nVersion )
+-    {
+-        top = -top;
+-        bottom = -bottom;
+-        left = -left;
+-        right = -right;
+-    }
+-
+-    rStrm.WriteInt32( top ).WriteInt32( left ).WriteInt32( right ).WriteInt32( bottom );
+-
+-    return rStrm;
+-}
+-
+ 
+ bool SvxGrfCrop::QueryValue( uno::Any& rVal, sal_uInt8 nMemberId ) const
+ {
+diff --git a/svx/source/items/hlnkitem.cxx b/svx/source/items/hlnkitem.cxx
+index 86381a2..18a33e7 100644
+--- a/svx/source/items/hlnkitem.cxx
++++ b/svx/source/items/hlnkitem.cxx
+@@ -27,168 +27,6 @@
+ 
+ SfxPoolItem* SvxHyperlinkItem::CreateDefault() { return new  SvxHyperlinkItem(0);}
+ 
+-#define HYPERLINKFF_MARKER  0x599401FE
+-
+-SvStream& SvxHyperlinkItem::Store( SvStream& rStrm, sal_uInt16 /*nItemVersion*/ ) const
+-{
+-    // store 'simple' data
+-    // UNICODE: rStrm << sName;
+-    rStrm.WriteUniOrByteString(sName, rStrm.GetStreamCharSet());
+-
+-    // UNICODE: rStrm << sURL;
+-    rStrm.WriteUniOrByteString(sURL, rStrm.GetStreamCharSet());
+-
+-    // UNICODE: rStrm << sTarget;
+-    rStrm.WriteUniOrByteString(sTarget, rStrm.GetStreamCharSet());
+-
+-    rStrm.WriteUInt32( eType );
+-
+-    // marker for versioninfo
+-    rStrm.WriteUInt32( HYPERLINKFF_MARKER );
+-
+-    // new data
+-    // UNICODE: rStrm << sIntName;
+-    rStrm.WriteUniOrByteString(sIntName, rStrm.GetStreamCharSet());
+-
+-    // macro-events
+-    rStrm.WriteUInt16( (sal_uInt16)nMacroEvents );
+-
+-    // store macros
+-    sal_uInt16 nCnt = pMacroTable ? (sal_uInt16)pMacroTable->size() : 0;
+-    sal_uInt16 nMax = nCnt;
+-    if( nCnt )
+-    {
+-        for ( SvxMacroTable::const_iterator it = pMacroTable->begin();
+-              it != pMacroTable->end(); ++it)
+-            if( STARBASIC != it->second.GetScriptType() )
+-                --nCnt;
+-    }
+-
+-    rStrm.WriteUInt16( nCnt );
+-
+-    if( nCnt )
+-    {
+-        // 1. StarBasic-Macros
+-        for ( SvxMacroTable::const_iterator it = pMacroTable->begin();
+-              it != pMacroTable->end(); ++it)
+-        {
+-            const SvxMacro& rMac = it->second;
+-            if( STARBASIC == rMac.GetScriptType() )
+-            {
+-                rStrm.WriteUInt16( sal_uInt16(it->first) );
+-
+-                // UNICODE: rStrm << pMac->GetLibName();
+-                rStrm.WriteUniOrByteString(rMac.GetLibName(), rStrm.GetStreamCharSet());
+-
+-                // UNICODE: rStrm << pMac->GetMacName();
+-                rStrm.WriteUniOrByteString(rMac.GetMacName(), rStrm.GetStreamCharSet());
+-            }
+-        }
+-    }
+-
+-    nCnt = nMax - nCnt;
+-    rStrm.WriteUInt16( nCnt );
+-    if( nCnt )
+-    {
+-        // 2. css::script::JavaScript-Macros
+-        for ( SvxMacroTable::const_iterator it = pMacroTable->begin();
+-              it != pMacroTable->end(); ++it)
+-        {
+-            const SvxMacro& rMac = it->second;
+-            if( STARBASIC != rMac.GetScriptType() )
+-            {
+-                rStrm.WriteUInt16( sal_uInt16(it->first) );
+-
+-                // UNICODE: rStrm << pMac->GetLibName();
+-                rStrm.WriteUniOrByteString(rMac.GetLibName(), rStrm.GetStreamCharSet());
+-
+-                // UNICODE: rStrm << pMac->GetMacName();
+-                rStrm.WriteUniOrByteString(rMac.GetMacName(), rStrm.GetStreamCharSet());
+-
+-                rStrm.WriteUInt16( rMac.GetScriptType() );
+-            }
+-        }
+-    }
+-
+-    return rStrm;
+-}
+-
+-SfxPoolItem*    SvxHyperlinkItem::Create( SvStream &rStrm, sal_uInt16 /*nItemVersion*/ ) const
+-{
+-    SvxHyperlinkItem* pNew = new SvxHyperlinkItem( Which() );
+-    sal_uInt32 nType;
+-
+-    // simple data-types
+-    // UNICODE: rStrm >> pNew->sName;
+-    pNew->sName = rStrm.ReadUniOrByteString(rStrm.GetStreamCharSet());
+-
+-    // UNICODE: rStrm >> pNew->sURL;
+-    pNew->sURL = rStrm.ReadUniOrByteString(rStrm.GetStreamCharSet());
+-
+-    // UNICODE: rStrm >> pNew->sTarget;
+-    pNew->sTarget = rStrm.ReadUniOrByteString(rStrm.GetStreamCharSet());
+-
+-    rStrm.ReadUInt32( nType );
+-    pNew->eType = (SvxLinkInsertMode) nType;
+-
+-    sal_uInt32 nPos = rStrm.Tell();
+-    sal_uInt32 nMarker;
+-    rStrm.ReadUInt32( nMarker );
+-    if ( nMarker == HYPERLINKFF_MARKER )
+-    {
+-        // new data
+-        // UNICODE: rStrm >> pNew->sIntName;
+-        pNew->sIntName = rStrm.ReadUniOrByteString(rStrm.GetStreamCharSet());
+-
+-        // macro-events
+-        sal_uInt16 nTmp;
+-        rStrm.ReadUInt16(nTmp);
+-        pNew->nMacroEvents = (HyperDialogEvent)nTmp;
+-
+-        // macros
+-        sal_uInt16 nCnt;
+-        rStrm.ReadUInt16( nCnt );
+-        while( nCnt-- )
+-        {
+-            sal_uInt16 nCurKey;
+-            OUString aLibName, aMacName;
+-
+-            rStrm.ReadUInt16( nCurKey );
+-            // UNICODE: rStrm >> aLibName;
+-            aLibName = rStrm.ReadUniOrByteString(rStrm.GetStreamCharSet());
+-
+-            // UNICODE: rStrm >> aMacName;
+-            aMacName = rStrm.ReadUniOrByteString(rStrm.GetStreamCharSet());
+-
+-            pNew->SetMacro( (HyperDialogEvent)nCurKey, SvxMacro( aMacName, aLibName, STARBASIC ) );
+-        }
+-
+-        rStrm.ReadUInt16( nCnt );
+-        while( nCnt-- )
+-        {
+-            sal_uInt16 nCurKey, nScriptType;
+-            OUString aLibName, aMacName;
+-
+-            rStrm.ReadUInt16( nCurKey );
+-
+-            // UNICODE: rStrm >> aLibName;
+-            aLibName = rStrm.ReadUniOrByteString(rStrm.GetStreamCharSet());
+-
+-            // UNICODE: rStrm >> aMacName;
+-            aMacName = rStrm.ReadUniOrByteString(rStrm.GetStreamCharSet());
+-
+-            rStrm.ReadUInt16( nScriptType );
+-
+-            pNew->SetMacro( (HyperDialogEvent)nCurKey, SvxMacro( aMacName, aLibName,
+-                                        (ScriptType)nScriptType ) );
+-        }
+-    }
+-    else
+-        rStrm.Seek( nPos );
+-
+-    return pNew;
+-}
+-
+ SvxHyperlinkItem::SvxHyperlinkItem( const SvxHyperlinkItem& rHyperlinkItem ):
+             SfxPoolItem(rHyperlinkItem)
+ {
+diff --git a/svx/source/items/numinf.cxx b/svx/source/items/numinf.cxx
+index ec538b8..56074be 100644
+--- a/svx/source/items/numinf.cxx
++++ b/svx/source/items/numinf.cxx
+@@ -155,20 +155,6 @@ SfxPoolItem* SvxNumberInfoItem::Clone( SfxItemPool * ) const
+     return new SvxNumberInfoItem( *this );
+ }
+ 
+-// Load/Save is unused!
+-
+-
+-SfxPoolItem* SvxNumberInfoItem::Create( SvStream& /*rStream*/, sal_uInt16 ) const
+-{
+-    return new SvxNumberInfoItem( *this );
+-}
+-
+-
+-SvStream& SvxNumberInfoItem::Store( SvStream &rStream, sal_uInt16 /*nItemVersion*/ ) const
+-{
+-    return rStream;
+-}
+-
+ 
+ void SvxNumberInfoItem::SetDelFormatArray( const sal_uInt32* pData,
+                                            const sal_uInt32 nCount )
+diff --git a/svx/source/items/viewlayoutitem.cxx b/svx/source/items/viewlayoutitem.cxx
+index 1a1abc0..8310933 100644
+--- a/svx/source/items/viewlayoutitem.cxx
++++ b/svx/source/items/viewlayoutitem.cxx
+@@ -63,18 +63,6 @@ SfxPoolItem* SvxViewLayoutItem::Clone( SfxItemPool * /*pPool*/ ) const
+ }
+ 
+ 
+-SfxPoolItem* SvxViewLayoutItem::Create( SvStream& /*rStrm*/, sal_uInt16 /*nVersion*/ ) const
+-{
+-    return nullptr;
+-}
+-
+-
+-SvStream& SvxViewLayoutItem::Store( SvStream& rStrm, sal_uInt16 /*nItemVersion*/ ) const
+-{
+-    return rStrm;
+-}
+-
+-
+ bool SvxViewLayoutItem::operator==( const SfxPoolItem& rAttr ) const
+ {
+     assert(SfxPoolItem::operator==(rAttr));
+diff --git a/svx/source/items/zoomslideritem.cxx b/svx/source/items/zoomslideritem.cxx
+index 53d8a04..d03674e 100644
+--- a/svx/source/items/zoomslideritem.cxx
++++ b/svx/source/items/zoomslideritem.cxx
+@@ -60,18 +60,6 @@ SfxPoolItem* SvxZoomSliderItem::Clone( SfxItemPool * /*pPool*/ ) const
+ }
+ 
+ 
+-SfxPoolItem* SvxZoomSliderItem::Create( SvStream& /*rStrm*/, sal_uInt16 /*nVersion*/ ) const
+-{
+-    return nullptr;
+-}
+-
+-
+-SvStream& SvxZoomSliderItem::Store( SvStream& rStrm, sal_uInt16 /*nItemVersion*/ ) const
+-{
+-    return rStrm;
+-}
+-
+-
+ bool SvxZoomSliderItem::operator==( const SfxPoolItem& rAttr ) const
+ {
+     assert(SfxPoolItem::operator==(rAttr));
+diff --git a/svx/source/svdraw/svdattr.cxx b/svx/source/svdraw/svdattr.cxx
+index 9b034d6..016c19d 100644
+--- a/svx/source/svdraw/svdattr.cxx
++++ b/svx/source/svdraw/svdattr.cxx
+@@ -610,15 +610,6 @@ void SdrItemPool::TakeItemName(sal_uInt16 nWhich, OUString& rItemName)
+ // FractionItem
+ 
+ 
+-SdrFractionItem::SdrFractionItem(sal_uInt16 nId, SvStream& rIn):
+-    SfxPoolItem(nId)
+-{
+-    sal_Int32 nMul,nDiv;
+-    rIn.ReadInt32( nMul );
+-    rIn.ReadInt32( nDiv );
+-    nValue=Fraction(nMul,nDiv);
+-}
+-
+ bool SdrFractionItem::operator==(const SfxPoolItem& rCmp) const
+ {
+     return SfxPoolItem::operator==(rCmp) &&
+@@ -658,18 +649,6 @@ bool SdrFractionItem::GetPresentation(
+     return false;
+ }
+ 
+-SfxPoolItem* SdrFractionItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new SdrFractionItem(Which(),rIn);
+-}
+-
+-SvStream& SdrFractionItem::Store(SvStream& rOut, sal_uInt16 /*nItemVers*/) const
+-{
+-    rOut.WriteInt32( nValue.GetNumerator() );
+-    rOut.WriteInt32( nValue.GetDenominator() );
+-    return rOut;
+-}
+-
+ SfxPoolItem* SdrFractionItem::Clone(SfxItemPool * /*pPool*/) const
+ {
+     return new SdrFractionItem(Which(),GetValue());
+@@ -705,11 +684,6 @@ bool SdrScaleItem::GetPresentation(
+     return true;
+ }
+ 
+-SfxPoolItem* SdrScaleItem::Create(SvStream& rIn, sal_uInt16 /*nVer*/) const
+-{
+-    return new SdrScaleItem(Which(),rIn);
+-}
+-
+ SfxPoolItem* SdrScaleItem::Clone(SfxItemPool * /*pPool*/) const
+ {
+     return new SdrScaleItem(Which(),GetValue());
+@@ -1335,16 +1309,6 @@ SdrTextFixedCellHeightItem::SdrTextFixedCellHeightItem( bool bUseFixedCellHeight
+     : SfxBoolItem( SDRATTR_TEXT_USEFIXEDCELLHEIGHT, bUseFixedCellHeight )
+ {
+ }
+-SdrTextFixedCellHeightItem::SdrTextFixedCellHeightItem( SvStream & rStream, sal_uInt16 nVersion )
+-    : SfxBoolItem( SDRATTR_TEXT_USEFIXEDCELLHEIGHT, false )
+-{
+-    if ( nVersion )
+-    {
+-        bool bValue;
+-        rStream.ReadCharAsBool( bValue );
+-        SetValue( bValue );
+-    }
+-}
+ bool SdrTextFixedCellHeightItem::GetPresentation( SfxItemPresentation ePres,
+                                     MapUnit /*eCoreMetric*/, MapUnit /*ePresentationMetric*/,
+                                     OUString &rText, const IntlWrapper& ) const
+@@ -1358,19 +1322,6 @@ bool SdrTextFixedCellHeightItem::GetPresentation( SfxItemPresentation ePres,
+     }
+     return true;
+ }
+-SfxPoolItem* SdrTextFixedCellHeightItem::Create( SvStream& rIn, sal_uInt16 nItemVersion ) const
+-{
+-    return new SdrTextFixedCellHeightItem( rIn, nItemVersion );
+-}
+-SvStream& SdrTextFixedCellHeightItem::Store( SvStream& rOut, sal_uInt16 nItemVersion ) const
+-{
+-    if ( nItemVersion )
+-    {
+-        bool bValue = GetValue();
+-        rOut.WriteBool( bValue );
+-    }
+-    return rOut;
+-}
+ SfxPoolItem* SdrTextFixedCellHeightItem::Clone( SfxItemPool * /*pPool*/) const
+ {
+     return new SdrTextFixedCellHeightItem( GetValue() );
+@@ -1399,22 +1350,6 @@ SdrCustomShapeAdjustmentItem::SdrCustomShapeAdjustmentItem() : SfxPoolItem( SDRA
+ {
+ }
+ 
+-SdrCustomShapeAdjustmentItem::SdrCustomShapeAdjustmentItem( SvStream& rIn, sal_uInt16 nVersion ):
+-    SfxPoolItem( SDRATTR_CUSTOMSHAPE_ADJUSTMENT )
+-{
+-    if ( nVersion )
+-    {
+-        SdrCustomShapeAdjustmentValue aVal;
+-        sal_uInt32 i, nCount;
+-        rIn.ReadUInt32( nCount );
+-        for ( i = 0; i < nCount; i++ )
+-        {
+-            rIn.ReadUInt32( aVal.nValue );
+-            SetValue( i, aVal );
+-        }
+-    }
+-}
+-
+ SdrCustomShapeAdjustmentItem::~SdrCustomShapeAdjustmentItem()
+ {
+ }
+@@ -1456,23 +1391,6 @@ bool SdrCustomShapeAdjustmentItem::GetPresentation(
+     return true;
+ }
+ 
+-SfxPoolItem* SdrCustomShapeAdjustmentItem::Create( SvStream& rIn, sal_uInt16 nItemVersion ) const
+-{
+-    return new SdrCustomShapeAdjustmentItem( rIn, nItemVersion );
+-}
+-
+-SvStream& SdrCustomShapeAdjustmentItem::Store( SvStream& rOut, sal_uInt16 nItemVersion ) const
+-{
+-    if ( nItemVersion )
+-    {
+-        sal_uInt32 i, nCount = GetCount();
+-        rOut.WriteUInt32( nCount );
+-        for ( i = 0; i < nCount; i++ )
+-            rOut.WriteUInt32( GetValue( i ).nValue );
+-    }
+-    return rOut;
+-}
+-
+ SfxPoolItem* SdrCustomShapeAdjustmentItem::Clone( SfxItemPool * /*pPool*/) const
+ {
+     SdrCustomShapeAdjustmentItem* pItem = new SdrCustomShapeAdjustmentItem;
+-- 
+2.7.4
+

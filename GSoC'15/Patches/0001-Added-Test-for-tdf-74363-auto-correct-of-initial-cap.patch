@@ -1,0 +1,63 @@
+From 7e32ce6b4f910c0d43ce6c6ee28dac1e5aad0e52 Mon Sep 17 00:00:00 2001
+From: Varun <varun.dhall@studentpartner.com>
+Date: Tue, 11 Aug 2015 22:50:08 +0530
+Subject: [PATCH] Added Test for tdf#74363 auto correct of initial captials on
+ start
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Change-Id: I1c17778ef4e1d5b977a7c3e6f6f78caca4e0a8ec
+Reviewed-on: https://gerrit.libreoffice.org/17654
+Tested-by: Jenkins <ci@libreoffice.org>
+Reviewed-by: Caolán McNamara <caolanm@redhat.com>
+Tested-by: Caolán McNamara <caolanm@redhat.com>
+---
+ sw/qa/extras/uiwriter/uiwriter.cxx | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+
+diff --git a/sw/qa/extras/uiwriter/uiwriter.cxx b/sw/qa/extras/uiwriter/uiwriter.cxx
+index d59f3b3..edfd808 100644
+--- a/sw/qa/extras/uiwriter/uiwriter.cxx
++++ b/sw/qa/extras/uiwriter/uiwriter.cxx
+@@ -133,6 +133,7 @@ public:
+     void testTdf78742();
+     void testUnoParagraph();
+     void testSearchWithTransliterate();
++    void testTdf74363();
+     void testTdf80663();
+     void testTdf57197();
+     void testTdf90808();
+@@ -202,6 +203,7 @@ public:
+     CPPUNIT_TEST(testTdf78742);
+     CPPUNIT_TEST(testUnoParagraph);
+     CPPUNIT_TEST(testSearchWithTransliterate);
++    CPPUNIT_TEST(testTdf74363);
+     CPPUNIT_TEST(testTdf80663);
+     CPPUNIT_TEST(testTdf57197);
+     CPPUNIT_TEST(testTdf90808);
+@@ -1576,6 +1578,21 @@ void SwUiWriterTest::testSearchWithTransliterate()
+     CPPUNIT_ASSERT_EQUAL(1,(int)case2);
+ }
+ 
++void SwUiWriterTest::testTdf74363()
++{
++    SwDoc* pDoc = createDoc();
++    SwWrtShell* pWrtShell = pDoc->GetDocShell()->GetWrtShell();
++    //testing autocorrect of initial capitals on start of first paragraph
++    SwAutoCorrect corr(*SvxAutoCorrCfg::Get().GetAutoCorrect());
++    //Inserting one all-lowercase word into the first paragraph
++    pWrtShell->Insert("testing");
++    const sal_Unicode cChar = ' ';
++    pWrtShell->AutoCorrect(corr, cChar);
++    //The word should be capitalized due to autocorrect
++    sal_uLong nIndex = pWrtShell->GetCrsr()->GetNode().GetIndex();
++    CPPUNIT_ASSERT_EQUAL(OUString("Testing "), static_cast<SwTextNode*>(pDoc->GetNodes()[nIndex])->GetText());
++}
++
+ void SwUiWriterTest::testTdf80663()
+ {
+     SwDoc* pDoc = createDoc();
+-- 
+2.1.4
+

@@ -1,0 +1,32 @@
+From a62c9ecfc27a375cddb2beefba4b5af9bd4f7727 Mon Sep 17 00:00:00 2001
+From: Varun Dhall <varun.dhall@studentpartner.com>
+Date: Thu, 6 Jul 2017 20:23:10 +0530
+Subject: [PATCH] EditEngine: Added warning for xml export exception
+
+Change-Id: I8709e6656ff753cdd833ee3622a922126161fc2d
+Reviewed-on: https://gerrit.libreoffice.org/39660
+Tested-by: Jenkins <ci@libreoffice.org>
+Reviewed-by: Michael Stahl <mstahl@redhat.com>
+---
+ editeng/source/xml/xmltxtexp.cxx | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/editeng/source/xml/xmltxtexp.cxx b/editeng/source/xml/xmltxtexp.cxx
+index 42f01b7..9b9a60d 100644
+--- a/editeng/source/xml/xmltxtexp.cxx
++++ b/editeng/source/xml/xmltxtexp.cxx
+@@ -368,9 +368,9 @@ void SvxWriteXML( EditEngine& rEditEngine, SvStream& rStream, const ESelection&
+         }
+         while( false );
+     }
+-    catch( const uno::Exception& )
++    catch( const uno::Exception& e )
+     {
+-        OSL_FAIL("exception during xml export");
++        SAL_WARN("editeng", "exception during xml export: " << e.Message);
+     }
+ }
+ 
+-- 
+2.7.4
+

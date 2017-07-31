@@ -1,0 +1,81 @@
+From 9fa77d0cf0dbc0bcb627848263c417ba49e988d3 Mon Sep 17 00:00:00 2001
+From: Varun Dhall <varun.dhall@studentpartner.com>
+Date: Sun, 23 Jul 2017 21:26:34 +0530
+Subject: [PATCH] EditEngine: Removing BIN format from sc
+
+Change-Id: I4d6b796439b90cab6a480f0bb8dc2c931e36cbe9
+Reviewed-on: https://gerrit.libreoffice.org/40329
+Tested-by: Jenkins <ci@libreoffice.org>
+Reviewed-by: Michael Stahl <mstahl@redhat.com>
+---
+ sc/source/ui/app/seltrans.cxx  | 1 -
+ sc/source/ui/app/transobj.cxx  | 4 +---
+ sc/source/ui/view/viewfun4.cxx | 3 +--
+ sc/source/ui/view/viewfun5.cxx | 3 +--
+ 4 files changed, 3 insertions(+), 8 deletions(-)
+
+diff --git a/sc/source/ui/app/seltrans.cxx b/sc/source/ui/app/seltrans.cxx
+index eaa4d93..eeca1a4 100644
+--- a/sc/source/ui/app/seltrans.cxx
++++ b/sc/source/ui/app/seltrans.cxx
+@@ -194,7 +194,6 @@ void ScSelectionTransferObj::AddSupportedFormats()
+             AddFormat( SotClipboardFormatId::RICHTEXT );
+             if ( eMode == SC_SELTRANS_CELL )
+             {
+-                AddFormat( SotClipboardFormatId::EDITENGINE );
+                 AddFormat( SotClipboardFormatId::EDITENGINE_ODF_TEXT_FLAT );
+             }
+             break;
+diff --git a/sc/source/ui/app/transobj.cxx b/sc/source/ui/app/transobj.cxx
+index 30fc5a1..cedac34 100644
+--- a/sc/source/ui/app/transobj.cxx
++++ b/sc/source/ui/app/transobj.cxx
+@@ -243,7 +243,6 @@ void ScTransferObj::AddSupportedFormats()
+     AddFormat( SotClipboardFormatId::RICHTEXT );
+     if ( aBlock.aStart == aBlock.aEnd )
+     {
+-        AddFormat( SotClipboardFormatId::EDITENGINE );
+         AddFormat( SotClipboardFormatId::EDITENGINE_ODF_TEXT_FLAT );
+     }
+ }
+@@ -260,8 +259,7 @@ bool ScTransferObj::GetData( const datatransfer::DataFlavor& rFlavor, const OUSt
+             bOK = SetTransferableObjectDescriptor( aObjDesc );
+         }
+         else if ( ( nFormat == SotClipboardFormatId::RTF || nFormat == SotClipboardFormatId::RICHTEXT ||
+-            nFormat == SotClipboardFormatId::EDITENGINE  || nFormat == SotClipboardFormatId::EDITENGINE_ODF_TEXT_FLAT )
+-                        && aBlock.aStart == aBlock.aEnd )
++            nFormat == SotClipboardFormatId::EDITENGINE_ODF_TEXT_FLAT ) && aBlock.aStart == aBlock.aEnd )
+         {
+             //  RTF from a single cell is handled by EditEngine
+ 
+diff --git a/sc/source/ui/view/viewfun4.cxx b/sc/source/ui/view/viewfun4.cxx
+index 4963180..fa65107 100644
+--- a/sc/source/ui/view/viewfun4.cxx
++++ b/sc/source/ui/view/viewfun4.cxx
+@@ -79,8 +79,7 @@ void ScViewFunc::PasteRTF( SCCOL nStartCol, SCROW nStartRow,
+                                 const css::uno::Reference< css::datatransfer::XTransferable >& rxTransferable )
+ {
+     TransferableDataHelper aDataHelper( rxTransferable );
+-    if ( aDataHelper.HasFormat( SotClipboardFormatId::EDITENGINE ) ||
+-            aDataHelper.HasFormat( SotClipboardFormatId::EDITENGINE_ODF_TEXT_FLAT ) )
++    if ( aDataHelper.HasFormat( SotClipboardFormatId::EDITENGINE_ODF_TEXT_FLAT ) )
+     {
+         HideAllCursors();
+ 
+diff --git a/sc/source/ui/view/viewfun5.cxx b/sc/source/ui/view/viewfun5.cxx
+index 75f1c2d9..2c2b431 100644
+--- a/sc/source/ui/view/viewfun5.cxx
++++ b/sc/source/ui/view/viewfun5.cxx
+@@ -285,8 +285,7 @@ bool ScViewFunc::PasteDataFormat( SotClipboardFormatId nFormatId,
+     else if ( ScImportExport::IsFormatSupported( nFormatId ) || nFormatId == SotClipboardFormatId::RTF ||
+                 nFormatId == SotClipboardFormatId::EDITENGINE_ODF_TEXT_FLAT )
+     {
+-        if ( nFormatId == SotClipboardFormatId::RTF && ( aDataHelper.HasFormat( SotClipboardFormatId::EDITENGINE ) ||
+-                aDataHelper.HasFormat( SotClipboardFormatId::EDITENGINE_ODF_TEXT_FLAT ) ) )
++        if ( nFormatId == SotClipboardFormatId::RTF && ( aDataHelper.HasFormat( SotClipboardFormatId::EDITENGINE_ODF_TEXT_FLAT ) ) )
+         {
+             //  use EditView's PasteSpecial / Drop
+             PasteRTF( nPosX, nPosY, rxTransferable );
+-- 
+2.7.4
+

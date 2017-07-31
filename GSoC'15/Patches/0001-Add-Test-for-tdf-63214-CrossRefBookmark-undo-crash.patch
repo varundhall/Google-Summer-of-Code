@@ -1,0 +1,68 @@
+From 6ec79a6a755e7a4a585e2b93f589bbc92fe0c35b Mon Sep 17 00:00:00 2001
+From: Varun <varun.dhall@studentpartner.com>
+Date: Wed, 24 Jun 2015 09:12:39 +0530
+Subject: [PATCH] Add Test for tdf#63214 CrossRefBookmark undo crash
+
+Change-Id: Id47197d9282a408a2d49a3b9de4c8856ad47dec3
+Reviewed-on: https://gerrit.libreoffice.org/16441
+Reviewed-by: Michael Stahl <mstahl@redhat.com>
+Tested-by: Michael Stahl <mstahl@redhat.com>
+---
+ sw/qa/extras/uiwriter/uiwriter.cxx | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
+
+diff --git a/sw/qa/extras/uiwriter/uiwriter.cxx b/sw/qa/extras/uiwriter/uiwriter.cxx
+index afefed2..2f5171d 100644
+--- a/sw/qa/extras/uiwriter/uiwriter.cxx
++++ b/sw/qa/extras/uiwriter/uiwriter.cxx
+@@ -91,6 +91,7 @@ public:
+     void testFdo87448();
+     void testTdf68183();
+     void testCp1000115();
++    void testTdf63214();
+     void testTdf90003();
+     void testTdf51741();
+     void testdelofTableRedlines();
+@@ -135,6 +136,7 @@ public:
+     CPPUNIT_TEST(testFdo87448);
+     CPPUNIT_TEST(testTdf68183);
+     CPPUNIT_TEST(testCp1000115);
++    CPPUNIT_TEST(testTdf63214);
+     CPPUNIT_TEST(testTdf90003);
+     CPPUNIT_TEST(testTdf51741);
+     CPPUNIT_TEST(testdelofTableRedlines);
+@@ -872,6 +874,31 @@ void SwUiWriterTest::testCp1000115()
+     xmlXPathFreeObject(pXmlObj);
+ }
+ 
++void SwUiWriterTest::testTdf63214()
++{
++    //This is a crash test
++    SwDoc* pDoc = createDoc();
++    SwWrtShell* pWrtShell = pDoc->GetDocShell()->GetWrtShell();
++    sw::UndoManager& rUndoManager = pDoc->GetUndoManager();
++    pWrtShell->Insert("V");
++    {   //limiting the lifetime of SwPaM with a nested scope
++        //the shell cursor are automatically adjusted when nodes are deleted, but the shell doesn't know about an SwPaM on the stack
++        IDocumentMarkAccess* const pMarkAccess = pDoc->getIDocumentMarkAccess();
++        SwPaM aPaM( SwNodeIndex(pDoc->GetNodes().GetEndOfContent(), -1) );
++        aPaM.SetMark();
++        aPaM.Move(fnMoveForward, fnGoContent);
++        //Inserting a crossRefBookmark
++        pMarkAccess->makeMark(aPaM, OUString("Bookmark"), IDocumentMarkAccess::MarkType::CROSSREF_HEADING_BOOKMARK);
++        CPPUNIT_ASSERT_EQUAL(sal_Int32(1), pMarkAccess->getAllMarksCount());
++    }
++    //moving cursor to the end of paragraph
++    pWrtShell->EndPara();
++    //inserting paragraph break
++    pWrtShell->SplitNode();
++    rUndoManager.Undo();
++    rUndoManager.Redo();
++}
++
+ void SwUiWriterTest::testTdf90003()
+ {
+     createDoc("tdf90003.odt");
+-- 
+2.1.4
+

@@ -1,0 +1,29 @@
+From 3278cbf7dcf0c72c125fb4ba14e2b24faf267d9c Mon Sep 17 00:00:00 2001
+From: Varun Dhall <varun.dhall@studentpartner.com>
+Date: Tue, 13 Jun 2017 01:36:06 +0530
+Subject: [PATCH] EditEngine: Added EditEngine ODF format for Windows
+
+Change-Id: I6750295708f2e7a9d73f85df4abbeeb8e5e60a07
+Reviewed-on: https://gerrit.libreoffice.org/38716
+Tested-by: Jenkins <ci@libreoffice.org>
+Reviewed-by: Michael Stahl <mstahl@redhat.com>
+---
+ dtrans/source/win32/ftransl/ftransl.cxx | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/dtrans/source/win32/ftransl/ftransl.cxx b/dtrans/source/win32/ftransl/ftransl.cxx
+index 6cb028e..40df081 100644
+--- a/dtrans/source/win32/ftransl/ftransl.cxx
++++ b/dtrans/source/win32/ftransl/ftransl.cxx
+@@ -147,6 +147,8 @@ static const std::vector< FormatEntry > g_TranslTable {
+         FormatEntry("application/x-openoffice-xfa;windows_formatname=\"XFA (XOutDev FillAttr)\"", "XFA (XOutDev FillAttr)", nullptr, CF_INVALID, CPPUTYPE_DEFAULT),
+     // SotClipboardFormatId::EDITENGINE
+         FormatEntry("application/x-openoffice-editengine;windows_formatname=\"EditEngineFormat\"", "EditEngineFormat", nullptr, CF_INVALID, CPPUTYPE_DEFAULT),
++    // SotClipboardFormatId::EDITENGINE_ODF_TEXT_FLAT
++        FormatEntry("application/vnd.oasis.opendocument.text-flat-xml", "EditEngine ODF", nullptr, CF_INVALID, CPPUTYPE_DEFAULT),
+     // SotClipboardFormatId::INTERNALLINK_STATE
+         FormatEntry("application/x-openoffice-internallink-state;windows_formatname=\"StatusInfo of SvxInternalLink\"", "StatusInfo of SvxInternalLink", nullptr, CF_INVALID, CPPUTYPE_DEFAULT),
+     // SotClipboardFormatId::SOLK
+-- 
+2.7.4
+
